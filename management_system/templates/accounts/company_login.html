@@ -1,0 +1,58 @@
+{% extends 'accounts/base_auth.html' %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+<div class="auth-card">
+    <div class="auth-header">
+        <h1 class="h3 mb-2"><i class="fas fa-building me-2"></i>Company Login</h1>
+        <p class="mb-0">Access your company's management system</p>
+    </div>
+    
+    <div class="auth-body">
+        <form method="post" novalidate>
+            {% csrf_token %}
+            
+            <div class="mb-4">
+                <h5 class="text-center mb-4">Enter Company Details</h5>
+                {{ form|crispy }}
+            </div>
+            
+            <div class="d-grid gap-2 mb-4">
+                <button type="submit" class="btn btn-primary btn-lg">
+                    <i class="fas fa-sign-in-alt me-2"></i>Login to Company
+                </button>
+            </div>
+            
+            <div class="auth-links text-center">
+                <p class="mb-2">
+                    Don't have a company account?
+                    <a href="{% url 'accounts:company_register' %}" class="fw-bold">
+                        Register Company
+                    </a>
+                </p>
+                <p class="mb-0">
+                    Joining an existing company?
+                    <a href="{% url 'accounts:user_register' %}" class="fw-bold">
+                        Join as Team Member
+                    </a>
+                </p>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-focus first input
+    document.querySelector('input').focus();
+    
+    // Add placeholder for company domain
+    const domainInput = document.querySelector('#id_company_domain');
+    if (domainInput) {
+        domainInput.placeholder = 'e.g., yourcompany';
+    }
+});
+</script>
+{% endblock %}

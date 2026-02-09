@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-6 offset-md-3">
+        <div class="card">
+            <div class="card-body text-center py-5">
+                <i class="fas fa-exclamation-triangle fa-4x text-danger mb-4"></i>
+                <h4>Confirm Delete</h4>
+                <p class="mb-4">
+                    Are you sure you want to delete project 
+                    <strong>"{{ project.name }}"</strong>?
+                </p>
+                
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-circle me-2"></i>
+                    <strong>Warning:</strong> This action will permanently delete:
+                    <ul class="mb-0 mt-2">
+                        <li>All project tasks ({{ project.sous_taches.count }} tasks)</li>
+                        <li>All task comments</li>
+                        <li>All project data</li>
+                    </ul>
+                </div>
+                
+                <form method="post" class="mt-4">
+                    {% csrf_token %}
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-trash me-2"></i>Yes, Delete Project
+                        </button>
+                        <a href="{% url 'projects:project_detail' project.pk %}" class="btn btn-secondary">
+                            <i class="fas fa-times me-2"></i>Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

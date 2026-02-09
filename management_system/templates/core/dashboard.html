@@ -1,0 +1,109 @@
+{% extends 'core/base.html' %}
+
+{% block content %}
+<h2 class="mb-4"><i class="fas fa-tachometer-alt"></i> Dashboard</h2>
+
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card stat-card bg-primary text-white">
+            <div class="card-body">
+                <i class="fas fa-users"></i>
+                <h3>{{ total_employees }}</h3>
+                <p>Active Employees</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card bg-success text-white">
+            <div class="card-body">
+                <i class="fas fa-project-diagram"></i>
+                <h3>{{ active_projects }}</h3>
+                <p>Active Projects</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card bg-info text-white">
+            <div class="card-body">
+                <i class="fas fa-boxes"></i>
+                <h3>{{ total_stock_items }}</h3>
+                <p>Stock Items</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card bg-warning text-white">
+            <div class="card-body">
+                <i class="fas fa-exclamation-triangle"></i>
+                <h3>{{ low_stock_items }}</h3>
+                <p>Low Stock Items</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-white">
+                <h5><i class="fas fa-project-diagram"></i> Recent Projects</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Status</th>
+                                <th>Progress</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for project in recent_projects %}
+                            <tr>
+                                <td>{{ project.name }}</td>
+                                <td><span class="badge bg-info">{{ project.get_status_display }}</span></td>
+                                <td>{{ project.completion_percentage }}%</td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="3" class="text-center">No projects yet</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-white">
+                <h5><i class="fas fa-users"></i> Recent Employees</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Name</th>
+                                <th>Department</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for employee in recent_employees %}
+                            <tr>
+                                <td>{{ employee.employee_id }}</td>
+                                <td>{{ employee.user.get_full_name }}</td>
+                                <td>{{ employee.department|default:"-" }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="3" class="text-center">No employees yet</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

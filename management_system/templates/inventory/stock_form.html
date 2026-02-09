@@ -1,0 +1,155 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-10 offset-md-1">
+        <div class="card">
+            <div class="card-header bg-white">
+                <h4 class="mb-0"><i class="fas fa-box me-2"></i>{{ title }}</h4>
+            </div>
+            
+            <div class="card-body">
+                <form method="post" novalidate>
+                    {% csrf_token %}
+                    
+                    <div class="row">
+                        <div class="col-12">
+                            <h5 class="mb-3 border-bottom pb-2">Basic Information</h5>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            {{ form.item_code|as_crispy_field }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.name|as_crispy_field }}
+                        </div>
+                        
+                        <div class="col-md-6">
+                            {{ form.category|as_crispy_field }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.unit|as_crispy_field }}
+                        </div>
+                        
+                        <div class="col-12">
+                            {{ form.description|as_crispy_field }}
+                        </div>
+                        
+                        <div class="col-12 mt-4">
+                            <h5 class="mb-3 border-bottom pb-2">Pricing & Quantity</h5>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            {{ form.quantity|as_crispy_field }}
+                        </div>
+                        <div class="col-md-4">
+                            {{ form.unit_price|as_crispy_field }}
+                        </div>
+                        <div class="col-md-4">
+                            {{ form.reorder_level|as_crispy_field }}
+                        </div>
+                        
+                        <div class="col-12 mt-4">
+                            <h5 class="mb-3 border-bottom pb-2">Supplier Information</h5>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            {{ form.supplier_name|as_crispy_field }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.supplier_contact|as_crispy_field }}
+                        </div>
+                        
+                        <div class="col-12 mt-4">
+                            <h5 class="mb-3 border-bottom pb-2">Storage Information</h5>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            {{ form.location|as_crispy_field }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.last_restocked|as_crispy_field }}
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-info mt-4">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Note:</strong> 
+                        <ul class="mb-0 mt-2">
+                            <li>Item code must be unique within your company</li>
+                            <li>Setting quantity will create an initial stock-in transaction</li>
+                            <li>Reorder level triggers low stock alerts when quantity falls below this level</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between mt-4">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-1"></i>Save Item
+                        </button>
+                        <div>
+                            <a href="{% url 'inventory:stock_list' %}" class="btn btn-secondary me-2">
+                                <i class="fas fa-times me-1"></i>Cancel
+                            </a>
+                            {% if stock %}
+                            <a href="{% url 'inventory:stock_detail' stock.pk %}" class="btn btn-info">
+                                <i class="fas fa-eye me-1"></i>View Details
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-set last_restocked to today if quantity is set
+    const quantityField = document.querySelector('#id_quantity');
+    const lastRestockedField = document.querySelector('#id_last_restocked');
+    
+    if (quantityField && lastRestockedField && !lastRestockedField.value) {
+        quantityField.addEventListener('change', function() {
+            if (this.value && parseInt(this.value) > 0) {
+                const today = new Date().toISOString().split('T')[0];
+                lastRestockedField.value = today;
+            }
+        });
+    }
+    
+    // Calculate total value
+    const quantityInput = document.querySelector('#id_quantity');
+    const unitPriceInput = document.querySelector('#id_unit_price');
+    const totalValueDisplay = document.createElement('div');
+    totalValueDisplay.className = 'form-text';
+    
+    if (quantityInput && unitPriceInput) {
+        const parentDiv = unitPriceInput.closest('.mb-3');
+        parentDiv.appendChild(totalValueDisplay);
+        
+        function calculateTotalValue() {
+            const quantity = parseFloat(quantityInput.value) || 0;
+            const unitPrice = parseFloat(unitPriceInput.value) || 0;
+            const totalValue = quantity * unitPrice;
+            
+            if (totalValue > 0) {
+                totalValueDisplay.innerHTML = `<strong>Total Value: $${totalValue.toFixed(2)}</strong>`;
+                totalValueDisplay.style.color = '#198754';
+            } else {
+                totalValueDisplay.innerHTML = '';
+            }
+        }
+        
+        quantityInput.addEventListener('input', calculateTotalValue);
+        unitPriceInput.addEventListener('input', calculateTotalValue);
+        
+        // Initial calculation
+        calculateTotalValue();
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,252 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="fas fa-book me-2"></i>Transaction Journal</h2>
+    <div>
+        <a href="{% url 'inventory:stock_transaction_export' %}?{{ request.GET.urlencode }}" class="btn btn-success btn-sm me-2">
+            <i class="fas fa-file-export me-1"></i>Export to Excel
+        </a>
+        <a href="{% url 'inventory:stock_list' %}" class="btn btn-secondary btn-sm">
+            <i class="fas fa-arrow-left me-1"></i>Back to Inventory
+        </a>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="card mb-4">
+    <div class="card-header bg-white">
+        <h5 class="mb-0"><i class="fas fa-filter me-2"></i>Filters</h5>
+    </div>
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-3">
+                <select name="stock" class="form-select">
+                    <option value="">All Items</option>
+                    {% for stock in stocks %}
+                    <option value="{{ stock.pk }}" {% if selected_stock == stock.pk|stringformat:"s" %}selected{% endif %}>
+                        {{ stock.item_code }} - {{ stock.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <select name="type" class="form-select">
+                    <option value="">All Types</option>
+                    {% for type_code, type_name in TRANSACTION_TYPES %}
+                    <option value="{{ type_code }}" {% if selected_type == type_code %}selected{% endif %}>
+                        {{ type_name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <input type="date" name="date_from" class="form-control" value="{{ date_from }}" placeholder="From Date">
+            </div>
+            <div class="col-md-3">
+                <input type="date" name="date_to" class="form-control" value="{{ date_to }}" placeholder="To Date">
+            </div>
+            <div class="col-md-1">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-search"></i>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Transaction Table -->
+<div class="card">
+    <div class="card-body">
+        {% if transactions %}
+        <div class="table-responsive">
+            <table class="table table-hover table-striped">
+                <thead class="table-light">
+                    <tr>
+                        <th>Date & Time</th>
+                        <th>Item Code</th>
+                        <th>Item Name</th>
+                        <th>Category</th>
+                        <th>Type</th>
+                        <th>Quantity</th>
+                        <th>Unit Price</th>
+                        <th>Total Value</th>
+                        <th>Remarks</th>
+                        <th>User</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for transaction in transactions %}
+                    <tr>
+                        <td>{{ transaction.transaction_date|date:"M d, Y H:i" }}</td>
+                        <td>
+                            <strong>{{ transaction.stock.item_code }}</strong>
+                        </td>
+                        <td>{{ transaction.stock.name }}</td>
+                        <td>{{ transaction.stock.category.name|default:"—" }}</td>
+                        <td>
+                            {% if transaction.transaction_type == 'in' %}
+                                <span class="badge bg-success">{{ transaction.get_transaction_type_display }}</span>
+                            {% elif transaction.transaction_type == 'out' %}
+                                <span class="badge bg-warning">{{ transaction.get_transaction_type_display }}</span>
+                            {% else %}
+                                <span class="badge bg-info">{{ transaction.get_transaction_type_display }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if transaction.transaction_type == 'in' %}
+                                <span class="text-success">+{{ transaction.quantity }}</span>
+                            {% elif transaction.transaction_type == 'out' %}
+                                <span class="text-danger">-{{ transaction.quantity }}</span>
+                            {% else %}
+                                <span class="text-info">{{ transaction.quantity }}</span>
+                            {% endif %}
+                            {{ transaction.stock.get_unit_display }}
+                        </td>
+                        <td>${{ transaction.stock.unit_price|floatformat:2 }}</td>
+                        <td>
+                            <strong>${{ transaction.quantity|multiply:transaction.stock.unit_price|floatformat:2 }}</strong>
+                        </td>
+                        <td>{{ transaction.remarks|default:"—" }}</td>
+                        <td>{{ transaction.user.get_full_name|default:"System" }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot class="table-secondary">
+                    <tr>
+                        <th colspan="5">Totals</th>
+                        <th>
+                            {% with total_in=transactions.filter|filter_by_type:'in'|sum:'quantity' total_out=transactions.filter|filter_by_type:'out'|sum:'quantity' %}
+                            +{{ total_in }} / -{{ total_out }}
+                            {% endwith %}
+                        </th>
+                        <th colspan="4"></th>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+        
+        <!-- Pagination (if needed) -->
+        {% if transactions.has_other_pages %}
+        <nav aria-label="Transaction pagination" class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% if transactions.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ transactions.previous_page_number }}{% if selected_stock %}&stock={{ selected_stock }}{% endif %}{% if selected_type %}&type={{ selected_type }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}">
+                        &laquo;
+                    </a>
+                </li>
+                {% endif %}
+                
+                {% for i in transactions.paginator.page_range %}
+                    {% if transactions.number == i %}
+                    <li class="page-item active"><span class="page-link">{{ i }}</span></li>
+                    {% else %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ i }}{% if selected_stock %}&stock={{ selected_stock }}{% endif %}{% if selected_type %}&type={{ selected_type }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}">
+                            {{ i }}
+                        </a>
+                    </li>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if transactions.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ transactions.next_page_number }}{% if selected_stock %}&stock={{ selected_stock }}{% endif %}{% if selected_type %}&type={{ selected_type }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}">
+                        &raquo;
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+        
+        {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-book fa-3x text-muted mb-3"></i>
+            <h5>No transactions found</h5>
+            <p class="text-muted">
+                {% if selected_stock or selected_type or date_from or date_to %}
+                Try adjusting your filters.
+                {% else %}
+                Perform your first stock transaction to see data here.
+                {% endif %}
+            </p>
+            <a href="{% url 'inventory:stock_list' %}" class="btn btn-primary mt-2">
+                <i class="fas fa-exchange-alt me-1"></i>Make a Transaction
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Summary Statistics -->
+{% if transactions %}
+<div class="row mt-4">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body text-center">
+                <h3>{{ transactions.count }}</h3>
+                <p class="text-muted mb-0">Total Transactions</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body text-center">
+                <h3 class="text-success">
+                    {% with total_in=transactions.filter|filter_by_type:'in'|sum:'quantity' %}
+                    +{{ total_in }}
+                    {% endwith %}
+                </h3>
+                <p class="text-muted mb-0">Total Stock In</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body text-center">
+                <h3 class="text-danger">
+                    {% with total_out=transactions.filter|filter_by_type:'out'|sum:'quantity' %}
+                    -{{ total_out }}
+                    {% endwith %}
+                </h3>
+                <p class="text-muted mb-0">Total Stock Out</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Set default date range to last 30 days
+    const dateFromInput = document.querySelector('input[name="date_from"]');
+    const dateToInput = document.querySelector('input[name="date_to"]');
+    
+    if (!dateFromInput.value) {
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        dateFromInput.value = thirtyDaysAgo.toISOString().split('T')[0];
+    }
+    
+    if (!dateToInput.value) {
+        const today = new Date().toISOString().split('T')[0];
+        dateToInput.value = today;
+    }
+    
+    // Clear filters button
+    const clearFiltersBtn = document.createElement('button');
+    clearFiltersBtn.type = 'button';
+    clearFiltersBtn.className = 'btn btn-sm btn-outline-secondary mt-3';
+    clearFiltersBtn.innerHTML = '<i class="fas fa-times me-1"></i>Clear All Filters';
+    clearFiltersBtn.addEventListener('click', function() {
+        window.location.href = "{% url 'inventory:stock_transaction_journal' %}";
+    });
+    
+    document.querySelector('.card-body form').appendChild(clearFiltersBtn);
+});
+</script>
+{% endblock %}

@@ -1,0 +1,210 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="fas fa-chart-bar me-2"></i>Employee Summary Report</h2>
+    <div>
+        <button onclick="window.print()" class="btn btn-outline-primary btn-sm me-2">
+            <i class="fas fa-print me-1"></i>Print
+        </button>
+        <a href="{% url 'employees:employee_list' %}" class="btn btn-secondary btn-sm">
+            <i class="fas fa-arrow-left me-1"></i>Back to Employees
+        </a>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header bg-white">
+        <h5 class="mb-0">Report Summary</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-3">
+                <div class="card bg-light">
+                    <div class="card-body text-center">
+                        <h3>{{ total_employees }}</h3>
+                        <p class="text-muted mb-0">Total Employees</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-success text-white">
+                    <div class="card-body text-center">
+                        <h3>{{ active_employees }}</h3>
+                        <p class="mb-0">Active</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-warning text-white">
+                    <div class="card-body text-center">
+                        <h3>{{ on_leave_employees }}</h3>
+                        <p class="mb-0">On Leave</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-secondary text-white">
+                    <div class="card-body text-center">
+                        <h3>{{ terminated_employees }}</h3>
+                        <p class="mb-0">Terminated</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-white">
+                <h5 class="mb-0">Role Distribution</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Role</th>
+                                <th>Count</th>
+                                <th>Percentage</th>
+                                <th width="50%"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in role_distribution %}
+                            <tr>
+                                <td>
+                                    {% for code, name in ROLE_CHOICES %}
+                                        {% if code == item.role %}
+                                            {{ name }}
+                                        {% endif %}
+                                    {% endfor %}
+                                </td>
+                                <td>{{ item.count }}</td>
+                                <td>{{ item.percentage|floatformat:1 }}%</td>
+                                <td>
+                                    <div class="progress" style="height: 20px;">
+                                        <div class="progress-bar" role="progressbar" 
+                                             style="width: {{ item.percentage }}%">
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-white">
+                <h5 class="mb-0">Department Distribution</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Department</th>
+                                <th>Count</th>
+                                <th>Percentage</th>
+                                <th width="50%"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in department_distribution %}
+                            <tr>
+                                <td>{{ item.department__name|default:"Unassigned" }}</td>
+                                <td>{{ item.count }}</td>
+                                <td>{{ item.percentage|floatformat:1 }}%</td>
+                                <td>
+                                    <div class="progress" style="height: 20px;">
+                                        <div class="progress-bar bg-info" role="progressbar" 
+                                             style="width: {{ item.percentage }}%">
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header bg-white">
+        <h5 class="mb-0">Salary Statistics</h5>
+    </div>
+    <div class="card-body">
+        <div class="row text-center">
+            <div class="col-md-3">
+                <h3>${{ salary_stats.avg_salary|floatformat:2|default:"0.00" }}</h3>
+                <p class="text-muted mb-0">Average Salary</p>
+            </div>
+            <div class="col-md-3">
+                <h3>${{ salary_stats.total_salary|floatformat:2|default:"0.00" }}</h3>
+                <p class="text-muted mb-0">Total Salary</p>
+            </div>
+            <div class="col-md-3">
+                <h3>${{ salary_stats.min_salary|floatformat:2|default:"0.00" }}</h3>
+                <p class="text-muted mb-0">Minimum Salary</p>
+            </div>
+            <div class="col-md-3">
+                <h3>${{ salary_stats.max_salary|floatformat:2|default:"0.00" }}</h3>
+                <p class="text-muted mb-0">Maximum Salary</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header bg-white">
+        <h5 class="mb-0">Recent Hires (Last 30 Days)</h5>
+    </div>
+    <div class="card-body">
+        {% if recent_hires %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Employee ID</th>
+                        <th>Name</th>
+                        <th>Department</th>
+                        <th>Role</th>
+                        <th>Date Joined</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for employee in recent_hires %}
+                    <tr>
+                        <td>{{ employee.employee_id }}</td>
+                        <td>{{ employee.user.get_full_name }}</td>
+                        <td>{{ employee.department.name|default:"—" }}</td>
+                        <td>{{ employee.get_role_display }}</td>
+                        <td>{{ employee.date_joined|date:"M d, Y" }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="text-center text-muted py-4">No recent hires in the last 30 days.</p>
+        {% endif %}
+    </div>
+</div>
+
+<div class="mt-4 text-muted text-center">
+    <small>
+        <i class="fas fa-calendar me-1"></i>
+        Report generated on {{ report_date|date:"F d, Y" }}
+    </small>
+</div>
+{% endblock %}

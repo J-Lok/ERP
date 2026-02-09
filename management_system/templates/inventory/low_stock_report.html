@@ -1,0 +1,239 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="fas fa-exclamation-triangle me-2"></i>Low Stock Report</h2>
+    <div>
+        <button onclick="window.print()" class="btn btn-outline-primary btn-sm me-2">
+            <i class="fas fa-print me-1"></i>Print
+        </button>
+        <a href="{% url 'inventory:stock_list' %}" class="btn btn-secondary btn-sm">
+            <i class="fas fa-arrow-left me-1"></i>Back to Inventory
+        </a>
+    </div>
+</div>
+
+<!-- Summary -->
+<div class="card mb-4">
+    <div class="card-header bg-warning">
+        <h5 class="mb-0 text-white"><i class="fas fa-exclamation-circle me-2"></i>Low Stock Alert Summary</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-4">
+                <div class="card bg-light">
+                    <div class="card-body text-center">
+                        <h3 class="text-danger">{{ total_low_stock }}</h3>
+                        <p class="text-muted mb-0">Low Stock Items</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card bg-light">
+                    <div class="card-body text-center">
+                        <h3 class="text-warning">${{ total_value|floatformat:2 }}</h3>
+                        <p class="text-muted mb-0">Total Value at Risk</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card bg-light">
+                    <div class="card-body text-center">
+                        <h3 class="text-info">{{ category_summary|length }}</h3>
+                        <p class="text-muted mb-0">Categories Affected</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Category Summary -->
+<div class="card mb-4">
+    <div class="card-header bg-white">
+        <h5 class="mb-0">Low Stock by Category</h5>
+    </div>
+    <div class="card-body">
+        {% if category_summary %}
+        <div class="table-responsive">
+            <table class="table table-sm">
+                <thead>
+                    <tr>
+                        <th>Category</th>
+                        <th>Low Stock Items</th>
+                        <th>Total Items</th>
+                        <th>Total Value</th>
+                        <th width="40%">Severity</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for category in category_summary %}
+                    <tr>
+                        <td>
+                            <strong>{{ category.category__name|default:"Uncategorized" }}</strong>
+                        </td>
+                        <td>{{ category.count }}</td>
+                        <td>{{ category.total_items }}</td>
+                        <td class="text-danger">${{ category.total_value|floatformat:2 }}</td>
+                        <td>
+                            <div class="progress" style="height: 20px;">
+                                <div class="progress-bar bg-warning" role="progressbar" 
+                                     style="width: {% widthratio category.count total_low_stock 100 %}%">
+                                    {% widthratio category.count total_low_stock 100 %}%
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="text-center text-muted py-4">No low stock items by category.</p>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Low Stock Items -->
+<div class="card">
+    <div class="card-header bg-white">
+        <h5 class="mb-0">Low Stock Items (Quantity ≤ Reorder Level)</h5>
+    </div>
+    <div class="card-body">
+        {% if low_stock_items %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th>Item Code</th>
+                        <th>Name</th>
+                        <th>Category</th>
+                        <th>Current Qty</th>
+                        <th>Reorder Level</th>
+                        <th>Shortage</th>
+                        <th>Unit Price</th>
+                        <th>Value at Risk</th>
+                        <th>Supplier</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in low_stock_items %}
+                    <tr class="{% if item.quantity == 0 %}table-danger{% else %}table-warning{% endif %}">
+                        <td>
+                            <strong>{{ item.item_code }}</strong>
+                            {% if item.quantity == 0 %}
+                            <span class="badge bg-danger">Out of Stock</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ item.name }}</td>
+                        <td>
+                            {% if item.category %}
+                            <span class="badge bg-info">{{ item.category.name }}</span>
+                            {% else %}
+                            <span class="text-muted">—</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <strong class="{% if item.quantity == 0 %}text-danger{% else %}text-warning{% endif %}">
+                                {{ item.quantity }}
+                            </strong>
+                            <small class="text-muted">{{ item.get_unit_display }}</small>
+                        </td>
+                        <td>{{ item.reorder_level }}</td>
+                        <td>
+                            {% with shortage=item.reorder_level|add:1|subtract:item.quantity %}
+                            {% if shortage > 0 %}
+                            <span class="badge bg-danger">{{ shortage }} needed</span>
+                            {% else %}
+                            <span class="badge bg-secondary">At reorder level</span>
+                            {% endif %}
+                            {% endwith %}
+                        </td>
+                        <td>${{ item.unit_price|floatformat:2 }}</td>
+                        <td class="text-danger">
+                            <strong>${{ item.total_value|floatformat:2 }}</strong>
+                        </td>
+                        <td>{{ item.supplier_name|default:"—" }}</td>
+                        <td>
+                            <a href="{% url 'inventory:stock_transaction' item.pk %}" class="btn btn-sm btn-primary">
+                                <i class="fas fa-exchange-alt"></i>
+                            </a>
+                            <a href="{% url 'inventory:stock_edit' item.pk %}" class="btn btn-sm btn-warning">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+            <h5>No Low Stock Items</h5>
+            <p class="text-muted">All inventory items are above their reorder levels. Great job!</p>
+            <a href="{% url 'inventory:stock_list' %}" class="btn btn-primary mt-2">
+                <i class="fas fa-boxes me-1"></i>View All Inventory
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Action Recommendations -->
+{% if low_stock_items %}
+<div class="card mt-4">
+    <div class="card-header bg-white">
+        <h5 class="mb-0"><i class="fas fa-lightbulb me-2"></i>Recommended Actions</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card bg-light">
+                    <div class="card-body">
+                        <h6><i class="fas fa-shopping-cart text-primary me-2"></i>Restock Priority</h6>
+                        <ul class="mb-0">
+                            <li>Restock items marked as "Out of Stock" first</li>
+                            <li>Focus on high-value items with significant shortages</li>
+                            <li>Contact suppliers for items with long lead times</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card bg-light">
+                    <div class="card-body">
+                        <h6><i class="fas fa-cog text-warning me-2"></i>System Adjustments</h6>
+                        <ul class="mb-0">
+                            <li>Review and adjust reorder levels if needed</li>
+                            <li>Consider increasing safety stock for critical items</li>
+                            <li>Set up automatic reorder alerts</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<div class="mt-4 text-muted text-center">
+    <small>
+        <i class="fas fa-calendar me-1"></i>
+        Report generated on {{ report_date|date:"F d, Y" }}
+    </small>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.table-warning:hover {
+    background-color: #fff3cd !important;
+}
+
+.table-danger:hover {
+    background-color: #f8d7da !important;
+}
+</style>
+{% endblock %}

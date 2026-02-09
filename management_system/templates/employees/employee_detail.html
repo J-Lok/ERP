@@ -1,0 +1,226 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-10 offset-md-1">
+        <div class="card">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <h4 class="mb-0"><i class="fas fa-id-card me-2"></i>Employee Details</h4>
+                <div>
+                    <a href="{% url 'employees:employee_edit' employee.pk %}" class="btn btn-warning btn-sm me-2">
+                        <i class="fas fa-edit me-1"></i>Edit
+                    </a>
+                    <a href="{% url 'employees:employee_list' %}" class="btn btn-secondary btn-sm">
+                        <i class="fas fa-arrow-left me-1"></i>Back to List
+                    </a>
+                </div>
+            </div>
+            
+            <div class="card-body">
+                <div class="row">
+                    <!-- Left Column - Profile -->
+                    <div class="col-md-4 text-center border-end">
+                        <div class="mb-4">
+                            {% if employee.photo %}
+                            <img src="{{ employee.photo.url }}" alt="{{ employee.user.get_full_name }}" 
+                                 class="rounded-circle" width="150" height="150" style="object-fit: cover;">
+                            {% else %}
+                            <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center mx-auto" 
+                                 style="width: 150px; height: 150px;">
+                                <i class="fas fa-user fa-4x"></i>
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <h4>{{ employee.user.get_full_name }}</h4>
+                        <p class="text-muted">{{ employee.user.email }}</p>
+                        
+                        <div class="mb-3">
+                            <span class="badge bg-primary fs-6">{{ employee.employee_id }}</span>
+                        </div>
+                        
+                        <div class="mb-3">
+                            {% if employee.status == 'active' %}
+                            <span class="badge bg-success fs-6">{{ employee.get_status_display }}</span>
+                            {% elif employee.status == 'on_leave' %}
+                            <span class="badge bg-warning fs-6">{{ employee.get_status_display }}</span>
+                            {% elif employee.status == 'inactive' %}
+                            <span class="badge bg-secondary fs-6">{{ employee.get_status_display }}</span>
+                            {% else %}
+                            <span class="badge bg-danger fs-6">{{ employee.get_status_display }}</span>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="list-group list-group-flush">
+                            <div class="list-group-item">
+                                <strong>Role:</strong> {{ employee.get_role_display }}
+                            </div>
+                            <div class="list-group-item">
+                                <strong>Date Joined:</strong> {{ employee.date_joined|date:"F d, Y" }}
+                            </div>
+                            <div class="list-group-item">
+                                <strong>Salary:</strong> ${{ employee.salary|floatformat:2 }}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Right Column - Details -->
+                    <div class="col-md-8">
+                        <div class="row">
+                            <div class="col-md-6 mb-4">
+                                <h5 class="border-bottom pb-2">Personal Information</h5>
+                                <table class="table table-sm">
+                                    <tr>
+                                        <th width="40%">Full Name:</th>
+                                        <td>{{ employee.user.get_full_name }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Email:</th>
+                                        <td>{{ employee.user.email }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Phone:</th>
+                                        <td>{{ employee.user.phone|default:"—" }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Date of Birth:</th>
+                                        <td>{{ employee.date_of_birth|date:"F d, Y"|default:"—" }}</td>
+                                    </tr>
+                                </table>
+                            </div>
+                            
+                            <div class="col-md-6 mb-4">
+                                <h5 class="border-bottom pb-2">Company Information</h5>
+                                <table class="table table-sm">
+                                    <tr>
+                                        <th width="40%">Department:</th>
+                                        <td>
+                                            {% if employee.department %}
+                                            <span class="badge bg-info">{{ employee.department.name }}</span>
+                                            {% else %}
+                                            <span class="text-muted">—</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>Employee ID:</th>
+                                        <td>{{ employee.employee_id }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Role:</th>
+                                        <td>{{ employee.get_role_display }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Status:</th>
+                                        <td>
+                                            {% if employee.status == 'active' %}
+                                            <span class="badge bg-success">{{ employee.get_status_display }}</span>
+                                            {% elif employee.status == 'on_leave' %}
+                                            <span class="badge bg-warning">{{ employee.get_status_display }}</span>
+                                            {% else %}
+                                            <span class="badge bg-secondary">{{ employee.get_status_display }}</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+                            
+                            <div class="col-md-6 mb-4">
+                                <h5 class="border-bottom pb-2">Employment Details</h5>
+                                <table class="table table-sm">
+                                    <tr>
+                                        <th width="40%">Date Joined:</th>
+                                        <td>{{ employee.date_joined|date:"F d, Y" }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Salary:</th>
+                                        <td>${{ employee.salary|floatformat:2 }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Created:</th>
+                                        <td>{{ employee.created_at|date:"M d, Y H:i" }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Last Updated:</th>
+                                        <td>{{ employee.updated_at|date:"M d, Y H:i" }}</td>
+                                    </tr>
+                                </table>
+                            </div>
+                            
+                            <div class="col-md-6 mb-4">
+                                <h5 class="border-bottom pb-2">User Account</h5>
+                                <table class="table table-sm">
+                                    <tr>
+                                        <th width="40%">Username:</th>
+                                        <td>{{ employee.user.email }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Account Status:</th>
+                                        <td>
+                                            {% if employee.user.is_active %}
+                                            <span class="badge bg-success">Active</span>
+                                            {% else %}
+                                            <span class="badge bg-danger">Inactive</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>Last Login:</th>
+                                        <td>{{ employee.user.last_login|date:"M d, Y H:i"|default:"Never" }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Admin Access:</th>
+                                        <td>
+                                            {% if employee.user.is_company_admin %}
+                                            <span class="badge bg-warning">Company Admin</span>
+                                            {% else %}
+                                            <span class="badge bg-secondary">Team Member</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                        
+                        <!-- Additional Information -->
+                        {% if employee.department and employee.department.description %}
+                        <div class="mb-4">
+                            <h5 class="border-bottom pb-2">Department Description</h5>
+                            <p class="text-muted">{{ employee.department.description }}</p>
+                        </div>
+                        {% endif %}
+                        
+                        <!-- Notes (if any) -->
+                        <div class="mb-4">
+                            <h5 class="border-bottom pb-2">Notes</h5>
+                            <p class="text-muted">No notes available.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Action Buttons -->
+                <div class="mt-4 border-top pt-3">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <a href="{% url 'employees:employee_edit' employee.pk %}" class="btn btn-primary me-2">
+                                <i class="fas fa-edit me-1"></i>Edit Employee
+                            </a>
+                            <a href="mailto:{{ employee.user.email }}" class="btn btn-outline-info me-2">
+                                <i class="fas fa-envelope me-1"></i>Send Email
+                            </a>
+                        </div>
+                        <div>
+                            <a href="{% url 'employees:employee_delete' employee.pk %}" class="btn btn-danger me-2">
+                                <i class="fas fa-trash me-1"></i>Delete
+                            </a>
+                            <a href="{% url 'employees:employee_list' %}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left me-1"></i>Back to List
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

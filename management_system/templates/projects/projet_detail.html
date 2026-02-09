@@ -1,0 +1,232 @@
+{% extends 'core/base.html' %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+
+<div class="d-flex justify-content-between mb-4">
+    <h2>{{ projet.name }}</h2>
+
+    <div>
+        <a href="{% url 'project_edit' projet.pk %}" class="btn btn-warning">Modifier</a>
+        <a href="{% url 'project_list' %}" class="btn btn-secondary">Retour</a>
+    </div>
+</div>
+
+<!-- PROJECT INFO -->
+
+<div class="row mb-4">
+
+<div class="col-md-8">
+<div class="card">
+<div class="card-body">
+
+<p>{{ projet.description }}</p>
+
+<p><strong>Manager:</strong>
+{% if projet.manager %}
+{{ projet.manager.user.get_full_name }}
+{% else %}
+Non assigné
+{% endif %}
+</p>
+
+<p><strong>Budget:</strong> ${{ projet.budget }}</p>
+
+</div>
+</div>
+</div>
+
+<!-- PROGRESS -->
+
+<div class="col-md-4">
+<div class="card">
+<div class="card-body text-center">
+
+<h5>Progression</h5>
+
+<div class="progress mb-3" style="height:25px">
+<div class="progress-bar"
+     data-width="{{ projet.progression }}">
+{{ projet.progression }}%
+</div>
+</div>
+
+<div class="row">
+<div class="col">
+<h4>{{ projet.sous_taches.count }}</h4>
+<small>Sous-tâches</small>
+</div>
+
+<div class="col">
+<h4>{{ terminees }}</h4>
+<small>Terminées</small>
+</div>
+</div>
+
+</div>
+</div>
+</div>
+
+</div>
+
+<!-- TASK LIST -->
+
+<div class="card mb-4">
+<div class="card-header d-flex justify-content-between">
+<h5>Sous-tâches</h5>
+
+<button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#ajouterTacheModal">
+Ajouter
+</button>
+</div>
+
+<div class="card-body">
+
+{% if sous_taches %}
+
+<table class="table">
+
+<thead>
+<tr>
+<th></th>
+<th>Tâche</th>
+<th>Assigné</th>
+<th>Échéance</th>
+<th>Statut</th>
+<th></th>
+</tr>
+</thead>
+
+<tbody>
+
+{% for tache in sous_taches %}
+<tr>
+
+<td>
+<input type="checkbox" class="tache-checkbox" data-id="{{ tache.id }}"
+{% if tache.status == 'termine' %}checked{% endif %}>
+</td>
+
+<td>{{ tache.titre }}</td>
+
+<td>
+{% if tache.assigne_a %}
+{{ tache.assigne_a.user.get_full_name }}
+{% else %}
+—
+{% endif %}
+</td>
+
+<td>
+{{ tache.date_echeance|default:"—" }}
+</td>
+
+<td>
+<form method="post" action="{% url 'sous_tache_changer_status' tache.pk %}">
+{% csrf_token %}
+<select name="status" class="form-select form-select-sm status-select">
+{% for code, nom in STATUS_CHOICES %}
+<option value="{{ code }}" {% if tache.status == code %}selected{% endif %}>
+{{ nom }}
+</option>
+{% endfor %}
+</select>
+</form>
+</td>
+
+<td>
+<form method="post" action="{% url 'sous_tache_supprimer' tache.pk %}">
+{% csrf_token %}
+<button class="btn btn-sm btn-danger">X</button>
+</form>
+</td>
+
+</tr>
+{% endfor %}
+
+</tbody>
+
+</table>
+
+{% else %}
+<p class="text-center text-muted">Aucune sous-tâche</p>
+{% endif %}
+
+</div>
+</div>
+
+<!-- STATS -->
+
+<div class="card mb-4">
+<div class="card-header">Statistiques</div>
+<div class="card-body">
+
+{% for code,data in stats.items %}
+
+<div class="d-flex justify-content-between">
+<span>{{ data.name }}</span>
+<span>{{ data.count }}</span>
+</div>
+
+<div class="progress mb-2">
+<div class="progress-bar" data-width="{{ data.percentage }}"></div>
+</div>
+
+{% endfor %}
+
+</div>
+</div>
+
+<!-- ADD TASK MODAL -->
+
+<div class="modal fade" id="ajouterTacheModal">
+<div class="modal-dialog">
+<div class="modal-content">
+
+<form method="post" action="{% url 'sous_tache_creer' projet.pk %}">
+{% csrf_token %}
+
+<div class="modal-header">
+<h5>Nouvelle tâche</h5>
+</div>
+
+<div class="modal-body">
+{{ tache_form|crispy }}
+</div>
+
+<div class="modal-footer">
+<button class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+<button class="btn btn-primary">Créer</button>
+</div>
+
+</form>
+
+</div>
+</div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+
+<script>
+
+document.querySelectorAll('.progress-bar').forEach(bar=>{
+    bar.style.width = bar.dataset.width + '%';
+});
+
+document.querySelectorAll('.tache-checkbox').forEach(cb=>{
+    cb.addEventListener('change',function(){
+        const select=this.closest('tr').querySelector('.status-select');
+        select.value=this.checked?'termine':'a_faire';
+        select.form.submit();
+    });
+});
+
+document.querySelectorAll('.status-select').forEach(sel=>{
+    sel.addEventListener('change',()=>sel.form.submit());
+});
+
+</script>
+
+{% endblock %}

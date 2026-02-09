@@ -1,0 +1,164 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-10 offset-md-1">
+        <div class="card">
+            <div class="card-header bg-white">
+                <h4 class="mb-0"><i class="fas fa-user-edit me-2"></i>{{ title }}</h4>
+            </div>
+            
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data" novalidate>
+                    {% csrf_token %}
+                    
+                    <div class="row">
+                        <div class="col-12">
+                            <h5 class="mb-3 border-bottom pb-2">Employee Information</h5>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            {{ form.employee_id|as_crispy_field }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.department|as_crispy_field }}
+                        </div>
+                        
+                        <div class="col-md-6">
+                            {{ form.role|as_crispy_field }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.status|as_crispy_field }}
+                        </div>
+                        
+                        <div class="col-md-6">
+                            {{ form.date_joined|as_crispy_field }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.date_of_birth|as_crispy_field }}
+                        </div>
+                        
+                        <div class="col-md-6">
+                            {{ form.salary|as_crispy_field }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.photo|as_crispy_field }}
+                        </div>
+                        
+                        <!-- User Account Section -->
+                        <div class="col-12 mt-4">
+                            <h5 class="mb-3 border-bottom pb-2">User Account</h5>
+                        </div>
+                        
+                        <div class="col-12 mb-3">
+                            {{ form.create_user_account|as_crispy_field }}
+                        </div>
+                        
+                        <!-- New User Fields (shown when create_user_account is checked) -->
+                        <div id="new-user-fields" class="row">
+                            <div class="col-md-6">
+                                {{ form.first_name|as_crispy_field }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.last_name|as_crispy_field }}
+                            </div>
+                            
+                            <div class="col-md-6">
+                                {{ form.user_email|as_crispy_field }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.user_password|as_crispy_field }}
+                            </div>
+                            
+                            <div class="col-md-6">
+                                {{ form.phone|as_crispy_field }}
+                            </div>
+                        </div>
+                        
+                        <!-- Existing User Fields (shown when create_user_account is not checked) -->
+                        <div id="existing-user-fields" class="row" style="display: none;">
+                            <div class="col-md-12">
+                                {{ form.existing_user_email|as_crispy_field }}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-info mt-4">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Note:</strong> Employee ID must be unique within your company.
+                    </div>
+                    
+                    <div class="d-flex justify-content-between mt-4">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-1"></i>Save Employee
+                        </button>
+                        <div>
+                            <a href="{% url 'employees:employee_list' %}" class="btn btn-secondary me-2">
+                                <i class="fas fa-times me-1"></i>Cancel
+                            </a>
+                            {% if employee %}
+                            <a href="{% url 'employees:employee_detail' employee.pk %}" class="btn btn-info">
+                                <i class="fas fa-eye me-1"></i>View Details
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const createAccountCheckbox = document.querySelector('#id_create_user_account');
+    const newUserFields = document.querySelector('#new-user-fields');
+    const existingUserFields = document.querySelector('#existing-user-fields');
+    
+    function toggleUserFields() {
+        if (createAccountCheckbox.checked) {
+            newUserFields.style.display = 'flex';
+            existingUserFields.style.display = 'none';
+            
+            // Make new user fields required
+            document.querySelectorAll('#new-user-fields input').forEach(input => {
+                if (input.id.includes('first_name') || input.id.includes('last_name') || 
+                    input.id.includes('user_email') || input.id.includes('user_password')) {
+                    input.required = true;
+                }
+            });
+            
+            // Make existing user field not required
+            document.querySelector('#id_existing_user_email').required = false;
+        } else {
+            newUserFields.style.display = 'none';
+            existingUserFields.style.display = 'block';
+            
+            // Make new user fields not required
+            document.querySelectorAll('#new-user-fields input').forEach(input => {
+                input.required = false;
+            });
+            
+            // Make existing user field required
+            document.querySelector('#id_existing_user_email').required = true;
+        }
+    }
+    
+    // Initial toggle
+    toggleUserFields();
+    
+    // Add event listener
+    createAccountCheckbox.addEventListener('change', toggleUserFields);
+    
+    // Auto-generate employee ID if empty
+    const employeeIdField = document.querySelector('#id_employee_id');
+    if (employeeIdField && !employeeIdField.value) {
+        const companyPrefix = '{{ company.domain|slice:":3"|upper }}';
+        employeeIdField.placeholder = `${companyPrefix}-001`;
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,256 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="fas fa-users me-2"></i>Employees</h2>
+    <div>
+        <a href="{% url 'employees:employee_export' %}" class="btn btn-info btn-sm me-2">
+            <i class="fas fa-file-export me-1"></i>Export
+        </a>
+        <a href="{% url 'employees:employee_import' %}" class="btn btn-success btn-sm me-2">
+            <i class="fas fa-file-import me-1"></i>Import
+        </a>
+        <a href="{% url 'employees:employee_create' %}" class="btn btn-primary">
+            <i class="fas fa-plus me-1"></i>Add Employee
+        </a>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card stat-card bg-primary text-white">
+            <div class="card-body text-center">
+                <i class="fas fa-users fa-2x mb-2"></i>
+                <h3>{{ total_employees }}</h3>
+                <p>Total Employees</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card bg-success text-white">
+            <div class="card-body text-center">
+                <i class="fas fa-user-check fa-2x mb-2"></i>
+                <h3>{{ active_employees }}</h3>
+                <p>Active</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card bg-warning text-white">
+            <div class="card-body text-center">
+                <i class="fas fa-umbrella-beach fa-2x mb-2"></i>
+                <h3>{{ on_leave_employees }}</h3>
+                <p>On Leave</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card bg-info text-white">
+            <div class="card-body text-center">
+                <i class="fas fa-chart-bar fa-2x mb-2"></i>
+                <a href="{% url 'employees:employee_summary_report' %}" class="text-white text-decoration-none">
+                    <h3>Report</h3>
+                    <p>View Summary</p>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="card mb-4">
+    <div class="card-header bg-white">
+        <h5 class="mb-0"><i class="fas fa-filter me-2"></i>Filters</h5>
+    </div>
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-3">
+                <input type="text" name="q" class="form-control" placeholder="Search employees..." 
+                       value="{{ query }}">
+            </div>
+            <div class="col-md-2">
+                <select name="department" class="form-select" onchange="this.form.submit()">
+                    <option value="">All Departments</option>
+                    {% for dept in departments %}
+                    <option value="{{ dept.id }}" {% if selected_department == dept.id|stringformat:"s" %}selected{% endif %}>
+                        {{ dept.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <select name="status" class="form-select" onchange="this.form.submit()">
+                    <option value="">All Status</option>
+                    {% for code, name in STATUS_CHOICES %}
+                    <option value="{{ code }}" {% if selected_status == code %}selected{% endif %}>
+                        {{ name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <select name="role" class="form-select" onchange="this.form.submit()">
+                    <option value="">All Roles</option>
+                    {% for code, name in ROLE_CHOICES %}
+                    <option value="{{ code }}" {% if selected_role == code %}selected{% endif %}>
+                        {{ name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <button type="submit" class="btn btn-primary me-2">
+                    <i class="fas fa-search me-1"></i>Search
+                </button>
+                <a href="{% url 'employees:employee_list' %}" class="btn btn-secondary">
+                    <i class="fas fa-times me-1"></i>Clear
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Employee Table -->
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th>Employee ID</th>
+                        <th>Name</th>
+                        <th>Department</th>
+                        <th>Role</th>
+                        <th>Status</th>
+                        <th>Salary</th>
+                        <th>Date Joined</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for employee in employees %}
+                    <tr>
+                        <td>
+                            <strong>{{ employee.employee_id }}</strong>
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                {% if employee.photo %}
+                                <img src="{{ employee.photo.url }}" alt="{{ employee.user.get_full_name }}" 
+                                     class="rounded-circle me-2" width="32" height="32">
+                                {% else %}
+                                <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center me-2" 
+                                     style="width: 32px; height: 32px;">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                                {% endif %}
+                                <div>
+                                    <strong>{{ employee.user.get_full_name }}</strong>
+                                    <div class="text-muted small">{{ employee.user.email }}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            {% if employee.department %}
+                            <span class="badge bg-info">{{ employee.department.name }}</span>
+                            {% else %}
+                            <span class="text-muted">—</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="badge bg-secondary">{{ employee.get_role_display }}</span>
+                        </td>
+                        <td>
+                            {% if employee.status == 'active' %}
+                            <span class="badge bg-success">{{ employee.get_status_display }}</span>
+                            {% elif employee.status == 'on_leave' %}
+                            <span class="badge bg-warning">{{ employee.get_status_display }}</span>
+                            {% elif employee.status == 'inactive' %}
+                            <span class="badge bg-secondary">{{ employee.get_status_display }}</span>
+                            {% else %}
+                            <span class="badge bg-danger">{{ employee.get_status_display }}</span>
+                            {% endif %}
+                        </td>
+                        <td>${{ employee.salary|floatformat:2 }}</td>
+                        <td>{{ employee.date_joined|date:"M d, Y" }}</td>
+                        <td>
+                            <div class="btn-group btn-group-sm" role="group">
+                                <a href="{% url 'employees:employee_detail' employee.pk %}" 
+                                   class="btn btn-outline-info" title="View">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <a href="{% url 'employees:employee_edit' employee.pk %}" 
+                                   class="btn btn-outline-warning" title="Edit">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="{% url 'employees:employee_delete' employee.pk %}" 
+                                   class="btn btn-outline-danger" title="Delete">
+                                    <i class="fas fa-trash"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="text-center py-4">
+                            <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                            <h5>No employees found</h5>
+                            <p class="text-muted">
+                                {% if query or selected_department or selected_status or selected_role %}
+                                Try adjusting your filters or 
+                                {% endif %}
+                                <a href="{% url 'employees:employee_create' %}">add your first employee</a>.
+                            </p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Quick Actions -->
+        <div class="mt-4 d-flex justify-content-between align-items-center">
+            <div>
+                <a href="{% url 'employees:department_list' %}" class="btn btn-outline-primary btn-sm">
+                    <i class="fas fa-sitemap me-1"></i>Manage Departments
+                </a>
+                <a href="{% url 'employees:download_employee_template' %}" class="btn btn-outline-info btn-sm">
+                    <i class="fas fa-download me-1"></i>Download Template
+                </a>
+            </div>
+            <small class="text-muted">
+                Showing {{ employees|length }} employee{{ employees|length|pluralize }}
+            </small>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Confirm before delete
+    const deleteButtons = document.querySelectorAll('a[href*="delete"]');
+    deleteButtons.forEach(button => {
+        button.addEventListener('click', function(e) {
+            if (!confirm('Are you sure you want to delete this employee?')) {
+                e.preventDefault();
+            }
+        });
+    });
+    
+    // Quick search
+    const searchInput = document.querySelector('input[name="q"]');
+    let searchTimer;
+    
+    searchInput.addEventListener('input', function() {
+        clearTimeout(searchTimer);
+        searchTimer = setTimeout(() => {
+            this.closest('form').submit();
+        }, 500);
+    });
+});
+</script>
+{% endblock %}

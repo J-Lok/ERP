@@ -1,0 +1,123 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-10 offset-md-1">
+        <div class="card">
+            <div class="card-header bg-white">
+                <h4 class="mb-0"><i class="fas fa-project-diagram me-2"></i>{{ title }}</h4>
+            </div>
+            
+            <div class="card-body">
+                <form method="post" novalidate>
+                    {% csrf_token %}
+                    
+                    <div class="row">
+                        <div class="col-12">
+                            <h5 class="mb-3 border-bottom pb-2">Basic Information</h5>
+                        </div>
+                        
+                        <div class="col-md-8">
+                            {{ form.name|as_crispy_field }}
+                        </div>
+                        <div class="col-md-4">
+                            {{ form.budget|as_crispy_field }}
+                        </div>
+                        
+                        <div class="col-12">
+                            {{ form.description|as_crispy_field }}
+                        </div>
+                        
+                        <div class="col-md-6">
+                            {{ form.start_date|as_crispy_field }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.end_date|as_crispy_field }}
+                        </div>
+                        
+                        <div class="col-md-6">
+                            {{ form.status|as_crispy_field }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.priority|as_crispy_field }}
+                        </div>
+                        
+                        <div class="col-12 mt-4">
+                            <h5 class="mb-3 border-bottom pb-2">Team Assignment</h5>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            {{ form.manager|as_crispy_field }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.team_members|as_crispy_field }}
+                        </div>
+                        
+                        <div class="col-12 mt-4">
+                            <h5 class="mb-3 border-bottom pb-2">Progress Tracking</h5>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            {{ form.completion_percentage|as_crispy_field }}
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-info mt-4">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Note:</strong> Project progress will be automatically calculated based on completed tasks.
+                    </div>
+                    
+                    <div class="d-flex justify-content-between mt-4">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-1"></i>Save Project
+                        </button>
+                        <div>
+                            <a href="{% url 'projects:project_list' %}" class="btn btn-secondary me-2">
+                                <i class="fas fa-times me-1"></i>Cancel
+                            </a>
+                            {% if project %}
+                            <a href="{% url 'projects:project_detail' project.pk %}" class="btn btn-info">
+                                <i class="fas fa-eye me-1"></i>View Details
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Set default end date to 30 days after start date
+    const startDateInput = document.querySelector('#id_start_date');
+    const endDateInput = document.querySelector('#id_end_date');
+    
+    if (startDateInput && !endDateInput.value) {
+        startDateInput.addEventListener('change', function() {
+            if (this.value) {
+                const startDate = new Date(this.value);
+                const endDate = new Date(startDate);
+                endDate.setDate(endDate.getDate() + 30);
+                
+                // Format to YYYY-MM-DD
+                const formattedEndDate = endDate.toISOString().split('T')[0];
+                endDateInput.value = formattedEndDate;
+            }
+        });
+    }
+    
+    // Initialize select2 for multiple select fields
+    if (typeof $.fn.select2 !== 'undefined') {
+        $('.select2').select2({
+            placeholder: 'Select options',
+            allowClear: true
+        });
+    }
+});
+</script>
+{% endblock %}

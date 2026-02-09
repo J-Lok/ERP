@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="fas fa-chart-pie me-2"></i>Department Report</h2>
+    <div>
+        <button onclick="window.print()" class="btn btn-outline-primary btn-sm me-2">
+            <i class="fas fa-print me-1"></i>Print
+        </button>
+        <a href="{% url 'employees:department_list' %}" class="btn btn-secondary btn-sm">
+            <i class="fas fa-arrow-left me-1"></i>Back to Departments
+        </a>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header bg-white">
+        <h5 class="mb-0">Department Statistics</h5>
+    </div>
+    <div class="card-body">
+        {% if departments %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th>Department</th>
+                        <th>Total Employees</th>
+                        <th>Active</th>
+                        <th>On Leave</th>
+                        <th>Avg Salary</th>
+                        <th>Total Salary</th>
+                        <th>% of Company</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for dept in departments %}
+                    <tr>
+                        <td>
+                            <strong>{{ dept.name }}</strong>
+                            {% if dept.description %}
+                            <br><small class="text-muted">{{ dept.description|truncatechars:50 }}</small>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="badge bg-primary">{{ dept.employee_count }}</span>
+                        </td>
+                        <td>
+                            <span class="badge bg-success">{{ dept.active_count|default:0 }}</span>
+                        </td>
+                        <td>
+                            <span class="badge bg-warning">{{ dept.on_leave_count|default:0 }}</span>
+                        </td>
+                        <td>
+                            ${{ dept.avg_salary|floatformat:2|default:"0.00" }}
+                        </td>
+                        <td>
+                            ${{ dept.total_salary|floatformat:2|default:"0.00" }}
+                        </td>
+                        <td>
+                            <div class="progress" style="height: 20px;">
+                                {% with percentage=dept.employee_count|default:0 %}
+                                <div class="progress-bar" role="progressbar" 
+                                     style="width: {{ percentage }}%">
+                                    {{ percentage|floatformat:1 }}%
+                                </div>
+                                {% endwith %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot class="table-secondary">
+                    <tr>
+                        <th>Total</th>
+                        <th>{{ departments|length }} departments</th>
+                        <th>{{ departments|sum:"active_count"|default:0 }}</th>
+                        <th>{{ departments|sum:"on_leave_count"|default:0 }}</th>
+                        <th>
+                            ${{ departments|sum:"avg_salary"|floatformat:2|default:"0.00" }}
+                        </th>
+                        <th>
+                            ${{ departments|sum:"total_salary"|floatformat:2|default:"0.00" }}
+                        </th>
+                        <th>100%</th>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+        {% else %}
+        <p class="text-center text-muted py-4">
+            <i class="fas fa-sitemap fa-3x mb-3"></i><br>
+            No departments found. 
+            <a href="{% url 'employees:department_create' %}">Create your first department</a>.
+        </p>
+        {% endif %}
+    </div>
+</div>
+
+<div class="mt-4 text-muted text-center">
+    <small>
+        <i class="fas fa-calendar me-1"></i>
+        Report generated on {{ report_date|date:"F d, Y" }}
+    </small>
+</div>
+{% endblock %}

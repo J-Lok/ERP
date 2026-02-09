@@ -1,0 +1,265 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="fas fa-chart-bar me-2"></i>Project Summary Report</h2>
+    <div>
+        <button onclick="window.print()" class="btn btn-outline-primary btn-sm me-2">
+            <i class="fas fa-print me-1"></i>Print
+        </button>
+        <a href="{% url 'projects:project_list' %}" class="btn btn-secondary btn-sm">
+            <i class="fas fa-arrow-left me-1"></i>Back to Projects
+        </a>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header bg-white">
+        <h5 class="mb-0">Project Statistics</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-3">
+                <div class="card bg-primary text-white">
+                    <div class="card-body text-center">
+                        <h3>{{ total_projects }}</h3>
+                        <p class="mb-0">Total Projects</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-success text-white">
+                    <div class="card-body text-center">
+                        <h3>{{ active_projects }}</h3>
+                        <p class="mb-0">Active</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-info text-white">
+                    <div class="card-body text-center">
+                        <h3>{{ completed_projects }}</h3>
+                        <p class="mb-0">Completed</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-warning text-white">
+                    <div class="card-body text-center">
+                        <h3>{{ planning_projects }}</h3>
+                        <p class="mb-0">Planning</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-white">
+                <h5 class="mb-0">Status Distribution</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Status</th>
+                                <th>Count</th>
+                                <th>Percentage</th>
+                                <th width="50%"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in status_distribution %}
+                            <tr>
+                                <td>
+                                    {% for code, name in STATUS_CHOICES %}
+                                        {% if code == item.status %}
+                                            {{ name }}
+                                        {% endif %}
+                                    {% endfor %}
+                                </td>
+                                <td>{{ item.count }}</td>
+                                <td>{{ item.percentage|floatformat:1 }}%</td>
+                                <td>
+                                    <div class="progress" style="height: 20px;">
+                                        <div class="progress-bar" role="progressbar" 
+                                             style="width: {{ item.percentage }}%">
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-white">
+                <h5 class="mb-0">Priority Distribution</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Priority</th>
+                                <th>Count</th>
+                                <th>Percentage</th>
+                                <th width="50%"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in priority_distribution %}
+                            <tr>
+                                <td>
+                                    {% for code, name in PRIORITY_CHOICES %}
+                                        {% if code == item.priority %}
+                                            {{ name }}
+                                        {% endif %}
+                                    {% endfor %}
+                                </td>
+                                <td>{{ item.count }}</td>
+                                <td>{{ item.percentage|floatformat:1 }}%</td>
+                                <td>
+                                    <div class="progress" style="height: 20px;">
+                                        <div class="progress-bar bg-warning" role="progressbar" 
+                                             style="width: {{ item.percentage }}%">
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header bg-white">
+        <h5 class="mb-0">Budget Statistics</h5>
+    </div>
+    <div class="card-body">
+        <div class="row text-center">
+            <div class="col-md-3">
+                <h3>${{ budget_stats.total_budget|floatformat:2|default:"0.00" }}</h3>
+                <p class="text-muted mb-0">Total Budget</p>
+            </div>
+            <div class="col-md-3">
+                <h3>${{ budget_stats.avg_budget|floatformat:2|default:"0.00" }}</h3>
+                <p class="text-muted mb-0">Average Budget</p>
+            </div>
+            <div class="col-md-3">
+                <h3>${{ budget_stats.min_budget|floatformat:2|default:"0.00" }}</h3>
+                <p class="text-muted mb-0">Minimum Budget</p>
+            </div>
+            <div class="col-md-3">
+                <h3>${{ budget_stats.max_budget|floatformat:2|default:"0.00" }}</h3>
+                <p class="text-muted mb-0">Maximum Budget</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-white">
+                <h5 class="mb-0">Overdue Projects</h5>
+            </div>
+            <div class="card-body">
+                {% if overdue_projects %}
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Project</th>
+                                <th>Due Date</th>
+                                <th>Progress</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for project in overdue_projects %}
+                            <tr>
+                                <td>{{ project.name }}</td>
+                                <td class="text-danger">{{ project.end_date|date:"M d, Y" }}</td>
+                                <td>
+                                    <div class="progress" style="height: 10px;">
+                                        <div class="progress-bar" role="progressbar" 
+                                             style="width: {{ project.completion_percentage }}%">
+                                        </div>
+                                    </div>
+                                    <small>{{ project.completion_percentage }}%</small>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-center text-muted py-4">No overdue projects.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-white">
+                <h5 class="mb-0">Recent Projects</h5>
+            </div>
+            <div class="card-body">
+                {% if recent_projects %}
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Project</th>
+                                <th>Created</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for project in recent_projects %}
+                            <tr>
+                                <td>{{ project.name }}</td>
+                                <td>{{ project.created_at|date:"M d, Y" }}</td>
+                                <td>
+                                    {% if project.status == 'completed' %}
+                                    <span class="badge bg-success">{{ project.get_status_display }}</span>
+                                    {% elif project.status == 'in_progress' %}
+                                    <span class="badge bg-primary">{{ project.get_status_display }}</span>
+                                    {% else %}
+                                    <span class="badge bg-secondary">{{ project.get_status_display }}</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-center text-muted py-4">No recent projects.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="mt-4 text-muted text-center">
+    <small>
+        <i class="fas fa-calendar me-1"></i>
+        Report generated on {{ report_date|date:"F d, Y" }}
+    </small>
+</div>
+{% endblock %}
