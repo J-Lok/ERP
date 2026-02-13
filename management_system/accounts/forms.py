@@ -3,12 +3,7 @@ from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth import authenticate
 from django.core.exceptions import ValidationError
 from .models import User, Company
-
-from django import forms
-from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
-from django.contrib.auth import authenticate
-from django.core.exceptions import ValidationError
-from .models import User, Company
+from django.contrib.auth.hashers import check_password
 
 class CompanyCreationForm(forms.ModelForm):
     admin_first_name = forms.CharField(max_length=30, required=True)
@@ -33,7 +28,7 @@ class CompanyCreationForm(forms.ModelForm):
     
     def clean(self):
         cleaned_data = super().clean()
-        
+
         # Check admin passwords match
         admin_password = cleaned_data.get('admin_password')
         confirm_admin_password = cleaned_data.get('confirm_admin_password')
@@ -52,8 +47,8 @@ class CompanyCreationForm(forms.ModelForm):
         company = super().save(commit=False)
         
         # Set company password
-        company.company_password = self.cleaned_data['company_password']
-        
+        company.set_company_password(self.cleaned_data['company_password'])
+
         if commit:
             company.save()
         
@@ -97,7 +92,7 @@ class UserRegistrationForm(UserCreationForm):
         if company_domain and company_password:
             try:
                 company = Company.objects.get(domain=company_domain)
-                if not company.company_password == company_password:
+                if not check_password(company_password, company.company_password):
                     raise ValidationError('Invalid company password.')
                 cleaned_data['company'] = company
             except Company.DoesNotExist:
@@ -115,33 +110,32 @@ class UserRegistrationForm(UserCreationForm):
         return user
 
 class CompanyLoginForm(AuthenticationForm):
-    company_domain = forms.CharField(
-        max_length=200,
-        widget=forms.TextInput(attrs={'placeholder': 'company-domain'}),
-        help_text="Enter your company domain"
-    )
-    
+    company_domain = forms.CharField(max_length=200)
+
     def clean(self):
-        company_domain = self.cleaned_data.get('company_domain')
-        username = self.cleaned_data.get('username')
-        password = self.cleaned_data.get('password')
-        
+        cleaned_data = super().clean()
+
+        company_domain = cleaned_data.get('company_domain')
+        username = cleaned_data.get('username')
+        password = cleaned_data.get('password')
+
         if company_domain and username and password:
             try:
                 company = Company.objects.get(domain=company_domain)
-                # Find user with this email and company
+
                 try:
-                    user = User.objects.get(email=username, company=company)
+                    User.objects.get(email=username, company=company)
                 except User.DoesNotExist:
                     raise ValidationError('No account found with these credentials.')
-                
-                # Authenticate the user
-                user = authenticate(username=username, password=password)
+
+                user = authenticate(email=username, password=password)
                 if user is None:
                     raise ValidationError('Invalid email or password.')
-                
-                self.cleaned_data['user'] = user
+
+                user.backend = 'django.contrib.auth.backends.ModelBackend'
+                cleaned_data['user'] = user
+
             except Company.DoesNotExist:
                 raise ValidationError('Company with this domain does not exist.')
-        
-        return self.cleaned_data
+
+        return cleaned_data

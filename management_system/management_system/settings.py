@@ -22,6 +22,8 @@ DEBUG = True
 ALLOWED_HOSTS = []
 
 INSTALLED_APPS = [
+     'accounts',
+
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -34,11 +36,13 @@ INSTALLED_APPS = [
     'crispy_bootstrap5',
     
     # Local apps
-    'accounts',
+   
     'employees',
     'inventory',
     'projects',
     'core',
+
+    'mathfilters',
 ]
 
 MIDDLEWARE = [

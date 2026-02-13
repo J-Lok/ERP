@@ -36,7 +36,13 @@ class ProjectForm(forms.ModelForm):
             
             # Set initial completion percentage based on existing tasks if project exists
             if self.instance and self.instance.pk and self.instance.sous_taches.exists():
-                self.fields['completion_percentage'].initial = self.instance.progression_auto
+                # Calculate completion from tasks
+                tasks = self.instance.sous_taches.all()
+                total_tasks = tasks.count()
+                completed_tasks = tasks.filter(status='termine').count()
+                if total_tasks > 0:
+                    calculated_progress = int((completed_tasks / total_tasks) * 100)
+                    self.fields['completion_percentage'].initial = calculated_progress
     
     def clean(self):
         cleaned_data = super().clean()

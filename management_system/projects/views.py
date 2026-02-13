@@ -31,7 +31,7 @@ def project_list(request):
             Q(name__icontains=query) |
             Q(description__icontains=query) |
             Q(manager__user__first_name__icontains=query) |
-            Q(manager__user__last_name__icontains(query))
+            Q(manager__user__last_name__icontains=query)
         )
     
     # Apply status filter
@@ -71,6 +71,7 @@ def project_list(request):
         'overdue_projects': overdue_projects,
         'STATUS_CHOICES': Project.STATUS_CHOICES,
         'PRIORITY_CHOICES': Project.PRIORITY_CHOICES,
+        'today': timezone.now().date(),
     }
     
     return render(request, 'projects/project_list.html', context)
@@ -551,7 +552,7 @@ def project_calendar(request):
             'start': project.start_date.isoformat() if project.start_date else '',
             'end': project.end_date.isoformat() if project.end_date else '',
             'url': f'/projects/{project.id}/',
-            'color': self._get_project_color(project.priority),
+            'color': _get_project_color(project.priority),
             'extendedProps': {
                 'type': 'project',
                 'priority': project.priority,
@@ -566,7 +567,7 @@ def project_calendar(request):
                     'title': task.titre,
                     'start': task.date_debut.isoformat(),
                     'end': task.date_echeance.isoformat(),
-                    'color': self._get_task_color(task.status),
+                    'color': _get_task_color(task.status),
                     'extendedProps': {
                         'type': 'task',
                         'status': task.status,
@@ -581,7 +582,7 @@ def project_calendar(request):
     
     return render(request, 'projects/project_calendar.html', context)
 
-def _get_project_color(self, priority):
+def _get_project_color(priority):
     """Get color based on project priority"""
     color_map = {
         'critical': '#dc3545',  # Red
@@ -591,7 +592,7 @@ def _get_project_color(self, priority):
     }
     return color_map.get(priority, '#6c757d')  # Default gray
 
-def _get_task_color(self, status):
+def _get_task_color(status):
     """Get color based on task status"""
     color_map = {
         'termine': '#198754',    # Green

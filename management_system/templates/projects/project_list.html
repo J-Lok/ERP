@@ -1,67 +1,338 @@
-{% extends 'core/base.html' %}
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Projects - {{ block.super }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .project-card {
+        transition: transform 0.2s;
+        border-left: 4px solid #dee2e6;
+    }
+    .project-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    .project-card.priority-critical {
+        border-left-color: #dc3545;
+    }
+    .project-card.priority-high {
+        border-left-color: #fd7e14;
+    }
+    .project-card.priority-medium {
+        border-left-color: #ffc107;
+    }
+    .project-card.priority-low {
+        border-left-color: #198754;
+    }
+    .stats-card {
+        border-radius: 10px;
+        padding: 20px;
+    }
+    .progress-thin {
+        height: 8px;
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h2><i class="fas fa-project-diagram"></i> Projects</h2>
-    <a href="{% url 'project_create' %}" class="btn btn-primary">
-        <i class="fas fa-plus"></i> Add Project
-    </a>
-</div>
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0">
+            <i class="fas fa-project-diagram me-2"></i>Projects
+        </h1>
+        <a href="{% url 'projects:project_create' %}" class="btn btn-primary">
+            <i class="fas fa-plus me-2"></i>New Project
+        </a>
+    </div>
 
-<div class="card">
-    <div class="card-body">
-        <form method="get" class="mb-3">
-            <div class="input-group">
-                <input type="text" name="q" class="form-control" placeholder="Search projects..." value="{{ request.GET.q }}">
-                <button type="submit" class="btn btn-primary"><i class="fas fa-search"></i></button>
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="card stats-card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-0">Total Projects</h6>
+                            <h2 class="mb-0 mt-2">{{ total_projects }}</h2>
+                        </div>
+                        <i class="fas fa-folder fa-3x opacity-50"></i>
+                    </div>
+                </div>
             </div>
-        </form>
-
-        <div class="table-responsive">
-            <table class="table table-hover">
-                <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th>Manager</th>
-                        <th>Status</th>
-                        <th>Priority</th>
-                        <th>Start Date</th>
-                        <th>End Date</th>
-                        <th>Progress</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for project in projects %}
-                    <tr>
-                        <td>{{ project.name }}</td>
-                        <td>{{ project.manager.user.get_full_name|default:"-" }}</td>
-                        <td><span class="badge bg-info">{{ project.get_status_display }}</span></td>
-                        <td><span class="badge {% if project.priority == 'critical' %}bg-danger{% elif project.priority == 'high' %}bg-warning{% else %}bg-secondary{% endif %}">{{ project.get_priority_display }}</span></td>
-                        <td>{{ project.start_date }}</td>
-                        <td>{{ project.end_date }}</td>
-                        <td>
-                            <div class="progress" style="height: 20px;">
-                                <div class="progress-bar" role="progressbar" >
-                                    {{ project.completion_percentage }}%
-                                </div>
-                            </div>
-                        </td>
-                        <td>
-                            <a href="{% url 'project_edit' project.pk %}" class="btn btn-sm btn-warning">
-                                <i class="fas fa-edit"></i>
-                            </a>
-                            <a href="{% url 'project_delete' project.pk %}" class="btn btn-sm btn-danger">
-                                <i class="fas fa-trash"></i>
-                            </a>
-                        </td>
-                    </tr>
-                    {% empty %}
-                    <tr><td colspan="8" class="text-center">No projects found</td></tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card stats-card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-0">Active</h6>
+                            <h2 class="mb-0 mt-2">{{ active_projects }}</h2>
+                        </div>
+                        <i class="fas fa-spinner fa-3x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card stats-card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-0">Completed</h6>
+                            <h2 class="mb-0 mt-2">{{ completed_projects }}</h2>
+                        </div>
+                        <i class="fas fa-check-circle fa-3x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card stats-card bg-warning text-dark">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-0">Overdue</h6>
+                            <h2 class="mb-0 mt-2">{{ overdue_projects }}</h2>
+                        </div>
+                        <i class="fas fa-exclamation-triangle fa-3x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
+
+    <!-- Filters -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label">Search</label>
+                    <input type="text" name="q" class="form-control" placeholder="Search projects..." value="{{ query }}">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Status</label>
+                    <select name="status" class="form-select">
+                        <option value="">All Status</option>
+                        {% for value, label in STATUS_CHOICES %}
+                        <option value="{{ value }}" {% if selected_status == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Priority</label>
+                    <select name="priority" class="form-select">
+                        <option value="">All Priorities</option>
+                        {% for value, label in PRIORITY_CHOICES %}
+                        <option value="{{ value }}" {% if selected_priority == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Manager</label>
+                    <select name="manager" class="form-select">
+                        <option value="">All Managers</option>
+                        {% for manager in managers %}
+                        <option value="{{ manager.id }}" {% if selected_manager == manager.id|stringformat:"s" %}selected{% endif %}>
+                            {{ manager.user.get_full_name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-filter me-2"></i>Filter
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Quick Links -->
+    <div class="mb-4">
+        <a href="{% url 'projects:project_kanban' %}" class="btn btn-outline-primary me-2">
+            <i class="fas fa-columns me-1"></i>Kanban View
+        </a>
+        <a href="{% url 'projects:project_calendar' %}" class="btn btn-outline-info me-2">
+            <i class="fas fa-calendar me-1"></i>Calendar View
+        </a>
+        <a href="{% url 'projects:project_gantt_chart' %}" class="btn btn-outline-success me-2">
+            <i class="fas fa-chart-gantt me-1"></i>Gantt Chart
+        </a>
+        <a href="{% url 'projects:project_summary_report' %}" class="btn btn-outline-secondary me-2">
+            <i class="fas fa-chart-bar me-1"></i>Reports
+        </a>
+        <a href="{% url 'projects:project_export' %}" class="btn btn-outline-dark">
+            <i class="fas fa-file-excel me-1"></i>Export
+        </a>
+    </div>
+
+    <!-- Projects List -->
+    {% if projects %}
+    <div class="row">
+        {% for project in projects %}
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card project-card h-100 priority-{{ project.priority }}">
+                <div class="card-body">
+                    <!-- Project Header -->
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <h5 class="card-title mb-0">
+                            <a href="{% url 'projects:project_detail' project.pk %}" class="text-decoration-none text-dark">
+                                {{ project.name }}
+                            </a>
+                        </h5>
+                        <div class="dropdown">
+                            <button class="btn btn-sm btn-light" data-bs-toggle="dropdown">
+                                <i class="fas fa-ellipsis-v"></i>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li>
+                                    <a class="dropdown-item" href="{% url 'projects:project_detail' project.pk %}">
+                                        <i class="fas fa-eye me-2"></i>View Details
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="{% url 'projects:project_edit' project.pk %}">
+                                        <i class="fas fa-edit me-2"></i>Edit
+                                    </a>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <a class="dropdown-item text-danger" href="{% url 'projects:project_delete' project.pk %}">
+                                        <i class="fas fa-trash me-2"></i>Delete
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Project Description -->
+                    {% if project.description %}
+                    <p class="card-text text-muted small mb-3">
+                        {{ project.description|truncatewords:20 }}
+                    </p>
+                    {% endif %}
+
+                    <!-- Status and Priority Badges -->
+                    <div class="mb-3">
+                        <span class="badge 
+                            {% if project.status == 'planning' %}bg-secondary
+                            {% elif project.status == 'in_progress' %}bg-primary
+                            {% elif project.status == 'on_hold' %}bg-warning
+                            {% elif project.status == 'completed' %}bg-success
+                            {% elif project.status == 'cancelled' %}bg-danger
+                            {% endif %}">
+                            {{ project.get_status_display }}
+                        </span>
+                        <span class="badge 
+                            {% if project.priority == 'critical' %}bg-danger
+                            {% elif project.priority == 'high' %}bg-warning
+                            {% elif project.priority == 'medium' %}bg-info
+                            {% elif project.priority == 'low' %}bg-secondary
+                            {% endif %}">
+                            {{ project.get_priority_display }}
+                        </span>
+                    </div>
+
+                    <!-- Progress Bar -->
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <small class="text-muted">Progress</small>
+                            <small class="fw-bold">{{ project.completion_percentage }}%</small>
+                        </div>
+                        <div class="progress progress-thin">
+                            <div class="progress-bar 
+                                {% if project.completion_percentage < 30 %}bg-danger
+                                {% elif project.completion_percentage < 70 %}bg-warning
+                                {% else %}bg-success
+                                {% endif %}" 
+                                role="progressbar" 
+                                style="width: {{ project.completion_percentage }}%"
+                                aria-valuenow="{{ project.completion_percentage }}" 
+                                aria-valuemin="0" 
+                                aria-valuemax="100">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Project Info -->
+                    <div class="small text-muted">
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="fas fa-user-tie me-2"></i>
+                            <span>
+                                {% if project.manager %}
+                                    {{ project.manager.user.get_full_name }}
+                                {% else %}
+                                    <em>No manager assigned</em>
+                                {% endif %}
+                            </span>
+                        </div>
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="fas fa-users me-2"></i>
+                            <span>{{ project.team_members.count }} team member{{ project.team_members.count|pluralize }}</span>
+                        </div>
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="fas fa-calendar me-2"></i>
+                            <span>{{ project.start_date|date:"M d, Y" }} - {{ project.end_date|date:"M d, Y" }}</span>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-dollar-sign me-2"></i>
+                            <span>${{ project.budget|floatformat:2 }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card Footer -->
+                <div class="card-footer bg-light">
+                    <div class="d-flex justify-content-between align-items-center text-muted small">
+                        <span>
+                            <i class="fas fa-tasks me-1"></i>
+                            {{ project.sous_taches.count }} task{{ project.sous_taches.count|pluralize }}
+                        </span>
+                        <span>
+                            {% if project.end_date < today and project.status != 'completed' %}
+                                <span class="text-danger">
+                                    <i class="fas fa-exclamation-circle me-1"></i>Overdue
+                                </span>
+                            {% endif %}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination (if you implement it later) -->
+    <!-- Add pagination controls here -->
+
+    {% else %}
+    <!-- No Projects Found -->
+    <div class="card">
+        <div class="card-body text-center py-5">
+            <i class="fas fa-folder-open fa-5x text-muted mb-3"></i>
+            <h4 class="text-muted">No projects found</h4>
+            {% if query or selected_status or selected_priority or selected_manager %}
+            <p class="text-muted">Try adjusting your filters or search terms.</p>
+            <a href="{% url 'projects:project_list' %}" class="btn btn-outline-primary">
+                <i class="fas fa-redo me-2"></i>Clear Filters
+            </a>
+            {% else %}
+            <p class="text-muted">Get started by creating your first project.</p>
+            <a href="{% url 'projects:project_create' %}" class="btn btn-primary">
+                <i class="fas fa-plus me-2"></i>Create Project
+            </a>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Add today's date for overdue check
+    const today = new Date('{{ today|date:"Y-m-d" }}');
+</script>
 {% endblock %}

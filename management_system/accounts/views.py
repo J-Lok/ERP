@@ -29,8 +29,10 @@ def company_login(request):
             messages.success(request, f'Welcome back, {user.first_name}!')
             
             # Store company ID in session for middleware
-            request.session['company_id'] = user.company.id
             
+            if user.company:
+                 request.session['company_id'] = user.company.id
+
             # Redirect to next URL or dashboard
             next_url = request.GET.get('next', 'core:dashboard')
             return redirect(next_url)

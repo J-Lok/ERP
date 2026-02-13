@@ -2,13 +2,14 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.core.validators import MinLengthValidator
 import uuid
+from django.contrib.auth.hashers import make_password
+from django.core.exceptions import ValidationError
 
 class Company(models.Model):
-    """Company model for data segregation"""
-    company_id = models.CharField(max_length=50, unique=True, default=uuid.uuid4)
+    company_id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     name = models.CharField(max_length=200)
     domain = models.CharField(max_length=200, unique=True)
-    company_password = models.CharField(max_length=128, help_text="Shared password for company members")
+    company_password = models.CharField(max_length=128)
     contact_email = models.EmailField()
     contact_phone = models.CharField(max_length=20, blank=True)
     address = models.TextField(blank=True)
@@ -32,7 +33,7 @@ class Company(models.Model):
     def set_company_password(self, raw_password):
         """Hash the company password (simplified version)"""
         # In production, use proper hashing
-        self.company_password = raw_password
+        self.company_password = make_password(raw_password)
     
     # Add this property
     @property

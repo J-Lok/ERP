@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from django.db.models import Q, Count, Sum, Avg, F
+from django.db.models import Q, Count, Sum, Avg, F, Case, When, IntegerField
 from django.http import HttpResponse, JsonResponse
 from django.db import transaction
 from django.utils import timezone
@@ -29,8 +29,8 @@ def stock_list(request):
         stocks = stocks.filter(
             Q(item_code__icontains=query) |
             Q(name__icontains=query) |
-            Q(description__icontains(query)) |
-            Q(supplier_name__icontains(query))
+            Q(description__icontains=query) |
+            Q(supplier_name__icontains=query)
         )
     
     # Apply category filter
@@ -880,27 +880,29 @@ def stock_valuation_report(request):
     """Generate stock valuation report"""
     company = request.user.company
     
-    # Get all stock items
-    stocks = Stock.objects.filter(company=company).select_related('category').order_by('-total_value')
+    # Get all stock items with calculated total value
+    stocks = Stock.objects.filter(company=company).select_related('category').annotate(
+        calculated_total_value=F('quantity') * F('unit_price')
+    ).order_by('-calculated_total_value')
     
     # Calculate statistics
     total_items = stocks.count()
-    total_quantity = sum(stock.quantity for stock in stocks)
-    total_value = sum(stock.total_value for stock in stocks)
+    total_quantity = stocks.aggregate(total=Sum('quantity'))['total'] or 0
+    total_value = stocks.aggregate(total=Sum(F('quantity') * F('unit_price')))['total'] or 0
     avg_unit_price = stocks.aggregate(avg=Avg('unit_price'))['avg'] or 0
     
     # Group by category
-    category_summary = stocks.values('category__name').annotate(
+    category_summary = Stock.objects.filter(company=company).values('category__name').annotate(
         count=Count('id'),
         total_quantity=Sum('quantity'),
         total_value=Sum(F('quantity') * F('unit_price'))
     ).order_by('-total_value')
     
     # Top 10 most valuable items
-    top_items = stocks.order_by('-total_value')[:10]
+    top_items = stocks.order_by('-calculated_total_value')[:10]
     
-    # Top 10 least valuable items
-    bottom_items = stocks.filter(total_value__gt=0).order_by('total_value')[:10]
+    # Top 10 least valuable items (excluding zero value)
+    bottom_items = stocks.filter(calculated_total_value__gt=0).order_by('calculated_total_value')[:10]
     
     context = {
         'stocks': stocks,
@@ -1038,6 +1040,3 @@ def inventory_dashboard(request):
     }
     
     return render(request, 'inventory/inventory_dashboard.html', context)
-
-# Add missing import
-from django.db.models import Case, When, IntegerField

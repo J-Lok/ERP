@@ -11,6 +11,12 @@
     <div class="auth-body">
         <form method="post" novalidate>
             {% csrf_token %}
+
+            {% if form.non_field_errors %}
+            <div class="alert alert-danger mb-3">
+                {{ form.non_field_errors }}
+            </div>
+            {% endif %}
             
             <div class="mb-4">
                 <h5 class="text-center mb-4">Enter Company Details</h5>
@@ -18,7 +24,7 @@
             </div>
             
             <div class="d-grid gap-2 mb-4">
-                <button type="submit" class="btn btn-primary btn-lg">
+                <button type="submit" class="btn btn-primary btn-lg" aria-label="Login to Company">
                     <i class="fas fa-sign-in-alt me-2"></i>Login to Company
                 </button>
             </div>
@@ -45,10 +51,11 @@
 {% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Auto-focus first input
-    document.querySelector('input').focus();
-    
-    // Add placeholder for company domain
+    // Auto-focus first text/password/email input
+    const firstInput = document.querySelector('input[type="text"], input[type="email"], input[type="password"]');
+    if (firstInput) firstInput.focus();
+
+    // Add placeholder for company domain field
     const domainInput = document.querySelector('#id_company_domain');
     if (domainInput) {
         domainInput.placeholder = 'e.g., yourcompany';

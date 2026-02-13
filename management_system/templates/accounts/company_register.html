@@ -12,30 +12,40 @@
         <form method="post" novalidate>
             {% csrf_token %}
             
-            <div class="row">
+            {% if form.non_field_errors %}
+            <div class="alert alert-danger mb-3">
+                {{ form.non_field_errors }}
+            </div>
+            {% endif %}
+            
+            <div class="row g-3">
                 <div class="col-12">
                     <h5 class="mb-3 border-bottom pb-2">Company Information</h5>
                 </div>
                 
                 <div class="col-md-6">
-                    {{ form.name}}
+                    {{ form.name|as_crispy_field }}
                 </div>
                 <div class="col-md-6">
-                    {{ form.company_domain }}
+                    {{ form.domain|as_crispy_field }}
+                </div>
+                
+                <div class="col-md-6">
+                    {{ form.contact_email|as_crispy_field }}
+                </div>
+                <div class="col-md-6">
+                    {{ form.contact_phone|as_crispy_field }}
+                </div>
+                
+                <div class="col-md-6">
+                    {{ form.company_password|as_crispy_field }}
+                </div>
+                <div class="col-md-6">
+                    {{ form.confirm_admin_password|as_crispy_field }}
                 </div>
                 
                 <div class="col-12">
-                    {{ form.contact_email }}
-                </div>
-                <div class="col-md-6">
-                    {{ form.company_password }}
-                </div>
-                <div class="col-md-6">
-                    {{ form.confirm_company_password }}
-                </div>
-                
-                <div class="col-12">
-                    {{ form.address }}
+                    {{ form.address|as_crispy_field }}
                 </div>
                 
                 <div class="col-12">
@@ -43,23 +53,25 @@
                 </div>
                 
                 <div class="col-md-6">
-                    {{ form.admin_first_name }}
+                    {{ form.admin_first_name|as_crispy_field }}
                 </div>
                 <div class="col-md-6">
-                    {{ form.admin_last_name }}
+                    {{ form.admin_last_name|as_crispy_field }}
                 </div>
                 
                 <div class="col-md-6">
-                    {{ form.admin_email }}
+                    {{ form.admin_email|as_crispy_field }}
                 </div>
                 <div class="col-md-6">
-                    {{ form.admin_password }}
+                    {{ form.admin_password|as_crispy_field }}
                 </div>
             </div>
             
-            <div class="alert alert-info mt-4">
+            <div class="alert alert-info mt-4 d-flex align-items-center">
                 <i class="fas fa-info-circle me-2"></i>
-                <strong>Important:</strong> The company password will be shared with your team members to join your company.
+                <div>
+                    <strong>Important:</strong> The company password will be shared with your team members to join your company.
+                </div>
             </div>
             
             <div class="d-grid gap-2 mt-4">
