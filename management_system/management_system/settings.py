@@ -41,7 +41,7 @@ INSTALLED_APPS = [
     'inventory',
     'projects',
     'core',
-
+    'marketplace',
     'mathfilters',
 ]
 
