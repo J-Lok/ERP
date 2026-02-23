@@ -1,0 +1,268 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="fas fa-dollar-sign me-2"></i>Stock Valuation Report</h2>
+    <div>
+        <button onclick="window.print()" class="btn btn-outline-primary btn-sm me-2">
+            <i class="fas fa-print me-1"></i>Print
+        </button>
+        <a href="{% url 'inventory:stock_list' %}" class="btn btn-secondary btn-sm">
+            <i class="fas fa-arrow-left me-1"></i>Back to Inventory
+        </a>
+    </div>
+</div>
+
+<!-- Report Header -->
+<div class="alert alert-info mb-4">
+    <i class="fas fa-calendar me-2"></i>
+    <strong>Valuation as of:</strong> {{ report_date|date:"F d, Y" }}
+</div>
+
+<!-- Summary Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body text-center">
+                <h3 class="mb-0">{{ total_items }}</h3>
+                <small>Total Items</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body text-center">
+                <h3 class="mb-0">{{ total_quantity }}</h3>
+                <small>Total Quantity</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body text-center">
+                <h3 class="mb-0">${{ total_value|floatformat:2 }}</h3>
+                <small>Total Value</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body text-center">
+                <h3 class="mb-0">${{ avg_unit_price|floatformat:2 }}</h3>
+                <small>Avg Unit Price</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Category Summary -->
+<div class="card mb-4">
+    <div class="card-header bg-white">
+        <h5 class="mb-0"><i class="fas fa-chart-pie me-2"></i>Valuation by Category</h5>
+    </div>
+    <div class="card-body">
+        {% if category_summary %}
+        <div class="table-responsive">
+            <table class="table table-sm">
+                <thead>
+                    <tr>
+                        <th>Category</th>
+                        <th>Items</th>
+                        <th>Total Quantity</th>
+                        <th>Total Value</th>
+                        <th>% of Total</th>
+                        <th width="30%">Distribution</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for category in category_summary %}
+                    <tr>
+                        <td>
+                            <strong>{{ category.category__name|default:"Uncategorized" }}</strong>
+                        </td>
+                        <td>{{ category.count }}</td>
+                        <td>{{ category.total_quantity }}</td>
+                        <td class="text-success">
+                            <strong>${{ category.total_value|floatformat:2 }}</strong>
+                        </td>
+                        <td>
+                            {% widthratio category.total_value total_value 100 %}%
+                        </td>
+                        <td>
+                            <div class="progress" style="height: 10px;">
+                                <div class="progress-bar bg-success" role="progressbar" 
+                                     style="width: {% widthratio category.total_value total_value 100 %}%">
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot class="table-light">
+                    <tr>
+                        <th>Total</th>
+                        <th>{{ total_items }}</th>
+                        <th>{{ total_quantity }}</th>
+                        <th>${{ total_value|floatformat:2 }}</th>
+                        <th>100%</th>
+                        <td></td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+        {% else %}
+        <p class="text-center text-muted py-4">No category data available.</p>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Top 10 Most Valuable Items -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="fas fa-arrow-up me-2"></i>Top 10 Most Valuable Items</h5>
+            </div>
+            <div class="card-body">
+                {% if top_items %}
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Item</th>
+                                <th>Category</th>
+                                <th>Quantity</th>
+                                <th>Unit Price</th>
+                                <th>Total Value</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in top_items %}
+                            <tr>
+                                <td>
+                                    <strong>{{ item.item_code }}</strong><br>
+                                    <small>{{ item.name|truncatechars:20 }}</small>
+                                </td>
+                                <td>{{ item.category.name|default:"—" }}</td>
+                                <td>{{ item.quantity }}</td>
+                                <td>${{ item.unit_price|floatformat:2 }}</td>
+                                <td class="text-success">
+                                    <strong>${{ item.calculated_total_value|floatformat:2 }}</strong>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-center text-muted py-4">No data available.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Bottom 10 Least Valuable Items -->
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-header bg-warning">
+                <h5 class="mb-0"><i class="fas fa-arrow-down me-2"></i>Top 10 Least Valuable Items</h5>
+            </div>
+            <div class="card-body">
+                {% if bottom_items %}
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Item</th>
+                                <th>Category</th>
+                                <th>Quantity</th>
+                                <th>Unit Price</th>
+                                <th>Total Value</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in bottom_items %}
+                            <tr>
+                                <td>
+                                    <strong>{{ item.item_code }}</strong><br>
+                                    <small>{{ item.name|truncatechars:20 }}</small>
+                                </td>
+                                <td>{{ item.category.name|default:"—" }}</td>
+                                <td>{{ item.quantity }}</td>
+                                <td>${{ item.unit_price|floatformat:2 }}</td>
+                                <td class="text-warning">
+                                    <strong>${{ item.calculated_total_value|floatformat:2 }}</strong>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-center text-muted py-4">No data available.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Complete Valuation List -->
+<div class="card">
+    <div class="card-header bg-white">
+        <h5 class="mb-0"><i class="fas fa-list me-2"></i>Complete Stock Valuation</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th>Item Code</th>
+                        <th>Name</th>
+                        <th>Category</th>
+                        <th>Quantity</th>
+                        <th>Unit Price</th>
+                        <th>Total Value</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for stock in stocks %}
+                    <tr class="{% if stock.needs_reorder %}table-warning{% endif %}">
+                        <td>{{ stock.item_code }}</td>
+                        <td>{{ stock.name }}</td>
+                        <td>{{ stock.category.name|default:"—" }}</td>
+                        <td>{{ stock.quantity }}</td>
+                        <td>${{ stock.unit_price|floatformat:2 }}</td>
+                        <td>
+                            <strong class="{% if stock.calculated_total_value > 1000 %}text-success{% endif %}">
+                                ${{ stock.calculated_total_value|floatformat:2 }}
+                            </strong>
+                        </td>
+                        <td>
+                            {% if stock.needs_reorder %}
+                            <span class="badge bg-danger">Low Stock</span>
+                            {% else %}
+                            <span class="badge bg-success">In Stock</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot class="table-light">
+                    <tr>
+                        <th colspan="5" class="text-end">Grand Total:</th>
+                        <th colspan="2">${{ total_value|floatformat:2 }}</th>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="mt-4 text-muted text-center">
+    <small>
+        <i class="fas fa-chart-line me-1"></i>
+        Values are calculated as Quantity × Unit Price
+    </small>
+</div>
+{% endblock %}

@@ -231,7 +231,7 @@ def sous_tache_create(request, project_id):
             tache.save()
             
             # Update project progress
-            project.mettre_a_jour_progression()
+            project.update_completion_from_subtasks()
             
             messages.success(request, 'Task created successfully!')
             return redirect('projects:project_detail', pk=project_id)

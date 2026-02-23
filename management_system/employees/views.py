@@ -457,9 +457,21 @@ def department_report(request):
         active_count=Count('employees', filter=Q(employees__status='active')),
         on_leave_count=Count('employees', filter=Q(employees__status='on_leave')),
     ).order_by('name')
-
+    
+    # Calculate totals
+    total_employees = sum(dept.employee_count for dept in departments)
+    total_active = sum(dept.active_count or 0 for dept in departments)
+    total_on_leave = sum(dept.on_leave_count or 0 for dept in departments)
+    total_salary = sum(dept.total_salary or 0 for dept in departments)
+    
     context = {
         'departments': departments,
         'report_date': datetime.now().date(),
+        'totals': {
+            'employees': total_employees,
+            'active': total_active,
+            'on_leave': total_on_leave,
+            'salary': total_salary,
+        }
     }
     return render(request, 'employees/department_report.html', context)
