@@ -10,7 +10,8 @@
             </div>
             
             <div class="card-body">
-                <form method="post" novalidate>
+                <!-- ✅ FORM TAG UPDATED -->
+                <form method="post" enctype="multipart/form-data" novalidate>
                     {% csrf_token %}
                     
                     <div class="row">
@@ -34,6 +35,24 @@
                         
                         <div class="col-12">
                             {{ form.description|as_crispy_field }}
+                        </div>
+
+                        <!-- ✅ IMAGE FIELD ADDED -->
+                        <div class="col-12 mt-3">
+                            <div class="mb-3">
+                                <label class="form-label">Product Image</label>
+                                {{ form.image }}
+                                
+                                {% if stock and stock.image %}
+                                <div class="mt-2">
+                                    <img src="{{ stock.image.url }}" 
+                                         alt="{{ stock.name }}" 
+                                         class="img-thumbnail" 
+                                         style="max-width: 200px;">
+                                    <p class="small text-muted">Current image</p>
+                                </div>
+                                {% endif %}
+                            </div>
                         </div>
                         
                         <div class="col-12 mt-4">
@@ -103,53 +122,4 @@
         </div>
     </div>
 </div>
-{% endblock %}
-
-{% block extra_js %}
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Auto-set last_restocked to today if quantity is set
-    const quantityField = document.querySelector('#id_quantity');
-    const lastRestockedField = document.querySelector('#id_last_restocked');
-    
-    if (quantityField && lastRestockedField && !lastRestockedField.value) {
-        quantityField.addEventListener('change', function() {
-            if (this.value && parseInt(this.value) > 0) {
-                const today = new Date().toISOString().split('T')[0];
-                lastRestockedField.value = today;
-            }
-        });
-    }
-    
-    // Calculate total value
-    const quantityInput = document.querySelector('#id_quantity');
-    const unitPriceInput = document.querySelector('#id_unit_price');
-    const totalValueDisplay = document.createElement('div');
-    totalValueDisplay.className = 'form-text';
-    
-    if (quantityInput && unitPriceInput) {
-        const parentDiv = unitPriceInput.closest('.mb-3');
-        parentDiv.appendChild(totalValueDisplay);
-        
-        function calculateTotalValue() {
-            const quantity = parseFloat(quantityInput.value) || 0;
-            const unitPrice = parseFloat(unitPriceInput.value) || 0;
-            const totalValue = quantity * unitPrice;
-            
-            if (totalValue > 0) {
-                totalValueDisplay.innerHTML = `<strong>Total Value: $${totalValue.toFixed(2)}</strong>`;
-                totalValueDisplay.style.color = '#198754';
-            } else {
-                totalValueDisplay.innerHTML = '';
-            }
-        }
-        
-        quantityInput.addEventListener('input', calculateTotalValue);
-        unitPriceInput.addEventListener('input', calculateTotalValue);
-        
-        // Initial calculation
-        calculateTotalValue();
-    }
-});
-</script>
 {% endblock %}

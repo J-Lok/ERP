@@ -9,13 +9,9 @@
                     <h2 class="text-center mb-4">Create Account</h2>
                     <form method="post">
                         {% csrf_token %}
-                        <div class="row">
-                            <div class="col-md-12 mb-3">
-                                <label class="form-label">Company Domain *</label>
-                                {{ form.company_domain }}
-                                <small class="text-muted">{{ form.company_domain.help_text }}</small>
-                            </div>
-                        </div>
+                        {% if company %}
+                        <p class="text-center mb-3">Registering for <strong>{{ company.name }}</strong></p>
+                        {% endif %}
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">First Name *</label>

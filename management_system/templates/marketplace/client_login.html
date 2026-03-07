@@ -13,10 +13,9 @@
                     </div>
                     <form method="post">
                         {% csrf_token %}
-                        <div class="mb-3">
-                            <label class="form-label">Company Domain</label>
-                            <input type="text" name="company_domain" class="form-control" required placeholder="your-company">
-                        </div>
+                        {% if company %}
+                        <p class="text-center mb-3">Logging into <strong>{{ company.name }}</strong></p>
+                        {% endif %}
                         <div class="mb-3">
                             <label class="form-label">Email</label>
                             <input type="email" name="email" class="form-control" required placeholder="you@example.com">

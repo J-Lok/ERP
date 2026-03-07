@@ -102,7 +102,7 @@ def stock_create(request):
     company = request.user.company
     
     if request.method == 'POST':
-        form = StockForm(request.POST, company=company)
+        form = StockForm(request.POST, request.FILES, company=company)
         if form.is_valid():
             stock = form.save(commit=False)
             stock.company = company
@@ -142,7 +142,7 @@ def stock_edit(request, pk):
     stock = get_object_or_404(Stock, pk=pk, company=company)
     
     if request.method == 'POST':
-        form = StockForm(request.POST, instance=stock, company=company)
+        form = StockForm(request.POST, request.FILES, instance=stock, company=company)
         if form.is_valid():
             form.save()
             messages.success(request, f'Stock item "{stock.name}" updated successfully!')

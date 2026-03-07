@@ -5,12 +5,13 @@ from django.core.exceptions import ValidationError
 class StockForm(forms.ModelForm):
     class Meta:
         model = Stock
-        fields = ['item_code', 'name', 'category', 'description', 'quantity', 
+        fields = ['item_code', 'name', 'category', 'description','image', 'quantity', 
                   'unit', 'unit_price', 'reorder_level', 'supplier_name', 
                   'supplier_contact', 'location', 'last_restocked']
         widgets = {
             'last_restocked': forms.DateInput(attrs={'type': 'date'}),
             'description': forms.Textarea(attrs={'rows': 3}),
+             'image': forms.FileInput(attrs={'class': 'form-control', 'accept': 'image/*'}),
         }
     
     def __init__(self, *args, **kwargs):

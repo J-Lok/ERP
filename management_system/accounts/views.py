@@ -55,20 +55,32 @@ def company_register(request):
             company = form.save()
             
             # Create company admin user
+            email = form.cleaned_data['admin_email']
+            password = form.cleaned_data['admin_password']
             user = User.objects.create_user(
-                email=form.cleaned_data['admin_email'],
-                password=form.cleaned_data['admin_password'],
+                email=email,
+                password=password,
                 first_name=form.cleaned_data['admin_first_name'],
                 last_name=form.cleaned_data['admin_last_name'],
                 company=company,
-                is_company_admin=True
+                is_company_admin=True,
+                role='admin'
             )
             
-            messages.success(request, 
-                f'Company "{company.name}" registered successfully! '
-                f'You can now login with email: {user.email}'
-            )
-            return redirect('accounts:company_login')
+            # Authenticate and login the user  
+            authenticated_user = authenticate(request, username=email, password=password)
+            if authenticated_user is not None:
+                login(request, authenticated_user)
+                messages.success(request, 
+                    f'Welcome to {company.name}! Your company has been registered successfully.'
+                )
+                return redirect('core:dashboard')
+            else:
+                # Fallback if authentication fails
+                messages.success(request, 
+                    f'Company "{company.name}" registered! Please login.'
+                )
+                return redirect('accounts:company_login')
     else:
         form = CompanyCreationForm()
     

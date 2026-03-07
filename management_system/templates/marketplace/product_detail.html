@@ -13,14 +13,18 @@
         <div class="col-md-6 mb-4">
             <div class="card">
                 <div class="card-body text-center" style="height: 400px; display: flex; align-items: center; justify-content: center; background: #f3f4f6;">
-                    <i class="fas fa-box fa-10x text-muted"></i>
+                    {% if stock.image %}
+                        <img src="{{ stock.image.url }}" alt="{{ stock.name }}" style="max-width: 100%; max-height: 100%; object-fit: contain;">
+                    {% else %}
+                        <i class="fas fa-box fa-10x text-muted"></i>
+                    {% endif %}
                 </div>
             </div>
         </div>
         <div class="col-md-6">
             <h2>{{ stock.name }}</h2>
             <p class="text-muted">{{ stock.item_code }}</p>
-            <h3 class="text-primary mb-3">${{ stock.unit_price }}</h3>
+            <h3 class="text-primary mb-3">FCFA {{ stock.unit_price }}</h3>
             <p><strong>Category:</strong> {{ stock.category.name|default:"Uncategorized" }}</p>
             <p><strong>Available:</strong> <span class="badge bg-success">{{ stock.quantity }} {{ stock.get_unit_display }}</span></p>
             {% if stock.description %}
@@ -29,6 +33,8 @@
                 <p>{{ stock.description }}</p>
             </div>
             {% endif %}
+            
+            {% if can_purchase %}
             <form method="post" action="{% url 'marketplace:add_to_cart' stock.pk %}" class="mt-4">
                 {% csrf_token %}
                 <div class="row g-2">
@@ -42,6 +48,14 @@
                     </div>
                 </div>
             </form>
+            {% else %}
+            <div class="alert alert-warning mt-4">
+                <i class="fas fa-sign-in-alt me-2"></i>
+                <a href="{% url 'marketplace:client_login' %}" class="alert-link">Login</a> to add this product to cart.
+            </div>
+            {% endif %}
+            
+            {% if is_logged_in %}
             <form method="post" action="{% url 'marketplace:add_to_wishlist' stock.pk %}" class="mt-2">
                 {% csrf_token %}
                 <button type="submit" class="btn btn-outline-secondary w-100">
@@ -49,6 +63,7 @@
                     {% if in_wishlist %}Remove from{% else %}Add to{% endif %} Wishlist
                 </button>
             </form>
+            {% endif %}
         </div>
     </div>
 </div>

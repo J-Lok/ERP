@@ -41,7 +41,13 @@ class Stock(models.Model):
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    image = models.ImageField(upload_to='products/%Y/%m/', blank=True, null=True)
     
+    def get_image_url(self):
+        if self.image:
+            return self.image.url
+        return None
+
     class Meta:
         unique_together = ['company', 'item_code']
         ordering = ['-created_at']

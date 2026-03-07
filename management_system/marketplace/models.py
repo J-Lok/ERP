@@ -5,9 +5,8 @@ from accounts.models import Company
 from inventory.models import Stock
 
 class Client(models.Model):
-    """Client model for marketplace customers"""
-    company = models.ForeignKey(Company, on_delete=models.CASCADE, related_name='clients')
-    email = models.EmailField()
+    """Client model for marketplace customers - platform-wide registration"""
+    email = models.EmailField(unique=True)
     password = models.CharField(max_length=128)  # Will be hashed
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
@@ -21,7 +20,6 @@ class Client(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     
     class Meta:
-        unique_together = ['company', 'email']
         ordering = ['-created_at']
     
     def __str__(self):
@@ -95,7 +93,6 @@ class Order(models.Model):
     ]
     
     order_number = models.CharField(max_length=50, unique=True)
-    company = models.ForeignKey(Company, on_delete=models.CASCADE, related_name='orders')
     client = models.ForeignKey(Client, on_delete=models.CASCADE, related_name='orders')
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
     payment_status = models.CharField(max_length=20, choices=PAYMENT_STATUS_CHOICES, default='pending')

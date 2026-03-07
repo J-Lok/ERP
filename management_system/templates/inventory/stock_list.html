@@ -37,7 +37,7 @@
         <div class="card stat-card bg-success text-white">
             <div class="card-body text-center">
                 <i class="fas fa-dollar-sign fa-2x mb-2"></i>
-                <h3>${{ total_value|floatformat:2 }}</h3>
+                <h3>FCFA {{ total_value|floatformat:0 }}</h3>
                 <p>Total Value</p>
             </div>
         </div>
@@ -148,9 +148,9 @@
                             <span class="fw-bold">{{ stock.quantity }}</span>
                             <small class="text-muted">{{ stock.get_unit_display }}</small>
                         </td>
-                        <td>${{ stock.unit_price|floatformat:2 }}</td>
+                        <td>FCFA {{ stock.unit_price|floatformat:0 }}</td>
                         <td>
-                            <strong>${{ stock.total_value|floatformat:2 }}</strong>
+                            <strong>FCFA {{ stock.total_value|floatformat:0 }}</strong>
                         </td>
                         <td>
                             {% if stock.needs_reorder %}

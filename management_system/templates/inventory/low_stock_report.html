@@ -31,7 +31,7 @@
             <div class="col-md-4">
                 <div class="card bg-light">
                     <div class="card-body text-center">
-                        <h3 class="text-warning">${{ total_value|floatformat:2 }}</h3>
+                        <h3 class="text-warning">FCFA {{ total_value|floatformat:0 }}</h3>
                         <p class="text-muted mb-0">Total Value at Risk</p>
                     </div>
                 </div>
@@ -74,7 +74,7 @@
                         </td>
                         <td>{{ category.count }}</td>
                         <td>{{ category.total_items }}</td>
-                        <td class="text-danger">${{ category.total_value|floatformat:2 }}</td>
+                        <td class="text-danger">FCFA {{ category.total_value|floatformat:0 }}</td>
                         <td>
                             <div class="progress" style="height: 20px;">
                                 <div class="progress-bar bg-warning" role="progressbar" 
@@ -153,9 +153,9 @@
                             {% endif %}
                             {% endwith %}
                         </td>
-                        <td>${{ item.unit_price|floatformat:2 }}</td>
+                        <td>FCFA {{ item.unit_price|floatformat:0 }}</td>
                         <td class="text-danger">
-                            <strong>${{ item.total_value|floatformat:2 }}</strong>
+                            <strong>FCFA {{ item.total_value|floatformat:0 }}</strong>
                         </td>
                         <td>{{ item.supplier_name|default:"—" }}</td>
                         <td>

@@ -43,6 +43,15 @@ INSTALLED_APPS = [
     'core',
     'marketplace',
     'mathfilters',
+    
+    # New finance module
+    'finance',
+    
+    # HR module
+    'hr',
+    
+    # CRM module
+    'crm',
 ]
 
 MIDDLEWARE = [
@@ -107,9 +116,9 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-LOGIN_URL = 'accounts:login'
+LOGIN_URL = 'accounts:company_login'
 LOGIN_REDIRECT_URL = 'core:dashboard'
-LOGOUT_REDIRECT_URL = 'accounts:login'
+LOGOUT_REDIRECT_URL = 'accounts:company_login'
 
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
 CRISPY_TEMPLATE_PACK = "bootstrap5"
@@ -120,3 +129,5 @@ AUTH_USER_MODEL = 'accounts.User'
 # Session settings
 SESSION_COOKIE_AGE = 86400  # 24 hours
 SESSION_SAVE_EVERY_REQUEST = True
+
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'

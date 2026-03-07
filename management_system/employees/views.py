@@ -21,6 +21,8 @@ from accounts.models import User
 def employee_list(request):
     """Display all employees with filters and search"""
     company = request.user.company
+    from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+
     employees = Employee.objects.filter(company=company).select_related('user', 'department')
 
     # Filters
@@ -53,8 +55,19 @@ def employee_list(request):
     roles = employees.values_list('role', flat=True).distinct()
     departments = Department.objects.filter(company=company).order_by('name')
 
+    # apply ordering and pagination
+    employees = employees.order_by('-created_at')
+    paginator = Paginator(employees, 25)
+    page = request.GET.get('page')
+    try:
+        employees_page = paginator.page(page)
+    except PageNotAnInteger:
+        employees_page = paginator.page(1)
+    except EmptyPage:
+        employees_page = paginator.page(paginator.num_pages)
+
     context = {
-        'employees': employees.order_by('-created_at'),
+        'employees': employees_page,
         'departments': departments,
         'roles': roles,
         'query': query,

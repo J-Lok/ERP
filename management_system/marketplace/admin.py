@@ -4,14 +4,14 @@ from .models import Client, Cart, CartItem, Order, OrderItem, Wishlist, Wishlist
 
 @admin.register(Client)
 class ClientAdmin(admin.ModelAdmin):
-    list_display = ['email', 'first_name', 'last_name', 'company', 'is_active', 'created_at']
-    list_filter = ['company', 'is_active', 'created_at']
+    list_display = ['email', 'first_name', 'last_name', 'is_active', 'created_at']
+    list_filter = ['is_active', 'created_at']
     search_fields = ['email', 'first_name', 'last_name']
     readonly_fields = ['created_at', 'updated_at']
     
     fieldsets = (
         ('Account Info', {
-            'fields': ('company', 'email', 'is_active')
+            'fields': ('email', 'is_active')
         }),
         ('Personal Info', {
             'fields': ('first_name', 'last_name', 'phone')
@@ -34,15 +34,20 @@ class OrderItemInline(admin.TabularInline):
 
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
-    list_display = ['order_number', 'client', 'company', 'status', 'payment_status', 'total', 'created_at']
-    list_filter = ['status', 'payment_status', 'company', 'created_at']
+    list_display = ['order_number', 'client', 'get_companies', 'status', 'payment_status', 'total', 'created_at']
+    list_filter = ['status', 'payment_status', 'created_at']
     search_fields = ['order_number', 'client__email', 'client__first_name', 'client__last_name']
     readonly_fields = ['order_number', 'created_at', 'updated_at', 'confirmed_at', 'shipped_at', 'delivered_at']
     inlines = [OrderItemInline]
     
+    def get_companies(self, obj):
+        companies = obj.items.values_list('stock__company__name', flat=True).distinct()
+        return ", ".join(companies)
+    get_companies.short_description = "Companies"
+    
     fieldsets = (
         ('Order Info', {
-            'fields': ('order_number', 'company', 'client', 'status', 'payment_status')
+            'fields': ('order_number', 'client', 'status', 'payment_status')
         }),
         ('Pricing', {
             'fields': ('subtotal', 'tax', 'shipping', 'total')

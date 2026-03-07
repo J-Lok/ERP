@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Contacts</h2>
+<a href="{% url 'crm:contact_create' %}" class="btn btn-primary">New Contact</a>
+<a href="{% url 'crm:opportunity_list' %}" class="btn btn-secondary ms-2">View Opportunities</a>
+<table class="table mt-2">
+    <thead><tr><th>Name</th><th>Email</th><th>Actions</th></tr></thead>
+    <tbody>
+    {% for c in contacts %}
+        <tr><td>{{ c.name }}</td><td>{{ c.email }}</td><td><a href="{% url 'crm:contact_edit' c.pk %}" class="btn btn-sm btn-warning"><i class="fas fa-edit"></i> Edit</a> <a href="{% url 'crm:contact_delete' c.pk %}" class="btn btn-sm btn-danger"><i class="fas fa-trash"></i> Delete</a></td></tr>
+    {% empty %}
+        <tr><td colspan="3">No contacts yet.</td></tr>
+    {% endfor %}
+    </tbody>
+</table>
+
+{% if contacts.has_other_pages %}
+<nav aria-label="Page navigation">
+  <ul class="pagination">
+    {% if contacts.has_previous %}
+      <li class="page-item"><a class="page-link" href="?page={{ contacts.previous_page_number }}">Previous</a></li>
+    {% else %}
+      <li class="page-item disabled"><span class="page-link">Previous</span></li>
+    {% endif %}
+    {% for num in contacts.paginator.page_range %}
+      <li class="page-item {% if contacts.number == num %}active{% endif %}"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+    {% endfor %}
+    {% if contacts.has_next %}
+      <li class="page-item"><a class="page-link" href="?page={{ contacts.next_page_number }}">Next</a></li>
+    {% else %}
+      <li class="page-item disabled"><span class="page-link">Next</span></li>
+    {% endif %}
+  </ul>
+</nav>
+{% endif %}
+{% endblock %}

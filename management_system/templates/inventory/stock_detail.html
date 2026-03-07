@@ -76,12 +76,12 @@
                             </tr>
                             <tr>
                                 <th>Unit Price:</th>
-                                <td>${{ stock.unit_price|floatformat:2 }}</td>
+                                <td>FCFA {{ stock.unit_price|floatformat:0 }}</td>
                             </tr>
                             <tr>
                                 <th>Total Value:</th>
                                 <td>
-                                    <strong class="text-success">${{ stock.total_value|floatformat:2 }}</strong>
+                                    <strong class="text-success">FCFA {{ stock.total_value|floatformat:0 }}</strong>
                                 </td>
                             </tr>
                             <tr>

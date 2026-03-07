@@ -41,7 +41,7 @@
                     {{ form.company_password|as_crispy_field }}
                 </div>
                 <div class="col-md-6">
-                    {{ form.confirm_admin_password|as_crispy_field }}
+                    {{ form.confirm_company_password|as_crispy_field }}
                 </div>
                 
                 <div class="col-12">
@@ -65,6 +65,10 @@
                 <div class="col-md-6">
                     {{ form.admin_password|as_crispy_field }}
                 </div>
+                
+                <div class="col-md-6">
+                    {{ form.confirm_admin_password|as_crispy_field }}
+                </div>
             </div>
             
             <div class="alert alert-info mt-4 d-flex align-items-center">
@@ -78,7 +82,7 @@
                 <button type="submit" class="btn btn-primary btn-lg">
                     <i class="fas fa-check-circle me-2"></i>Register Company
                 </button>
-                <a href="{% url 'accounts:company_login' %}" class="btn btn-outline-secondary">
+                <a href="{% url 'core:dashboard' %}" class="btn btn-outline-secondary">
                     <i class="fas fa-arrow-left me-2"></i>Back to Login
                 </a>
             </div>

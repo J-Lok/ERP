@@ -27,6 +27,15 @@ urlpatterns = [
     path('projects/', include('projects.urls')),
     path('inventory/', include('inventory.urls')),
     path('marketplace/', include('marketplace.urls')), 
+    
+    # finance app endpoints
+    path('finance/', include('finance.urls')),
+    
+    # hr app endpoints
+    path('hr/', include('hr.urls')),
+    
+    # crm app endpoints
+    path('crm/', include('crm.urls')),
 ]
 
 if settings.DEBUG:

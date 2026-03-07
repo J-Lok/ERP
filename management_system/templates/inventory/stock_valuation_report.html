@@ -40,7 +40,7 @@
     <div class="col-md-3">
         <div class="card bg-info text-white">
             <div class="card-body text-center">
-                <h3 class="mb-0">${{ total_value|floatformat:2 }}</h3>
+                <h3 class="mb-0">FCFA  {{ total_value|floatformat:0}}</h3>
                 <small>Total Value</small>
             </div>
         </div>
@@ -48,7 +48,7 @@
     <div class="col-md-3">
         <div class="card bg-warning text-white">
             <div class="card-body text-center">
-                <h3 class="mb-0">${{ avg_unit_price|floatformat:2 }}</h3>
+                <h3 class="mb-0">FCFA  {{ avg_unit_price|floatformat:0 }}</h3>
                 <small>Avg Unit Price</small>
             </div>
         </div>
@@ -83,7 +83,7 @@
                         <td>{{ category.count }}</td>
                         <td>{{ category.total_quantity }}</td>
                         <td class="text-success">
-                            <strong>${{ category.total_value|floatformat:2 }}</strong>
+                            <strong>FCFA  {{ category.total_value|floatformat:0 }}</strong>
                         </td>
                         <td>
                             {% widthratio category.total_value total_value 100 %}%
@@ -103,7 +103,7 @@
                         <th>Total</th>
                         <th>{{ total_items }}</th>
                         <th>{{ total_quantity }}</th>
-                        <th>${{ total_value|floatformat:2 }}</th>
+                        <th>FCFA  {{ total_value|floatformat:0 }}</th>
                         <th>100%</th>
                         <td></td>
                     </tr>
@@ -145,9 +145,9 @@
                                 </td>
                                 <td>{{ item.category.name|default:"—" }}</td>
                                 <td>{{ item.quantity }}</td>
-                                <td>${{ item.unit_price|floatformat:2 }}</td>
+                                <td>FCFA  {{ item.unit_price|floatformat:0 }}</td>
                                 <td class="text-success">
-                                    <strong>${{ item.calculated_total_value|floatformat:2 }}</strong>
+                                    <strong>FCFA  {{ item.calculated_total_value|floatformat:0 }}</strong>
                                 </td>
                             </tr>
                             {% endfor %}
@@ -189,9 +189,9 @@
                                 </td>
                                 <td>{{ item.category.name|default:"—" }}</td>
                                 <td>{{ item.quantity }}</td>
-                                <td>${{ item.unit_price|floatformat:2 }}</td>
+                                <td>FCFA  {{ item.unit_price|floatformat:0 }}</td>
                                 <td class="text-warning">
-                                    <strong>${{ item.calculated_total_value|floatformat:2 }}</strong>
+                                    <strong>FCFA  {{ item.calculated_total_value|floatformat:0 }}</strong>
                                 </td>
                             </tr>
                             {% endfor %}
@@ -232,10 +232,10 @@
                         <td>{{ stock.name }}</td>
                         <td>{{ stock.category.name|default:"—" }}</td>
                         <td>{{ stock.quantity }}</td>
-                        <td>${{ stock.unit_price|floatformat:2 }}</td>
+                        <td>FCFA  {{ stock.unit_price|floatformat:0 }}</td>
                         <td>
                             <strong class="{% if stock.calculated_total_value > 1000 %}text-success{% endif %}">
-                                ${{ stock.calculated_total_value|floatformat:2 }}
+                                FCFA  {{ stock.calculated_total_value|floatformat:0 }}
                             </strong>
                         </td>
                         <td>
@@ -251,7 +251,7 @@
                 <tfoot class="table-light">
                     <tr>
                         <th colspan="5" class="text-end">Grand Total:</th>
-                        <th colspan="2">${{ total_value|floatformat:2 }}</th>
+                        <th colspan="2">FCFA  {{ total_value|floatformat:0 }}</th>
                     </tr>
                 </tfoot>
             </table>
