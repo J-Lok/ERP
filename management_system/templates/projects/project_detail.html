@@ -53,6 +53,8 @@
 
 {% block content %}
 <div class="container-fluid">
+    <!-- hidden csrf for AJAX endpoints -->
+    <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
     <!-- Page Header -->
     <div class="d-flex justify-content-between align-items-start mb-4">
         <div>
@@ -181,6 +183,11 @@
                         {% for tache in sous_taches %}
                         <div class="list-group-item task-card priority-{{ tache.priorite }} mb-2">
                             <div class="d-flex justify-content-between align-items-start">
+                                <div class="form-check me-3">
+                                    <input class="form-check-input subtask-checkbox" type="checkbox" 
+                                           data-id="{{ tache.id }}" id="task{{ tache.id }}"
+                                           {% if tache.completion_percentage == 100 %}checked{% endif %}>
+                                </div>
                                 <div class="flex-grow-1">
                                     <div class="d-flex align-items-center mb-2">
                                         <h6 class="mb-0 me-3">{{ tache.titre }}</h6>
@@ -263,6 +270,11 @@
                         </button>
                     </div>
                     {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
                 </div>
             </div>
         </div>
@@ -402,6 +414,43 @@
         </div>
     </div>
 </div>
+
+{% block extra_js %}
+<script>
+    function getCsrfToken() {
+        return document.querySelector('[name=csrfmiddlewaretoken]').value;
+    }
+
+    function toggleTaskCheckbox(el) {
+        const taskId = el.dataset.id;
+        const checked = el.checked;
+        fetch(`{% url 'projects:toggle_subtask_completion' 0 %}`.replace('0', taskId), {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCsrfToken(),
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: `checked=${checked}`
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.project_completion !== undefined) {
+                const perc = data.project_completion;
+                const bar = document.getElementById('progress-bar');
+                const badge = document.getElementById('progress-badge');
+                if (bar) bar.style.width = perc + '%';
+                if (bar) bar.innerText = perc + '%';
+                if (badge) badge.innerText = perc + '%';
+            }
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('.subtask-checkbox').forEach(cb => {
+            cb.addEventListener('change', function() { toggleTaskCheckbox(this); });
+        });
+    });
+</script>
 {% endblock %}
 
 {% block extra_js %}

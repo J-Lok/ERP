@@ -17,6 +17,7 @@ urlpatterns = [
     path('task/<int:pk>/edit/', views.sous_tache_edit, name='sous_tache_edit'),
     path('task/<int:pk>/delete/', views.sous_tache_delete, name='sous_tache_delete'),
     path('task/<int:pk>/change-status/', views.sous_tache_change_status, name='sous_tache_change_status'),
+    path('task/<int:pk>/toggle-complete/', views.toggle_subtask_completion, name='toggle_subtask_completion'),
     path('task/<int:pk>/detail/', views.sous_tache_detail, name='sous_tache_detail'),
     
     # Comments

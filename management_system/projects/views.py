@@ -105,11 +105,9 @@ def project_detail(request, pk):
     # Get task form for adding new tasks
     tache_form = SousTacheForm(company=company, projet_id=project.id)
     
-    # Calculate project progress
-    if total_taches > 0:
-        progress_percentage = int((taches_terminees / total_taches) * 100)
-    else:
-        progress_percentage = project.completion_percentage
+    # Recalculate project progress from the model (ensure fresh value)
+    project.update_completion_from_subtasks()
+    progress_percentage = project.completion_percentage
     
     # Get team members
     team_members = project.team_members.all()
@@ -142,19 +140,34 @@ def project_create(request):
             project = form.save(commit=False)
             project.company = company
             project.created_by = request.user
-            
+
             # Calculate end date if not provided
             if not project.end_date and project.start_date:
                 project.end_date = project.start_date + timedelta(days=30)
-            
+
             project.save()
             form.save_m2m()  # Save many-to-many relationships
-            
+
+            # create any subtasks provided via the form
+            titles = request.POST.getlist('subtask_titles')
+            for t in titles:
+                t = t.strip()
+                if t:
+                    SousTache.objects.create(
+                        company=company,
+                        projet=project,
+                        titre=t,
+                        created_by=request.user
+                    )
+
+            # ensure stored completion matches any subtasks
+            project.update_completion_from_subtasks()
+
             messages.success(request, f'Project "{project.name}" created successfully!')
             return redirect('projects:project_list')
     else:
         form = ProjectForm(company=company)
-    
+
     return render(request, 'projects/project_form.html', {
         'form': form,
         'title': 'Create New Project'
@@ -170,6 +183,20 @@ def project_edit(request, pk):
         form = ProjectForm(request.POST, instance=project, company=company)
         if form.is_valid():
             form.save()
+
+            # add any new subtasks entered during edit (skip duplicates)
+            titles = request.POST.getlist('subtask_titles')
+            for t in titles:
+                t = t.strip()
+                if t and not project.sous_taches.filter(titre=t).exists():
+                    SousTache.objects.create(
+                        company=company,
+                        projet=project,
+                        titre=t,
+                        created_by=request.user
+                    )
+
+            project.update_completion_from_subtasks()
             messages.success(request, f'Project "{project.name}" updated successfully!')
             return redirect('projects:project_detail', pk=project.pk)
     else:
@@ -269,7 +296,7 @@ def sous_tache_delete(request, pk):
         
         # Update project progress
         project = get_object_or_404(Project, pk=project_id, company=company)
-        project.mettre_a_jour_progression()
+        project.update_completion_from_subtasks()
         
         messages.success(request, 'Task deleted successfully!')
     
@@ -286,23 +313,52 @@ def sous_tache_change_status(request, pk):
         if nouveau_status in dict(SousTache.STATUS_CHOICES):
             ancien_status = tache.status
             tache.status = nouveau_status
-            
+
             # Update completion date if task is marked as done
             if nouveau_status == 'termine' and ancien_status != 'termine':
                 tache.date_achevement = timezone.now().date()
             elif nouveau_status != 'termine':
                 tache.date_achevement = None
-            
+
             tache.save()
-            
+
             # Update project progress
-            tache.projet.mettre_a_jour_progression()
+            tache.projet.update_completion_from_subtasks()
             
             messages.success(request, f'Task status changed to: {tache.get_status_display()}')
     
     return redirect('projects:project_detail', pk=tache.projet.id)
 
 @login_required
+
+def toggle_subtask_completion(request, pk):
+    """Ajax endpoint used by the checkbox in the project detail page.
+
+    When a user checks or unchecks a task the front‑end sends a POST payload
+    with ``checked`` set to ``true`` or ``false``. We update the subtask's
+    ``completion_percentage`` and status accordingly, recalc the parent
+    project's completion, and return the new percentage so the progress bar
+    can update without a full page reload.
+    """
+    company = request.user.company
+    tache = get_object_or_404(SousTache, pk=pk, company=company)
+
+    if request.method == 'POST':
+        checked = request.POST.get('checked') == 'true'
+        tache.completion_percentage = 100 if checked else 0
+        # keep status in sync
+        tache.status = 'termine' if checked else 'a_faire'
+        tache.date_achevement = timezone.now().date() if checked else None
+        tache.save()
+
+        # recalc project progress
+        tache.projet.update_completion_from_subtasks()
+        return JsonResponse({'project_completion': tache.projet.completion_percentage})
+    return JsonResponse({'error': 'Invalid request'}, status=400)
+
+
+@login_required
+
 def sous_tache_detail(request, pk):
     """View subtask details (for AJAX/modal)"""
     company = request.user.company

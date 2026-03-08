@@ -67,13 +67,24 @@ class Project(models.Model):
         return f"{self.name} ({self.company.name})"
 
     def update_completion_from_subtasks(self):
-        """Calculate completion percentage based on associated subtasks."""
+        """Calculate completion percentage based on associated subtasks.
+
+        The project completion is the average of all linked
+        ``SousTache.completion_percentage`` values. This is invoked whenever a
+        task is created, updated, deleted, or toggled via the checklist UI so
+        that the stored ``completion_percentage`` field always reflects the
+        current state of its subtasks.
+        """
         subtasks = self.sous_taches.all()
         if subtasks.exists():
+            # average the percentages (missing percentages count as 0)
             self.completion_percentage = int(
                 sum(getattr(t, 'completion_percentage', 0) for t in subtasks) / subtasks.count()
             )
-            self.save()
+        else:
+            # no subtasks means no progress
+            self.completion_percentage = 0
+        self.save()
 
 
 class SousTache(models.Model):

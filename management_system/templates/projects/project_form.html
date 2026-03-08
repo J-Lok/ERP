@@ -168,6 +168,19 @@
                     </div>
                 </div>
 
+                <!-- Subtasks (only available while creating or editing project) -->
+                <div class="form-section" id="subtasksSection">
+                    <h5><i class="fas fa-list me-2"></i>Subtasks</h5>
+                    <p class="text-muted">Define tasks that belong to this project. You can
+                    add multiple items and check them off later in the project view.</p>
+                    <div id="subtaskContainer">
+                        <!-- existing subtasks when editing will be populated by Javascript -->
+                    </div>
+                    <button type="button" id="addSubtaskBtn" class="btn btn-sm btn-secondary mt-2">
+                        <i class="fas fa-plus me-1"></i>Add Another Subtask
+                    </button>
+                </div>
+
                 <!-- Form Actions -->
                 <div class="d-flex justify-content-between align-items-center mt-4">
                     <a href="{% url 'projects:project_list' %}" class="btn btn-outline-secondary">
@@ -219,5 +232,28 @@
             return false;
         }
     });
+
+    // --- Subtask dynamic fields ---
+    function addSubtaskField(value = '') {
+        const container = document.getElementById('subtaskContainer');
+        const index = container.children.length;
+        const div = document.createElement('div');
+        div.className = 'mb-2';
+        div.innerHTML = `
+            <input type="text" name="subtask_titles" class="form-control" placeholder="Subtask title" value="${value}">
+        `;
+        container.appendChild(div);
+    }
+
+    document.getElementById('addSubtaskBtn').addEventListener('click', function() {
+        addSubtaskField();
+    });
+
+    // populate existing subtasks if editing
+    {% if project and project.sous_taches.all %}
+    {% for t in project.sous_taches.all %}
+    addSubtaskField("{{ t.titre }}");
+    {% endfor %}
+    {% endif %}
 </script>
 {% endblock %}
