@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.py[cod]
+
+# virtualenv
+env/
+
+# Django
+*.log
+*.pot
+*.pyc
+*.sqlite3
+media/
+staticfiles/
+
+# VSCode
+.vscode/
+
+# JetBrains
+.idea/
+
+# Mac
+.DS_Store
