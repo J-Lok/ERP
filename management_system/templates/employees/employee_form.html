@@ -1,107 +1,90 @@
 {% extends 'base.html' %}
 {% load crispy_forms_tags %}
 
+{% block title %}{{ title }} — ERP System{% endblock %}
+
 {% block content %}
-<div class="row">
-    <div class="col-md-10 offset-md-1">
-        <div class="card">
+<div class="row justify-content-center">
+    <div class="col-md-10">
+        <div class="card shadow-sm">
             <div class="card-header bg-white">
-                <h4 class="mb-0"><i class="fas fa-user-edit me-2"></i>{{ title }}</h4>
+                <h4 class="mb-0">
+                    <i class="fas fa-user-edit me-2 text-primary" aria-hidden="true"></i>{{ title }}
+                </h4>
             </div>
-            
+
             <div class="card-body">
                 <form method="post" enctype="multipart/form-data" novalidate>
                     {% csrf_token %}
-                    
-                    <div class="row">
-                        <div class="col-12">
-                            <h5 class="mb-3 border-bottom pb-2">Employee Information</h5>
-                        </div>
-                        
-                        <div class="col-md-6">
-                            {{ form.employee_id|as_crispy_field }}
-                        </div>
-                        <div class="col-md-6">
-                            {{ form.department|as_crispy_field }}
-                        </div>
-                        
-                        <div class="col-md-6">
-                            {{ form.role|as_crispy_field }}
-                        </div>
-                        <div class="col-md-6">
-                            {{ form.status|as_crispy_field }}
-                        </div>
-                        
-                        <div class="col-md-6">
-                            {{ form.date_joined|as_crispy_field }}
-                        </div>
-                        <div class="col-md-6">
-                            {{ form.date_of_birth|as_crispy_field }}
-                        </div>
-                        
-                        <div class="col-md-6">
-                            {{ form.salary|as_crispy_field }}
-                        </div>
-                        <div class="col-md-6">
-                            {{ form.photo|as_crispy_field }}
-                        </div>
-                        
-                        <!-- User Account Section -->
-                        <div class="col-12 mt-4">
-                            <h5 class="mb-3 border-bottom pb-2">User Account</h5>
-                        </div>
-                        
-                        <div class="col-12 mb-3">
-                            {{ form.create_user_account|as_crispy_field }}
-                        </div>
-                        
-                        <!-- New User Fields (shown when create_user_account is checked) -->
-                        <div id="new-user-fields" class="row">
-                            <div class="col-md-6">
-                                {{ form.first_name|as_crispy_field }}
-                            </div>
-                            <div class="col-md-6">
-                                {{ form.last_name|as_crispy_field }}
-                            </div>
-                            
-                            <div class="col-md-6">
-                                {{ form.user_email|as_crispy_field }}
-                            </div>
-                            <div class="col-md-6">
-                                {{ form.user_password|as_crispy_field }}
-                            </div>
-                            
-                            <div class="col-md-6">
-                                {{ form.phone|as_crispy_field }}
-                            </div>
-                        </div>
-                        
-                        <!-- Existing User Fields (shown when create_user_account is not checked) -->
-                        <div id="existing-user-fields" class="row" style="display: none;">
-                            <div class="col-md-12">
-                                {{ form.existing_user_email|as_crispy_field }}
-                            </div>
-                        </div>
+
+                    {% if form.non_field_errors %}
+                    <div class="alert alert-danger" role="alert">
+                        <i class="fas fa-exclamation-circle me-2" aria-hidden="true"></i>
+                        {{ form.non_field_errors }}
                     </div>
-                    
-                    <div class="alert alert-info mt-4">
-                        <i class="fas fa-info-circle me-2"></i>
-                        <strong>Note:</strong> Employee ID must be unique within your company.
+                    {% endif %}
+
+                    {# ---- Employee Information ---- #}
+                    <h5 class="border-bottom pb-2 mb-3">
+                        <i class="fas fa-id-card me-1 text-primary" aria-hidden="true"></i>
+                        Employee Information
+                    </h5>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">{{ form.employee_id|as_crispy_field }}</div>
+                        <div class="col-md-6">{{ form.department|as_crispy_field }}</div>
+                        <div class="col-md-6">{{ form.role|as_crispy_field }}</div>
+                        <div class="col-md-6">{{ form.status|as_crispy_field }}</div>
+                        <div class="col-md-6">{{ form.date_joined|as_crispy_field }}</div>
+                        <div class="col-md-6">{{ form.date_of_birth|as_crispy_field }}</div>
+                        <div class="col-md-6">{{ form.salary|as_crispy_field }}</div>
+                        <div class="col-md-6">{{ form.photo|as_crispy_field }}</div>
                     </div>
-                    
-                    <div class="d-flex justify-content-between mt-4">
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-save me-1"></i>Save Employee
-                        </button>
+
+                    {# ---- User Account ---- #}
+                    <h5 class="border-bottom pb-2 mb-3">
+                        <i class="fas fa-user-shield me-1 text-primary" aria-hidden="true"></i>
+                        User Account
+                    </h5>
+
+                    <div class="mb-3">{{ form.create_user_account|as_crispy_field }}</div>
+
+                    {# New user fields — shown when create_user_account is checked #}
+                    <div id="new-user-fields" class="row g-3 mb-3">
+                        <div class="col-md-6">{{ form.first_name|as_crispy_field }}</div>
+                        <div class="col-md-6">{{ form.last_name|as_crispy_field }}</div>
+                        <div class="col-md-6">{{ form.user_email|as_crispy_field }}</div>
+                        <div class="col-md-6">{{ form.user_password|as_crispy_field }}</div>
+                        <div class="col-md-6">{{ form.phone|as_crispy_field }}</div>
+                    </div>
+
+                    {# Existing user field — shown when create_user_account is unchecked #}
+                    <div id="existing-user-fields" class="row g-3 mb-3" hidden>
+                        <div class="col-12">{{ form.existing_user_email|as_crispy_field }}</div>
+                    </div>
+
+                    <div class="alert alert-info d-flex align-items-start mt-2" role="note">
+                        <i class="fas fa-info-circle me-2 mt-1 flex-shrink-0" aria-hidden="true"></i>
                         <div>
-                            <a href="{% url 'employees:employee_list' %}" class="btn btn-secondary me-2">
-                                <i class="fas fa-times me-1"></i>Cancel
-                            </a>
+                            Employee ID must be unique within your company.
+                            The ID placeholder is pre-filled based on your company domain.
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between mt-4 flex-wrap gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-1" aria-hidden="true"></i>Save Employee
+                        </button>
+                        <div class="d-flex gap-2">
                             {% if employee %}
-                            <a href="{% url 'employees:employee_detail' employee.pk %}" class="btn btn-info">
-                                <i class="fas fa-eye me-1"></i>View Details
+                            <a href="{% url 'employees:employee_detail' employee.pk %}"
+                               class="btn btn-outline-info btn-sm">
+                                <i class="fas fa-eye me-1" aria-hidden="true"></i>View Details
                             </a>
                             {% endif %}
+                            <a href="{% url 'employees:employee_list' %}"
+                               class="btn btn-outline-secondary btn-sm">
+                                <i class="fas fa-times me-1" aria-hidden="true"></i>Cancel
+                            </a>
                         </div>
                     </div>
                 </form>
@@ -113,51 +96,38 @@
 
 {% block extra_js %}
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const createAccountCheckbox = document.querySelector('#id_create_user_account');
-    const newUserFields = document.querySelector('#new-user-fields');
-    const existingUserFields = document.querySelector('#existing-user-fields');
-    
-    function toggleUserFields() {
-        if (createAccountCheckbox.checked) {
-            newUserFields.style.display = 'flex';
-            existingUserFields.style.display = 'none';
-            
-            // Make new user fields required
-            document.querySelectorAll('#new-user-fields input').forEach(input => {
-                if (input.id.includes('first_name') || input.id.includes('last_name') || 
-                    input.id.includes('user_email') || input.id.includes('user_password')) {
-                    input.required = true;
-                }
-            });
-            
-            // Make existing user field not required
-            document.querySelector('#id_existing_user_email').required = false;
-        } else {
-            newUserFields.style.display = 'none';
-            existingUserFields.style.display = 'block';
-            
-            // Make new user fields not required
-            document.querySelectorAll('#new-user-fields input').forEach(input => {
-                input.required = false;
-            });
-            
-            // Make existing user field required
-            document.querySelector('#id_existing_user_email').required = true;
-        }
+document.addEventListener('DOMContentLoaded', function () {
+    const checkbox      = document.getElementById('id_create_user_account');
+    const newFields     = document.getElementById('new-user-fields');
+    const existingField = document.getElementById('existing-user-fields');
+
+    // Required fields inside each panel
+    const newRequired = ['id_first_name', 'id_last_name', 'id_user_email', 'id_user_password'];
+    const existingRequired = ['id_existing_user_email'];
+
+    function setRequired(ids, required) {
+        ids.forEach(function (id) {
+            const el = document.getElementById(id);
+            if (el) el.required = required;
+        });
     }
-    
-    // Initial toggle
-    toggleUserFields();
-    
-    // Add event listener
-    createAccountCheckbox.addEventListener('change', toggleUserFields);
-    
-    // Auto-generate employee ID if empty
-    const employeeIdField = document.querySelector('#id_employee_id');
-    if (employeeIdField && !employeeIdField.value) {
-        const companyPrefix = '{{ company.domain|slice:":3"|upper }}';
-        employeeIdField.placeholder = `${companyPrefix}-001`;
+
+    function toggle() {
+        const creating = checkbox.checked;
+        newFields.hidden      = !creating;
+        existingField.hidden  = creating;
+        setRequired(newRequired, creating);
+        setRequired(existingRequired, !creating);
+    }
+
+    toggle();  // initialise on page load
+    checkbox.addEventListener('change', toggle);
+
+    // Employee ID placeholder
+    const idField = document.getElementById('id_employee_id');
+    if (idField && !idField.value) {
+        const prefix = '{{ company.domain|slice:":3"|upper }}';
+        idField.placeholder = prefix + '-001';
     }
 });
 </script>

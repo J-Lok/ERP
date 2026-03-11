@@ -1,18 +1,54 @@
-{% extends "base.html" %}
-{% block content %}
-<div class="alert alert-danger" role="alert">
-    <h4 class="alert-heading">Delete Opportunity</h4>
-    <p>Are you sure you want to delete the opportunity <strong>{{ opportunity.title }}</strong>?</p>
-    <p><strong>Contact:</strong> {{ opportunity.contact.name }}<br>
-    <strong>Stage:</strong> {{ opportunity.get_stage_display }}<br>
-    <strong>Value:</strong> {{ opportunity.value }}</p>
-    <hr>
-    <p class="mb-0">This action cannot be undone.</p>
-</div>
+{% extends 'base.html' %}
 
-<form method="post" class="d-inline">
-    {% csrf_token %}
-    <button type="submit" class="btn btn-danger"><i class="fas fa-trash"></i> Confirm Delete</button>
-    <a href="{% url 'crm:opportunity_list' %}" class="btn btn-secondary"><i class="fas fa-times"></i> Cancel</a>
-</form>
+{% block title %}Delete {{ opportunity.title }} — CRM{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-5">
+        <div class="card shadow-sm text-center">
+            <div class="card-body py-5 px-4">
+                <i class="fas fa-exclamation-triangle fa-3x text-danger mb-3" aria-hidden="true"></i>
+                <h5 class="mb-1">Delete Opportunity?</h5>
+                <p class="text-muted mb-3">
+                    You are about to permanently delete
+                    <strong>{{ opportunity.title }}</strong>.
+                </p>
+
+                {# Summary of what will be lost #}
+                <dl class="row text-start small mb-3">
+                    <dt class="col-5 text-muted fw-normal">Contact</dt>
+                    <dd class="col-7">{{ opportunity.contact.name }}</dd>
+
+                    <dt class="col-5 text-muted fw-normal">Stage</dt>
+                    <dd class="col-7">{{ opportunity.get_stage_display }}</dd>
+
+                    <dt class="col-5 text-muted fw-normal">Value</dt>
+                    <dd class="col-7">${{ opportunity.value|floatformat:0 }}</dd>
+
+                    {% if opportunity.expected_close_date %}
+                    <dt class="col-5 text-muted fw-normal">Close Date</dt>
+                    <dd class="col-7">{{ opportunity.expected_close_date|date:"M j, Y" }}</dd>
+                    {% endif %}
+                </dl>
+
+                <div class="alert alert-danger text-start" role="alert">
+                    <i class="fas fa-exclamation-circle me-2" aria-hidden="true"></i>
+                    <strong>This cannot be undone.</strong>
+                </div>
+
+                <form method="post" class="mt-4">
+                    {% csrf_token %}
+                    <div class="d-flex justify-content-center gap-2">
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-trash me-1" aria-hidden="true"></i>Yes, Delete
+                        </button>
+                        <a href="{% url 'crm:opportunity_list' %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-times me-1" aria-hidden="true"></i>Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}

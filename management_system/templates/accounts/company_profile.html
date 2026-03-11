@@ -1,102 +1,105 @@
 {% extends 'base.html' %}
 {% load crispy_forms_tags %}
 
+{% block title %}Company Profile — ERP System{% endblock %}
+
 {% block content %}
-<div class="row">
-    <div class="col-md-10 offset-md-1">
-        <div class="card">
+<div class="row justify-content-center">
+    <div class="col-md-10">
+        <div class="card shadow-sm">
             <div class="card-header bg-white d-flex justify-content-between align-items-center">
-                <h4 class="mb-0"><i class="fas fa-building me-2"></i>Company Profile</h4>
+                <h4 class="mb-0">
+                    <i class="fas fa-building me-2 text-primary" aria-hidden="true"></i>Company Profile
+                </h4>
                 <span class="badge bg-success">Administrator View</span>
             </div>
-            
+
             <div class="card-body">
-                <div class="row mb-4">
-                    <div class="col-md-4 text-center">
-                        <div class="card bg-light">
-                            <div class="card-body">
-                                <i class="fas fa-building fa-4x text-primary mb-3"></i>
-                                <h5>{{ company.name }}</h5>
-                                <p class="text-muted">{{ company.domain }}</p>
+                {# ---- Summary row ---- #}
+                <div class="row g-3 mb-4">
+                    <div class="col-md-4">
+                        <div class="card bg-light text-center h-100">
+                            <div class="card-body d-flex flex-column align-items-center justify-content-center">
+                                <i class="fas fa-building fa-3x text-primary mb-3" aria-hidden="true"></i>
+                                <h5 class="mb-1">{{ company.name }}</h5>
+                                <p class="text-muted small mb-0">{{ company.domain }}</p>
                             </div>
                         </div>
                     </div>
-                    
+
                     <div class="col-md-8">
-                        <div class="card">
+                        <div class="card h-100">
                             <div class="card-body">
-                                <h5 class="card-title">Company Statistics</h5>
-                                <div class="row text-center">
+                                <h6 class="card-title text-muted text-uppercase small mb-3">Company Statistics</h6>
+                                <div class="row text-center g-2">
                                     <div class="col-4">
-                                        <h3>{{ company.users.count }}</h3>
-                                        <small>Users</small>
+                                        <div class="p-3 bg-light rounded">
+                                            <p class="display-6 mb-0 fw-bold text-primary">{{ company.active_user_count }}</p>
+                                            <small class="text-muted">Active Users</small>
+                                        </div>
                                     </div>
                                     <div class="col-4">
-                                        <h3>{{ company.projects.count }}</h3>
-                                        <small>Projects</small>
+                                        <div class="p-3 bg-light rounded">
+                                            <p class="display-6 mb-0 fw-bold text-success">{{ company.projects.count }}</p>
+                                            <small class="text-muted">Projects</small>
+                                        </div>
                                     </div>
                                     <div class="col-4">
-                                        <h3>{{ company.employees.count }}</h3>
-                                        <small>Employees</small>
+                                        <div class="p-3 bg-light rounded">
+                                            <p class="display-6 mb-0 fw-bold text-info">{{ company.employees.count }}</p>
+                                            <small class="text-muted">Employees</small>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-                
+
+                {# ---- Edit form ---- #}
                 <form method="post" novalidate>
                     {% csrf_token %}
-                    
+
                     {% if form.non_field_errors %}
-                    <div class="alert alert-danger mb-3">
+                    <div class="alert alert-danger" role="alert">
+                        <i class="fas fa-exclamation-circle me-2" aria-hidden="true"></i>
                         {{ form.non_field_errors }}
                     </div>
                     {% endif %}
-                    
-                    <h5 class="mb-3">Company Information</h5>
+
+                    <h5 class="mb-3">
+                        <i class="fas fa-pen me-1 text-primary" aria-hidden="true"></i>
+                        Company Information
+                    </h5>
                     <div class="row g-3">
-                        <div class="col-md-6">
-                            {{ form.name|as_crispy_field }}
-                        </div>
-                        <div class="col-md-6">
-                            {{ form.domain|as_crispy_field }}
-                        </div>
-                        <div class="col-md-6">
-                            {{ form.contact_email|as_crispy_field }}
-                        </div>
-                        <div class="col-md-6">
-                            {{ form.contact_phone|as_crispy_field }}
-                        </div>
-                        <div class="col-12">
-                            {{ form.address|as_crispy_field }}
-                        </div>
-                        <div class="col-md-6">
-                            {{ form.subscription_plan|as_crispy_field }}
-                        </div>
-                        <div class="col-md-6">
-                            {{ form.is_active|as_crispy_field }}
-                        </div>
+                        <div class="col-md-6">{{ form.name|as_crispy_field }}</div>
+                        <div class="col-md-6">{{ form.domain|as_crispy_field }}</div>
+                        <div class="col-md-6">{{ form.contact_email|as_crispy_field }}</div>
+                        <div class="col-md-6">{{ form.contact_phone|as_crispy_field }}</div>
+                        <div class="col-12">{{ form.address|as_crispy_field }}</div>
+                        <div class="col-md-6">{{ form.subscription_plan|as_crispy_field }}</div>
+                        <div class="col-md-6">{{ form.is_active|as_crispy_field }}</div>
                     </div>
-                    
-                    <div class="alert alert-warning mt-4 d-flex align-items-center">
-                        <i class="fas fa-exclamation-triangle me-2"></i>
+
+                    <div class="alert alert-warning d-flex align-items-start mt-4" role="note">
+                        <i class="fas fa-exclamation-triangle me-2 mt-1 flex-shrink-0" aria-hidden="true"></i>
                         <div>
-                            <strong>Note:</strong> Changing the company domain may affect how users login.
+                            <strong>Domain changes:</strong> Changing the company domain affects how
+                            team members log in. Make sure all users are informed before saving.
                         </div>
                     </div>
-                    
+
                     <div class="d-flex justify-content-between mt-4 flex-wrap gap-2">
-                        <div>
+                        <div class="d-flex gap-2">
                             <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-save me-1"></i>Save Changes
+                                <i class="fas fa-save me-1" aria-hidden="true"></i>Save Changes
                             </button>
-                            <a href="{% url 'accounts:user_profile' %}" class="btn btn-secondary">
-                                <i class="fas fa-user me-1"></i>My Profile
+                            <a href="{% url 'accounts:user_profile' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-user me-1" aria-hidden="true"></i>My Profile
                             </a>
                         </div>
                         <a href="{% url 'core:dashboard' %}" class="btn btn-outline-secondary">
-                            <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
+                            <i class="fas fa-arrow-left me-1" aria-hidden="true"></i>Dashboard
                         </a>
                     </div>
                 </form>

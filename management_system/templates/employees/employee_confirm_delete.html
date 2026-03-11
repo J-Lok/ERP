@@ -1,31 +1,34 @@
 {% extends 'base.html' %}
 
+{% block title %}Delete {{ employee.user.get_full_name }} — ERP System{% endblock %}
+
 {% block content %}
-<div class="row">
-    <div class="col-md-6 offset-md-3">
-        <div class="card">
-            <div class="card-body text-center py-5">
-                <i class="fas fa-exclamation-triangle fa-4x text-warning mb-4"></i>
-                <h4>Confirm Delete</h4>
-                <p class="mb-4">
-                    Are you sure you want to delete employee 
-                    <strong>{{ employee.employee_id }} - {{ employee.user.get_full_name }}</strong>?
+<div class="row justify-content-center">
+    <div class="col-md-6 col-lg-5">
+        <div class="card shadow-sm text-center">
+            <div class="card-body py-5 px-4">
+                <i class="fas fa-exclamation-triangle fa-3x text-danger mb-3" aria-hidden="true"></i>
+                <h5 class="mb-1">Delete Employee?</h5>
+                <p class="text-muted mb-3">
+                    You are about to permanently delete
+                    <strong>{{ employee.employee_id }} — {{ employee.user.get_full_name }}</strong>.
                 </p>
-                
-                <div class="alert alert-danger">
-                    <i class="fas fa-exclamation-circle me-2"></i>
-                    <strong>Warning:</strong> This action cannot be undone. 
-                    All employee data will be permanently deleted.
+
+                <div class="alert alert-danger text-start" role="alert">
+                    <i class="fas fa-exclamation-circle me-2" aria-hidden="true"></i>
+                    <strong>This cannot be undone.</strong>
+                    All records linked to this employee will be permanently removed.
                 </div>
-                
+
                 <form method="post" class="mt-4">
                     {% csrf_token %}
-                    <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+                    <div class="d-flex justify-content-center gap-2">
                         <button type="submit" class="btn btn-danger">
-                            <i class="fas fa-trash me-2"></i>Yes, Delete Employee
+                            <i class="fas fa-trash me-1" aria-hidden="true"></i>Yes, Delete
                         </button>
-                        <a href="{% url 'employees:employee_detail' employee.pk %}" class="btn btn-secondary">
-                            <i class="fas fa-times me-2"></i>Cancel
+                        <a href="{% url 'employees:employee_detail' employee.pk %}"
+                           class="btn btn-outline-secondary">
+                            <i class="fas fa-times me-1" aria-hidden="true"></i>Cancel
                         </a>
                     </div>
                 </form>

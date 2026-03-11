@@ -1,57 +1,113 @@
-{% extends 'core/base.html' %}
+{% extends 'base.html' %}
+
+{% block title %}Dashboard — {{ request.user.company.name }}{% endblock %}
 
 {% block content %}
-<h2 class="mb-4"><i class="fas fa-tachometer-alt"></i> Dashboard</h2>
 
-<div class="row mb-4">
-    <div class="col-md-3">
-        <div class="card stat-card bg-primary text-white">
-            <div class="card-body">
-                <i class="fas fa-users"></i>
-                <h3>{{ total_employees }}</h3>
-                <p>Active Employees</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card stat-card bg-success text-white">
-            <div class="card-body">
-                <i class="fas fa-project-diagram"></i>
-                <h3>{{ active_projects }}</h3>
-                <p>Active Projects</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card stat-card bg-info text-white">
-            <div class="card-body">
-                <i class="fas fa-boxes"></i>
-                <h3>{{ total_stock_items }}</h3>
-                <p>Stock Items</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card stat-card bg-warning text-white">
-            <div class="card-body">
-                <i class="fas fa-exclamation-triangle"></i>
-                <h3>{{ low_stock_items }}</h3>
-                <p>Low Stock Items</p>
-            </div>
-        </div>
-    </div>
+{# ---- Page header ---- #}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="mb-0">
+        <i class="fas fa-tachometer-alt text-primary me-2" aria-hidden="true"></i>Dashboard
+    </h2>
+    <span class="text-muted small">
+        <i class="fas fa-calendar-alt me-1" aria-hidden="true"></i>
+        {{ now|date:"N j, Y" }}
+    </span>
 </div>
 
-<div class="row">
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-header bg-white">
-                <h5><i class="fas fa-project-diagram"></i> Recent Projects</h5>
+{# ---- Stat cards ---- #}
+<div class="row g-3 mb-4">
+
+    <div class="col-sm-6 col-xl-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body d-flex align-items-center gap-3">
+                <div class="rounded-circle bg-primary bg-opacity-10 p-3">
+                    <i class="fas fa-users fa-lg text-primary" aria-hidden="true"></i>
+                </div>
+                <div>
+                    <p class="text-muted small mb-0">Active Employees</p>
+                    <h3 class="mb-0 fw-bold">{{ total_employees|default:"0" }}</h3>
+                </div>
             </div>
-            <div class="card-body">
+        </div>
+    </div>
+
+    <div class="col-sm-6 col-xl-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body d-flex align-items-center gap-3">
+                <div class="rounded-circle bg-success bg-opacity-10 p-3">
+                    <i class="fas fa-project-diagram fa-lg text-success" aria-hidden="true"></i>
+                </div>
+                <div>
+                    <p class="text-muted small mb-0">Active Projects</p>
+                    <h3 class="mb-0 fw-bold">{{ active_projects|default:"0" }}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-sm-6 col-xl-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body d-flex align-items-center gap-3">
+                <div class="rounded-circle bg-info bg-opacity-10 p-3">
+                    <i class="fas fa-boxes fa-lg text-info" aria-hidden="true"></i>
+                </div>
+                <div>
+                    <p class="text-muted small mb-0">Stock Items</p>
+                    <h3 class="mb-0 fw-bold">{{ total_stock_items|default:"0" }}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-sm-6 col-xl-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body d-flex align-items-center gap-3">
+                <div class="rounded-circle bg-warning bg-opacity-10 p-3">
+                    <i class="fas fa-exclamation-triangle fa-lg text-warning" aria-hidden="true"></i>
+                </div>
+                <div>
+                    <p class="text-muted small mb-0">Low Stock Items</p>
+                    <h3 class="mb-0 fw-bold">{{ low_stock_count|default:"0" }}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+{# ---- Low stock alert ---- #}
+{% if low_stock_items %}
+<div class="alert alert-warning d-flex align-items-start mb-4" role="alert">
+    <i class="fas fa-exclamation-triangle me-2 mt-1 flex-shrink-0" aria-hidden="true"></i>
+    <div>
+        <strong>{{ low_stock_items|length }} item{{ low_stock_items|length|pluralize }} below reorder level:</strong>
+        {% for item in low_stock_items %}
+            <a href="{% url 'inventory:stock_detail' item.pk %}" class="ms-1 badge bg-warning text-dark text-decoration-none">
+                {{ item.name }} ({{ item.quantity }} left)
+            </a>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+{# ---- Recent Projects & Employees ---- #}
+<div class="row g-4">
+
+    {# Recent Projects #}
+    <div class="col-md-6">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <h6 class="mb-0">
+                    <i class="fas fa-project-diagram text-success me-2" aria-hidden="true"></i>
+                    Recent Projects
+                </h6>
+                <a href="{% url 'projects:project_list' %}" class="btn btn-outline-secondary btn-sm">View all</a>
+            </div>
+            <div class="card-body p-0">
                 <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead>
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
                             <tr>
                                 <th>Name</th>
                                 <th>Status</th>
@@ -61,12 +117,43 @@
                         <tbody>
                             {% for project in recent_projects %}
                             <tr>
-                                <td>{{ project.name }}</td>
-                                <td><span class="badge bg-info">{{ project.get_status_display }}</span></td>
-                                <td>{{ project.completion_percentage }}%</td>
+                                <td>
+                                    <a href="{% url 'projects:project_detail' project.pk %}"
+                                       class="text-decoration-none fw-semibold">
+                                        {{ project.name }}
+                                    </a>
+                                </td>
+                                <td>
+                                    <span class="badge
+                                        {% if project.status == 'completed' %}bg-success
+                                        {% elif project.status == 'in_progress' %}bg-info
+                                        {% elif project.status == 'on_hold' %}bg-warning text-dark
+                                        {% elif project.status == 'cancelled' %}bg-danger
+                                        {% else %}bg-secondary{% endif %}">
+                                        {{ project.get_status_display }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="progress flex-grow-1" style="height:6px;">
+                                            <div class="progress-bar
+                                                {% if project.completion_percentage == 100 %}bg-success
+                                                {% elif project.completion_percentage >= 50 %}bg-info
+                                                {% else %}bg-warning{% endif %}"
+                                                role="progressbar"
+                                                style="width:{{ project.completion_percentage }}%"
+                                                aria-valuenow="{{ project.completion_percentage }}"
+                                                aria-valuemin="0" aria-valuemax="100">
+                                            </div>
+                                        </div>
+                                        <small class="text-muted text-nowrap">{{ project.completion_percentage }}%</small>
+                                    </div>
+                                </td>
                             </tr>
                             {% empty %}
-                            <tr><td colspan="3" class="text-center">No projects yet</td></tr>
+                            <tr>
+                                <td colspan="3" class="text-center text-muted py-3">No projects yet.</td>
+                            </tr>
                             {% endfor %}
                         </tbody>
                     </table>
@@ -74,15 +161,21 @@
             </div>
         </div>
     </div>
+
+    {# Recent Employees #}
     <div class="col-md-6">
-        <div class="card">
-            <div class="card-header bg-white">
-                <h5><i class="fas fa-users"></i> Recent Employees</h5>
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <h6 class="mb-0">
+                    <i class="fas fa-users text-primary me-2" aria-hidden="true"></i>
+                    Recent Employees
+                </h6>
+                <a href="{% url 'employees:employee_list' %}" class="btn btn-outline-secondary btn-sm">View all</a>
             </div>
-            <div class="card-body">
+            <div class="card-body p-0">
                 <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead>
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
                             <tr>
                                 <th>ID</th>
                                 <th>Name</th>
@@ -92,12 +185,19 @@
                         <tbody>
                             {% for employee in recent_employees %}
                             <tr>
-                                <td>{{ employee.employee_id }}</td>
-                                <td>{{ employee.user.get_full_name }}</td>
-                                <td>{{ employee.department|default:"-" }}</td>
+                                <td class="text-muted small">{{ employee.employee_id }}</td>
+                                <td>
+                                    <a href="{% url 'employees:employee_detail' employee.pk %}"
+                                       class="text-decoration-none fw-semibold">
+                                        {{ employee.user.get_full_name }}
+                                    </a>
+                                </td>
+                                <td>{{ employee.department|default:"—" }}</td>
                             </tr>
                             {% empty %}
-                            <tr><td colspan="3" class="text-center">No employees yet</td></tr>
+                            <tr>
+                                <td colspan="3" class="text-center text-muted py-3">No employees yet.</td>
+                            </tr>
                             {% endfor %}
                         </tbody>
                     </table>
@@ -105,5 +205,6 @@
             </div>
         </div>
     </div>
+
 </div>
 {% endblock %}

@@ -2,39 +2,48 @@ from django import forms
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth import authenticate
 from django.core.exceptions import ValidationError
-from django.contrib.auth.hashers import check_password
+
 from .models import User, Company
 
 
+# ---------------------------------------------------------------------------
+# Shared widget defaults
+# ---------------------------------------------------------------------------
+
+_PASSWORD_WIDGET = forms.PasswordInput(attrs={'autocomplete': 'new-password'})
+_CURRENT_PASSWORD_WIDGET = forms.PasswordInput(attrs={'autocomplete': 'current-password'})
+
+
+# ---------------------------------------------------------------------------
+# Company registration
+# ---------------------------------------------------------------------------
+
 class CompanyCreationForm(forms.ModelForm):
-    """
-    Form for registering a new company along with its admin user.
-    """
+    """Register a new company and its initial admin user in one step."""
+
     # Admin user fields
-    admin_first_name = forms.CharField(max_length=30, required=True)
-    admin_last_name = forms.CharField(max_length=30, required=True)
-    admin_email = forms.EmailField(required=True)
+    admin_first_name = forms.CharField(max_length=30)
+    admin_last_name = forms.CharField(max_length=30)
+    admin_email = forms.EmailField()
     admin_password = forms.CharField(
-        widget=forms.PasswordInput,
-        required=True,
-        label="Admin Password"
+        widget=_PASSWORD_WIDGET,
+        label='Admin Password',
+        min_length=8,
     )
     confirm_admin_password = forms.CharField(
-        widget=forms.PasswordInput,
-        required=True,
-        label="Confirm Admin Password"
+        widget=_PASSWORD_WIDGET,
+        label='Confirm Admin Password',
     )
 
-    # Company password fields (shared secret for team members)
+    # Company shared-secret fields
     company_password = forms.CharField(
-        widget=forms.PasswordInput,
-        required=True,
-        label="Company Password (shared with team)"
+        widget=_PASSWORD_WIDGET,
+        label='Company Password (shared with team)',
+        min_length=8,
     )
     confirm_company_password = forms.CharField(
-        widget=forms.PasswordInput,
-        required=True,
-        label="Confirm Company Password"
+        widget=_PASSWORD_WIDGET,
+        label='Confirm Company Password',
     )
 
     class Meta:
@@ -50,50 +59,51 @@ class CompanyCreationForm(forms.ModelForm):
             raise ValidationError('This domain is already taken.')
         return domain
 
+    def clean_admin_email(self):
+        email = self.cleaned_data['admin_email'].lower().strip()
+        if User.objects.filter(email=email).exists():
+            raise ValidationError('This email is already registered.')
+        return email
+
     def clean(self):
         cleaned_data = super().clean()
 
-        # Validate admin passwords
         admin_pw = cleaned_data.get('admin_password')
         confirm_admin = cleaned_data.get('confirm_admin_password')
         if admin_pw and confirm_admin and admin_pw != confirm_admin:
             self.add_error('confirm_admin_password', 'Admin passwords do not match.')
 
-        # Validate company passwords
         company_pw = cleaned_data.get('company_password')
         confirm_company = cleaned_data.get('confirm_company_password')
         if company_pw and confirm_company and company_pw != confirm_company:
             self.add_error('confirm_company_password', 'Company passwords do not match.')
 
-        # Check if admin email already exists
-        admin_email = cleaned_data.get('admin_email')
-        if admin_email and User.objects.filter(email=admin_email).exists():
-            self.add_error('admin_email', 'This email is already registered.')
-
         return cleaned_data
 
     def save(self, commit=True):
         company = super().save(commit=False)
-        # Hash the company password before saving
         company.set_company_password(self.cleaned_data['company_password'])
-
         if commit:
             company.save()
         return company
 
 
+# ---------------------------------------------------------------------------
+# User registration (join existing company)
+# ---------------------------------------------------------------------------
+
 class UserRegistrationForm(UserCreationForm):
-    """
-    Form for a new user to join an existing company using the company's domain and shared password.
-    """
+    """Allow a new user to join an existing company via domain + shared password."""
+
     company_domain = forms.CharField(
         max_length=200,
-        widget=forms.TextInput(attrs={'placeholder': 'company-domain'}),
-        help_text="Enter your company's domain"
+        widget=forms.TextInput(attrs={'placeholder': 'your-company-domain'}),
+        help_text="Your company's domain.",
     )
     company_password = forms.CharField(
-        widget=forms.PasswordInput(attrs={'placeholder': 'Company password'}),
-        help_text="Enter your company's shared password"
+        widget=_CURRENT_PASSWORD_WIDGET,
+        label='Company Password',
+        help_text="Your company's shared registration password.",
     )
 
     class Meta(UserCreationForm.Meta):
@@ -102,88 +112,102 @@ class UserRegistrationForm(UserCreationForm):
 
     def clean(self):
         cleaned_data = super().clean()
-        domain = cleaned_data.get('company_domain')
+        domain = cleaned_data.get('company_domain', '').lower().strip()
         company_pw = cleaned_data.get('company_password')
 
         if domain and company_pw:
             try:
-                company = Company.objects.get(domain=domain)
-                if not company.check_company_password(company_pw):
-                    raise ValidationError('Invalid company password.')
-                # Store company in cleaned_data for use in save()
-                cleaned_data['company'] = company
+                company = Company.objects.get(domain=domain, is_active=True)
             except Company.DoesNotExist:
-                raise ValidationError('Company with this domain does not exist.')
+                raise ValidationError('No active company found with that domain.')
+
+            if not company.check_company_password(company_pw):
+                raise ValidationError('Invalid company password.')
+
+            cleaned_data['company'] = company
+
         return cleaned_data
 
     def save(self, commit=True):
         user = super().save(commit=False)
-        company = self.cleaned_data.get('company')
-        if company:
-            user.company = company
+        user.company = self.cleaned_data.get('company')
         if commit:
             user.save()
         return user
 
 
+# ---------------------------------------------------------------------------
+# Login
+# ---------------------------------------------------------------------------
+
 class CompanyLoginForm(AuthenticationForm):
-    """
-    Custom login form that requires company domain in addition to email and password.
-    """
-    company_domain = forms.CharField(max_length=200, required=True)
+    """Login requiring company domain + user email + password."""
+
+    company_domain = forms.CharField(
+        max_length=200,
+        widget=forms.TextInput(attrs={'placeholder': 'your-company-domain', 'autocomplete': 'organization'}),
+    )
+
+    # Move company_domain to the top of the rendered form
+    field_order = ['company_domain', 'username', 'password']
 
     def clean(self):
-        # First, call the parent clean to get username and password
         cleaned_data = super().clean()
-        domain = cleaned_data.get('company_domain')
-        username = cleaned_data.get('username')  # This is the email field
+        domain = cleaned_data.get('company_domain', '').lower().strip()
+        email = cleaned_data.get('username', '').lower().strip()
         password = cleaned_data.get('password')
 
-        if domain and username and password:
-            try:
-                company = Company.objects.get(domain=domain)
-                # Check if a user with this email exists under this company
-                try:
-                    user = User.objects.get(email=username, company=company)
-                except User.DoesNotExist:
-                    raise ValidationError('No account found with these credentials.')
+        if not (domain and email and password):
+            return cleaned_data
 
-                # Authenticate with the provided password
-                user = authenticate(email=username, password=password)
-                if user is None:
-                    raise ValidationError('Invalid email or password.')
+        # Verify company exists and is active
+        try:
+            company = Company.objects.get(domain=domain, is_active=True)
+        except Company.DoesNotExist:
+            raise ValidationError('No active company found with that domain.')
 
-                # Attach the user and company to cleaned_data for the view
-                cleaned_data['user'] = user
-                cleaned_data['company'] = company
+        # Verify user belongs to this company
+        if not User.objects.filter(email=email, company=company, is_active=True).exists():
+            # Use a generic message to avoid user-enumeration
+            raise ValidationError('Invalid credentials.')
 
-            except Company.DoesNotExist:
-                raise ValidationError('Company with this domain does not exist.')
+        # Authenticate password
+        user = authenticate(self.request, username=email, password=password)
+        if user is None:
+            raise ValidationError('Invalid credentials.')
 
+        cleaned_data['user'] = user
+        cleaned_data['company'] = company
         return cleaned_data
 
 
+# ---------------------------------------------------------------------------
+# Profile forms
+# ---------------------------------------------------------------------------
+
 class UserProfileForm(forms.ModelForm):
-    """Form for users to edit their own profile."""
+    """Let users edit their own profile. Email is read-only."""
+
     class Meta:
         model = User
         fields = ['first_name', 'last_name', 'email', 'phone', 'department', 'position']
         widgets = {
-            'email': forms.EmailInput(attrs={'readonly': 'readonly'}),  # Email should not be changed
+            'email': forms.EmailInput(attrs={'readonly': True}),
         }
 
     def clean_email(self):
-        # Prevent changing email (optional)
+        # Always return the original email — ignore any tampering
         return self.instance.email
 
 
 class UserManagementForm(forms.ModelForm):
-    """Form for admin users to manage company user roles."""
+    """Allow company admins to manage user roles and details."""
+
     class Meta:
         model = User
-        fields = ['first_name', 'last_name', 'email', 'phone', 'department', 'position', 'role']
+        fields = ['first_name', 'last_name', 'email', 'phone', 'department', 'position', 'role', 'is_active']
         widgets = {
-            'email': forms.EmailInput(attrs={'readonly': 'readonly'}),
+            'email': forms.EmailInput(attrs={'readonly': True}),
         }
 
     def clean_email(self):
@@ -191,41 +215,50 @@ class UserManagementForm(forms.ModelForm):
 
 
 class CompanyProfileForm(forms.ModelForm):
-    """Form for company admins to edit company details."""
+    """Allow company admins to edit company details. Domain is read-only."""
+
     class Meta:
         model = Company
-        fields = ['name', 'domain', 'contact_email', 'contact_phone', 'address',
-                  'subscription_plan', 'is_active']
+        fields = ['name', 'domain', 'contact_email', 'contact_phone', 'address', 'subscription_plan']
         widgets = {
-            'domain': forms.TextInput(attrs={'readonly': 'readonly'}),  # Domain shouldn't be changed casually
+            'domain': forms.TextInput(attrs={'readonly': True}),
+            'address': forms.Textarea(attrs={'rows': 3}),
         }
 
+    def clean_domain(self):
+        # Domain must never change after creation
+        return self.instance.domain
+
+
+# ---------------------------------------------------------------------------
+# Company password change
+# ---------------------------------------------------------------------------
 
 class CompanyPasswordChangeForm(forms.Form):
-    """
-    Form for company admins to change the company's shared password.
-    """
+    """Allow company admins to rotate the shared company password."""
+
     current_company_password = forms.CharField(
-        widget=forms.PasswordInput,
-        label="Current Company Password"
+        widget=_CURRENT_PASSWORD_WIDGET,
+        label='Current Company Password',
     )
     new_company_password = forms.CharField(
-        widget=forms.PasswordInput,
-        label="New Company Password"
+        widget=_PASSWORD_WIDGET,
+        label='New Company Password',
+        min_length=8,
     )
     confirm_new_company_password = forms.CharField(
-        widget=forms.PasswordInput,
-        label="Confirm New Company Password"
+        widget=_PASSWORD_WIDGET,
+        label='Confirm New Company Password',
     )
 
-    def __init__(self, company, *args, **kwargs):
+    def __init__(self, company: Company, *args, **kwargs):
         self.company = company
         super().__init__(*args, **kwargs)
 
     def clean_current_company_password(self):
         current = self.cleaned_data['current_company_password']
         if not self.company.check_company_password(current):
-            raise ValidationError("Current company password is incorrect.")
+            raise ValidationError('Current company password is incorrect.')
         return current
 
     def clean(self):
@@ -233,10 +266,9 @@ class CompanyPasswordChangeForm(forms.Form):
         new_pw = cleaned_data.get('new_company_password')
         confirm = cleaned_data.get('confirm_new_company_password')
         if new_pw and confirm and new_pw != confirm:
-            self.add_error('confirm_new_company_password', "New passwords do not match.")
+            self.add_error('confirm_new_company_password', 'New passwords do not match.')
         return cleaned_data
 
-    def save(self):
-        new_pw = self.cleaned_data['new_company_password']
-        self.company.set_company_password(new_pw)
-        self.company.save(update_fields=['company_password'])
+    def save(self) -> None:
+        self.company.set_company_password(self.cleaned_data['new_company_password'])
+        self.company.save(update_fields=['company_password', 'updated_at'])

@@ -415,6 +415,8 @@
     </div>
 </div>
 
+{% endblock %}
+
 {% block extra_js %}
 <script>
     function getCsrfToken() {
@@ -445,50 +447,46 @@
         });
     }
 
+    function changeTaskStatus(taskId, newStatus) {
+        if (confirm('Change task status to ' + newStatus + '?')) {
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = `/projects/task/${taskId}/change-status/`;
+
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+            form.innerHTML = `
+                <input type="hidden" name="csrfmiddlewaretoken" value="${csrfToken}">
+                <input type="hidden" name="status" value="${newStatus}">
+            `;
+
+            document.body.appendChild(form);
+            form.submit();
+        }
+    }
+
+    function editTask(taskId) {
+        // Implement edit functionality or redirect
+        window.location.href = `/projects/task/${taskId}/edit/`;
+    }
+
+    function deleteTask(taskId) {
+        if (confirm('Are you sure you want to delete this task?')) {
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = `/projects/task/${taskId}/delete/`;
+
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+            form.innerHTML = `<input type="hidden" name="csrfmiddlewaretoken" value="${csrfToken}">`;
+
+            document.body.appendChild(form);
+            form.submit();
+        }
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
         document.querySelectorAll('.subtask-checkbox').forEach(cb => {
             cb.addEventListener('change', function() { toggleTaskCheckbox(this); });
         });
     });
-</script>
-{% endblock %}
-
-{% block extra_js %}
-<script>
-function changeTaskStatus(taskId, newStatus) {
-    if (confirm('Change task status to ' + newStatus + '?')) {
-        const form = document.createElement('form');
-        form.method = 'POST';
-        form.action = `/projects/task/${taskId}/change-status/`;
-        
-        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-        form.innerHTML = `
-            <input type="hidden" name="csrfmiddlewaretoken" value="${csrfToken}">
-            <input type="hidden" name="status" value="${newStatus}">
-        `;
-        
-        document.body.appendChild(form);
-        form.submit();
-    }
-}
-
-function editTask(taskId) {
-    // Implement edit functionality or redirect
-    window.location.href = `/projects/task/${taskId}/edit/`;
-}
-
-function deleteTask(taskId) {
-    if (confirm('Are you sure you want to delete this task?')) {
-        const form = document.createElement('form');
-        form.method = 'POST';
-        form.action = `/projects/task/${taskId}/delete/`;
-        
-        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-        form.innerHTML = `<input type="hidden" name="csrfmiddlewaretoken" value="${csrfToken}">`;
-        
-        document.body.appendChild(form);
-        form.submit();
-    }
-}
 </script>
 {% endblock %}

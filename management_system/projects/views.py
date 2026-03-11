@@ -1,660 +1,649 @@
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.decorators import login_required
-from django.contrib import messages
-from django.db.models import Q, Count, Avg, Sum
-from django.http import HttpResponse, JsonResponse
-from django.db import transaction
-from django.utils import timezone
-import pandas as pd
+"""
+projects/views.py
+"""
+
 import io
 import json
-from datetime import datetime, timedelta
+import logging
 
-from .models import Project, SousTache, CommentaireTache
-from .forms import ProjectForm, SousTacheForm, CommentaireForm
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
+from django.db import transaction
+from django.db.models import Avg, Count, Max, Min, Q, Sum
+from django.http import HttpResponse, JsonResponse
+from django.shortcuts import get_object_or_404, redirect, render
+from django.utils import timezone
+from django.views.decorators.http import require_http_methods
+
 from employees.models import Employee
+from .forms import CommentaireForm, ProjectForm, SousTacheForm
+from .models import CommentaireTache, Project, SousTache
+
+logger = logging.getLogger(__name__)
+PAGE_SIZE = 20
+
+
+def _paginate(qs, page_number, per_page=PAGE_SIZE):
+    paginator = Paginator(qs, per_page)
+    try:
+        return paginator.page(page_number)
+    except PageNotAnInteger:
+        return paginator.page(1)
+    except EmptyPage:
+        return paginator.page(paginator.num_pages)
+
+
+# ---------------------------------------------------------------------------
+# Project list
+# ---------------------------------------------------------------------------
 
 @login_required
 def project_list(request):
-    """Display list of projects with filters"""
     company = request.user.company
-    
-    # Get all projects for the company
-    projects = Project.objects.filter(company=company).select_related(
-        'manager', 'created_by'
-    ).prefetch_related('team_members').order_by('-created_at')
-    
-    # Apply search filter
+    today = timezone.localdate()
+
+    projects = (
+        Project.objects
+        .filter(company=company)
+        .select_related('manager__user', 'created_by')
+        .prefetch_related('team_members')
+        .order_by('-created_at')
+    )
+
+    # Filters
     query = request.GET.get('q', '').strip()
     if query:
         projects = projects.filter(
-            Q(name__icontains=query) |
-            Q(description__icontains=query) |
-            Q(manager__user__first_name__icontains=query) |
-            Q(manager__user__last_name__icontains=query)
+            Q(name__icontains=query)
+            | Q(description__icontains=query)
+            | Q(manager__user__first_name__icontains=query)
+            | Q(manager__user__last_name__icontains=query)
         )
-    
-    # Apply status filter
+
     status = request.GET.get('status', '')
-    if status:
+    if status in dict(Project.STATUS_CHOICES):
         projects = projects.filter(status=status)
-    
-    # Apply priority filter
+
     priority = request.GET.get('priority', '')
-    if priority:
+    if priority in dict(Project.PRIORITY_CHOICES):
         projects = projects.filter(priority=priority)
-    
-    # Apply manager filter
+
     manager_id = request.GET.get('manager', '')
     if manager_id:
         projects = projects.filter(manager_id=manager_id)
-    
-    # Calculate statistics
-    total_projects = projects.count()
-    active_projects = projects.filter(status='in_progress').count()
-    completed_projects = projects.filter(status='completed').count()
-    overdue_projects = projects.filter(end_date__lt=timezone.now().date(), status__in=['planning', 'in_progress']).count()
-    
-    # Get managers for filter dropdown
-    managers = Employee.objects.filter(company=company, user__is_company_admin=True)
-    
-    context = {
-        'projects': projects,
+
+    # Stats on unfiltered company queryset so counts are always accurate
+    all_projects = Project.objects.filter(company=company)
+    stats = all_projects.aggregate(
+        total=Count('id'),
+        active=Count('id', filter=Q(status='in_progress')),
+        completed=Count('id', filter=Q(status='completed')),
+        overdue=Count('id', filter=Q(
+            end_date__lt=today, status__in=['planning', 'in_progress']
+        )),
+    )
+
+    managers = Employee.objects.filter(company=company, status='active').select_related('user')
+
+    return render(request, 'projects/project_list.html', {
+        'projects': _paginate(projects, request.GET.get('page')),
         'managers': managers,
         'query': query,
         'selected_status': status,
         'selected_priority': priority,
         'selected_manager': manager_id,
-        'total_projects': total_projects,
-        'active_projects': active_projects,
-        'completed_projects': completed_projects,
-        'overdue_projects': overdue_projects,
+        'stats': stats,
         'STATUS_CHOICES': Project.STATUS_CHOICES,
         'PRIORITY_CHOICES': Project.PRIORITY_CHOICES,
-        'today': timezone.now().date(),
-    }
-    
-    return render(request, 'projects/project_list.html', context)
+        'today': today,
+    })
+
+
+# ---------------------------------------------------------------------------
+# Project detail
+# ---------------------------------------------------------------------------
 
 @login_required
 def project_detail(request, pk):
-    """Display project details with tasks"""
     company = request.user.company
     project = get_object_or_404(
         Project.objects.prefetch_related(
             'sous_taches__assigne_a__user',
             'sous_taches__commentaires__auteur',
-            'team_members__user'
-        ), 
-        pk=pk, 
-        company=company
+            'team_members__user',
+        ),
+        pk=pk,
+        company=company,
     )
-    
-    # Get all tasks for this project
-    sous_taches = project.sous_taches.all().select_related('assigne_a__user').order_by('ordre')
-    
-    # Calculate task statistics
-    total_taches = sous_taches.count()
-    taches_terminees = sous_taches.filter(status='termine').count()
-    taches_en_cours = sous_taches.filter(status='en_cours').count()
-    taches_a_faire = sous_taches.filter(status='a_faire').count()
-    
-    # Get comments for tasks
-    comment_form = CommentaireForm()
-    
-    # Get task form for adding new tasks
-    tache_form = SousTacheForm(company=company, projet_id=project.id)
-    
-    # Recalculate project progress from the model (ensure fresh value)
-    project.update_completion_from_subtasks()
-    progress_percentage = project.completion_percentage
-    
-    # Get team members
-    team_members = project.team_members.all()
-    
-    context = {
+
+    sous_taches = project.sous_taches.select_related('assigne_a__user').order_by('ordre')
+
+    # Single aggregate instead of 4 separate COUNT queries
+    task_stats = sous_taches.aggregate(
+        total=Count('id'),
+        terminees=Count('id', filter=Q(status='termine')),
+        en_cours=Count('id', filter=Q(status='en_cours')),
+        a_faire=Count('id', filter=Q(status='a_faire')),
+    )
+
+    return render(request, 'projects/project_detail.html', {
         'project': project,
         'sous_taches': sous_taches,
-        'comment_form': comment_form,
-        'tache_form': tache_form,
-        'team_members': team_members,
-        'total_taches': total_taches,
-        'taches_terminees': taches_terminees,
-        'taches_en_cours': taches_en_cours,
-        'taches_a_faire': taches_a_faire,
-        'progress_percentage': progress_percentage,
+        'task_stats': task_stats,
+        'comment_form': CommentaireForm(),
+        'tache_form': SousTacheForm(company=company, projet_id=project.id),
+        'team_members': project.team_members.all(),
+        'progress_percentage': project.completion_percentage,
         'STATUS_CHOICES': SousTache.STATUS_CHOICES,
         'PRIORITE_CHOICES': SousTache.PRIORITE_CHOICES,
-    }
-    
-    return render(request, 'projects/project_detail.html', context)
+    })
+
+
+# ---------------------------------------------------------------------------
+# Project CRUD
+# ---------------------------------------------------------------------------
 
 @login_required
+@require_http_methods(['GET', 'POST'])
 def project_create(request):
-    """Create new project"""
     company = request.user.company
-    
+
     if request.method == 'POST':
         form = ProjectForm(request.POST, company=company)
         if form.is_valid():
-            project = form.save(commit=False)
-            project.company = company
-            project.created_by = request.user
+            with transaction.atomic():
+                project = form.save(commit=False)
+                project.company = company
+                project.created_by = request.user
+                project.save()
+                form.save_m2m()
 
-            # Calculate end date if not provided
-            if not project.end_date and project.start_date:
-                project.end_date = project.start_date + timedelta(days=30)
+                # Inline subtasks submitted with the creation form
+                for title in request.POST.getlist('subtask_titles'):
+                    title = title.strip()
+                    if title:
+                        SousTache.objects.create(
+                            company=company,
+                            projet=project,
+                            titre=title,
+                            created_by=request.user,
+                        )
 
-            project.save()
-            form.save_m2m()  # Save many-to-many relationships
+                project.update_completion_from_subtasks()
 
-            # create any subtasks provided via the form
-            titles = request.POST.getlist('subtask_titles')
-            for t in titles:
-                t = t.strip()
-                if t:
-                    SousTache.objects.create(
-                        company=company,
-                        projet=project,
-                        titre=t,
-                        created_by=request.user
-                    )
-
-            # ensure stored completion matches any subtasks
-            project.update_completion_from_subtasks()
-
-            messages.success(request, f'Project "{project.name}" created successfully!')
+            messages.success(request, f'Project "{project.name}" created.')
             return redirect('projects:project_list')
     else:
         form = ProjectForm(company=company)
 
-    return render(request, 'projects/project_form.html', {
-        'form': form,
-        'title': 'Create New Project'
-    })
+    return render(request, 'projects/project_form.html', {'form': form, 'title': 'Create Project'})
+
 
 @login_required
+@require_http_methods(['GET', 'POST'])
 def project_edit(request, pk):
-    """Edit existing project"""
     company = request.user.company
     project = get_object_or_404(Project, pk=pk, company=company)
-    
+
     if request.method == 'POST':
         form = ProjectForm(request.POST, instance=project, company=company)
         if form.is_valid():
-            form.save()
+            with transaction.atomic():
+                form.save()
+                for title in request.POST.getlist('subtask_titles'):
+                    title = title.strip()
+                    if title and not project.sous_taches.filter(titre=title).exists():
+                        SousTache.objects.create(
+                            company=company,
+                            projet=project,
+                            titre=title,
+                            created_by=request.user,
+                        )
+                project.update_completion_from_subtasks()
 
-            # add any new subtasks entered during edit (skip duplicates)
-            titles = request.POST.getlist('subtask_titles')
-            for t in titles:
-                t = t.strip()
-                if t and not project.sous_taches.filter(titre=t).exists():
-                    SousTache.objects.create(
-                        company=company,
-                        projet=project,
-                        titre=t,
-                        created_by=request.user
-                    )
-
-            project.update_completion_from_subtasks()
-            messages.success(request, f'Project "{project.name}" updated successfully!')
+            messages.success(request, f'Project "{project.name}" updated.')
             return redirect('projects:project_detail', pk=project.pk)
     else:
         form = ProjectForm(instance=project, company=company)
-    
+
     return render(request, 'projects/project_form.html', {
-        'form': form,
-        'project': project,
-        'title': 'Edit Project'
+        'form': form, 'project': project, 'title': 'Edit Project',
     })
 
+
 @login_required
+@require_http_methods(['GET', 'POST'])
 def project_delete(request, pk):
-    """Delete project"""
     company = request.user.company
     project = get_object_or_404(Project, pk=pk, company=company)
-    
+
     if request.method == 'POST':
-        project_name = project.name
+        name = project.name
         project.delete()
-        messages.success(request, f'Project "{project_name}" deleted successfully!')
+        messages.success(request, f'Project "{name}" deleted.')
         return redirect('projects:project_list')
-    
+
     return render(request, 'projects/project_confirm_delete.html', {'project': project})
 
+
 @login_required
+@require_http_methods(['POST'])
 def update_project_progress(request, pk):
-    """Update project progress manually"""
+    """Manually override project completion percentage."""
     company = request.user.company
     project = get_object_or_404(Project, pk=pk, company=company)
-    
-    if request.method == 'POST':
-        try:
-            progress = int(request.POST.get('progress', 0))
-            if 0 <= progress <= 100:
-                project.completion_percentage = progress
-                project.save()
-                messages.success(request, f'Project progress updated to {progress}%')
-            else:
-                messages.error(request, 'Progress must be between 0 and 100')
-        except ValueError:
-            messages.error(request, 'Invalid progress value')
-    
-    return redirect('projects:project_detail', pk=project.pk)
+
+    try:
+        progress = int(request.POST.get('progress', 0))
+    except (ValueError, TypeError):
+        messages.error(request, 'Invalid progress value.')
+        return redirect('projects:project_detail', pk=pk)
+
+    if 0 <= progress <= 100:
+        project.completion_percentage = progress
+        project.save(update_fields=['completion_percentage', 'updated_at'])
+        messages.success(request, f'Progress updated to {progress}%.')
+    else:
+        messages.error(request, 'Progress must be between 0 and 100.')
+
+    return redirect('projects:project_detail', pk=pk)
+
+
+# ---------------------------------------------------------------------------
+# Sub-tasks
+# ---------------------------------------------------------------------------
 
 @login_required
+@require_http_methods(['POST'])
 def sous_tache_create(request, project_id):
-    """Create new subtask"""
     company = request.user.company
     project = get_object_or_404(Project, pk=project_id, company=company)
-    
-    if request.method == 'POST':
-        form = SousTacheForm(request.POST, company=company, projet_id=project_id)
-        if form.is_valid():
-            tache = form.save(commit=False)
-            tache.company = company
-            tache.projet = project
-            tache.created_by = request.user
-            tache.save()
-            
-            # Update project progress
-            project.update_completion_from_subtasks()
-            
-            messages.success(request, 'Task created successfully!')
-            return redirect('projects:project_detail', pk=project_id)
-    
-    return redirect('projects:project_detail', pk=project_id)
 
-@login_required
-def sous_tache_edit(request, pk):
-    """Edit existing subtask"""
-    company = request.user.company
-    tache = get_object_or_404(SousTache, pk=pk, company=company)
-    
-    if request.method == 'POST':
-        form = SousTacheForm(request.POST, instance=tache, company=company, projet_id=tache.projet.id)
-        if form.is_valid():
-            form.save()
-            
-            # Update project progress
-            tache.projet.mettre_a_jour_progression()
-            
-            messages.success(request, 'Task updated successfully!')
-            return redirect('projects:project_detail', pk=tache.projet.id)
-    
-    return redirect('projects:project_detail', pk=tache.projet.id)
-
-@login_required
-def sous_tache_delete(request, pk):
-    """Delete subtask"""
-    company = request.user.company
-    tache = get_object_or_404(SousTache, pk=pk, company=company)
-    project_id = tache.projet.id
-    
-    if request.method == 'POST':
-        tache.delete()
-        
-        # Update project progress
-        project = get_object_or_404(Project, pk=project_id, company=company)
+    form = SousTacheForm(request.POST, company=company, projet_id=project_id)
+    if form.is_valid():
+        tache = form.save(commit=False)
+        tache.company = company
+        tache.projet = project
+        tache.created_by = request.user
+        tache.save()
         project.update_completion_from_subtasks()
-        
-        messages.success(request, 'Task deleted successfully!')
-    
+        messages.success(request, 'Task created.')
+    else:
+        messages.error(request, 'Could not create task. Please check the form.')
+
     return redirect('projects:project_detail', pk=project_id)
 
+
 @login_required
-def sous_tache_change_status(request, pk):
-    """Change subtask status"""
+@require_http_methods(['POST'])
+def sous_tache_edit(request, pk):
     company = request.user.company
     tache = get_object_or_404(SousTache, pk=pk, company=company)
-    
-    if request.method == 'POST':
-        nouveau_status = request.POST.get('status')
-        if nouveau_status in dict(SousTache.STATUS_CHOICES):
-            ancien_status = tache.status
-            tache.status = nouveau_status
 
-            # Update completion date if task is marked as done
-            if nouveau_status == 'termine' and ancien_status != 'termine':
-                tache.date_achevement = timezone.now().date()
-            elif nouveau_status != 'termine':
-                tache.date_achevement = None
+    form = SousTacheForm(
+        request.POST, instance=tache, company=company, projet_id=tache.projet_id
+    )
+    if form.is_valid():
+        form.save()
+        tache.projet.update_completion_from_subtasks()
+        messages.success(request, 'Task updated.')
+    else:
+        messages.error(request, 'Could not update task.')
 
-            tache.save()
+    return redirect('projects:project_detail', pk=tache.projet_id)
 
-            # Update project progress
-            tache.projet.update_completion_from_subtasks()
-            
-            messages.success(request, f'Task status changed to: {tache.get_status_display()}')
-    
-    return redirect('projects:project_detail', pk=tache.projet.id)
 
 @login_required
+@require_http_methods(['POST'])
+def sous_tache_delete(request, pk):
+    company = request.user.company
+    tache = get_object_or_404(SousTache, pk=pk, company=company)
+    project = tache.projet
+    tache.delete()
+    project.update_completion_from_subtasks()
+    messages.success(request, 'Task deleted.')
+    return redirect('projects:project_detail', pk=project.pk)
 
+
+@login_required
+@require_http_methods(['POST'])
+def sous_tache_change_status(request, pk):
+    """Change task status — delegates to SousTache.change_status()."""
+    company = request.user.company
+    tache = get_object_or_404(SousTache, pk=pk, company=company)
+    new_status = request.POST.get('status', '').strip()
+
+    try:
+        tache.change_status(new_status)
+        messages.success(request, f'Status changed to {tache.get_status_display()}.')
+    except Exception as exc:
+        messages.error(request, str(exc))
+
+    return redirect('projects:project_detail', pk=tache.projet_id)
+
+
+@login_required
+@require_http_methods(['POST'])
 def toggle_subtask_completion(request, pk):
-    """Ajax endpoint used by the checkbox in the project detail page.
-
-    When a user checks or unchecks a task the front‑end sends a POST payload
-    with ``checked`` set to ``true`` or ``false``. We update the subtask's
-    ``completion_percentage`` and status accordingly, recalc the parent
-    project's completion, and return the new percentage so the progress bar
-    can update without a full page reload.
+    """
+    AJAX endpoint: toggle a task between 'termine' and 'a_faire'.
+    Delegates to SousTache.change_status() so all side-effects (date,
+    completion_percentage, project rollup) are handled consistently.
     """
     company = request.user.company
     tache = get_object_or_404(SousTache, pk=pk, company=company)
 
-    if request.method == 'POST':
-        checked = request.POST.get('checked') == 'true'
-        tache.completion_percentage = 100 if checked else 0
-        # keep status in sync
-        tache.status = 'termine' if checked else 'a_faire'
-        tache.date_achevement = timezone.now().date() if checked else None
-        tache.save()
+    checked = request.POST.get('checked') == 'true'
+    new_status = 'termine' if checked else 'a_faire'
+    tache.change_status(new_status)
 
-        # recalc project progress
-        tache.projet.update_completion_from_subtasks()
-        return JsonResponse({'project_completion': tache.projet.completion_percentage})
-    return JsonResponse({'error': 'Invalid request'}, status=400)
+    # Re-fetch the project's updated completion percentage
+    tache.projet.refresh_from_db(fields=['completion_percentage'])
+    return JsonResponse({'project_completion': tache.projet.completion_percentage})
 
 
 @login_required
-
 def sous_tache_detail(request, pk):
-    """View subtask details (for AJAX/modal)"""
     company = request.user.company
     tache = get_object_or_404(SousTache, pk=pk, company=company)
-    
-    context = {
+    return render(request, 'projects/sous_tache_detail.html', {
         'tache': tache,
-        'comments': tache.commentaires.all().order_by('-created_at'),
+        'comments': tache.commentaires.select_related('auteur').order_by('-created_at'),
         'comment_form': CommentaireForm(),
-    }
-    
-    return render(request, 'projects/sous_tache_detail.html', context)
+    })
+
+
+# ---------------------------------------------------------------------------
+# Comments
+# ---------------------------------------------------------------------------
 
 @login_required
+@require_http_methods(['POST'])
 def add_comment(request, tache_id):
-    """Add comment to subtask"""
     company = request.user.company
     tache = get_object_or_404(SousTache, pk=tache_id, company=company)
-    
-    if request.method == 'POST':
-        form = CommentaireForm(request.POST)
-        if form.is_valid():
-            commentaire = form.save(commit=False)
-            commentaire.company = company
-            commentaire.tache = tache
-            commentaire.auteur = request.user
-            commentaire.save()
-            
-            messages.success(request, 'Comment added successfully!')
-    
-    return redirect('projects:project_detail', pk=tache.projet.id)
+
+    form = CommentaireForm(request.POST)
+    if form.is_valid():
+        commentaire = form.save(commit=False)
+        commentaire.company = company
+        commentaire.tache = tache
+        commentaire.auteur = request.user
+        commentaire.save()
+        messages.success(request, 'Comment added.')
+    else:
+        messages.error(request, 'Comment cannot be empty.')
+
+    return redirect('projects:project_detail', pk=tache.projet_id)
+
 
 @login_required
+@require_http_methods(['POST'])
 def delete_comment(request, pk):
-    """Delete comment"""
     company = request.user.company
     commentaire = get_object_or_404(CommentaireTache, pk=pk, company=company)
-    
-    # Check if user is author or admin
-    if commentaire.auteur == request.user or request.user.is_company_admin:
-        project_id = commentaire.tache.projet.id
-        commentaire.delete()
-        messages.success(request, 'Comment deleted successfully!')
-        return redirect('projects:project_detail', pk=project_id)
-    else:
-        messages.error(request, 'You are not authorized to delete this comment.')
-        return redirect('projects:project_detail', pk=commentaire.tache.projet.id)
 
-@login_required
-def project_export(request):
-    """Export projects to Excel"""
-    company = request.user.company
-    projects = Project.objects.filter(company=company).select_related('manager__user')
-    
-    # Prepare data
-    data = []
-    for project in projects:
-        # Calculate task statistics
-        sous_taches = project.sous_taches.all()
-        total_taches = sous_taches.count()
-        completed_taches = sous_taches.filter(status='termine').count()
-        
-        data.append({
-            'Project ID': project.id,
-            'Name': project.name,
-            'Description': project.description[:100],  # First 100 chars
-            'Status': project.get_status_display(),
-            'Priority': project.get_priority_display(),
-            'Manager': project.manager.user.get_full_name() if project.manager else '',
-            'Team Members': ', '.join([emp.user.get_full_name() for emp in project.team_members.all()]),
-            'Budget': float(project.budget) if project.budget else 0.0,
-            'Start Date': project.start_date.strftime('%Y-%m-%d') if project.start_date else '',
-            'End Date': project.end_date.strftime('%Y-%m-%d') if project.end_date else '',
-            'Completion %': project.completion_percentage,
-            'Total Tasks': total_taches,
-            'Completed Tasks': completed_taches,
-            'Created By': project.created_by.get_full_name() if project.created_by else '',
-            'Created At': project.created_at.strftime('%Y-%m-%d %H:%M'),
-        })
-    
-    # Create DataFrame
-    df = pd.DataFrame(data)
-    
-    # Create Excel file in memory
-    buffer = io.BytesIO()
-    with pd.ExcelWriter(buffer, engine='openpyxl') as writer:
-        df.to_excel(writer, sheet_name='Projects', index=False)
-        
-        # Auto-adjust column widths
-        worksheet = writer.sheets['Projects']
-        for column in worksheet.columns:
-            max_length = 0
-            column_letter = column[0].column_letter
-            for cell in column:
-                try:
-                    if len(str(cell.value)) > max_length:
-                        max_length = len(str(cell.value))
-                except:
-                    pass
-            adjusted_width = min(max_length + 2, 50)
-            worksheet.column_dimensions[column_letter].width = adjusted_width
-    
-    buffer.seek(0)
-    
-    # Create response
-    response = HttpResponse(
-        buffer.getvalue(),
-        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-    )
-    response['Content-Disposition'] = 'attachment; filename="projects_export.xlsx"'
-    return response
+    if commentaire.auteur == request.user or request.user.is_company_admin:
+        project_id = commentaire.tache.projet_id
+        commentaire.delete()
+        messages.success(request, 'Comment deleted.')
+    else:
+        messages.error(request, 'You are not authorised to delete this comment.')
+        project_id = commentaire.tache.projet_id
+
+    return redirect('projects:project_detail', pk=project_id)
+
+
+# ---------------------------------------------------------------------------
+# Reports & visualisations
+# ---------------------------------------------------------------------------
 
 @login_required
 def project_summary_report(request):
-    """Generate project summary report"""
     company = request.user.company
-    
-    # Get all projects
     projects = Project.objects.filter(company=company)
-    
-    # Calculate statistics
-    total_projects = projects.count()
-    active_projects = projects.filter(status='in_progress').count()
-    completed_projects = projects.filter(status='completed').count()
-    planning_projects = projects.filter(status='planning').count()
-    on_hold_projects = projects.filter(status='on_hold').count()
-    
-    # Budget statistics
+    today = timezone.localdate()
+
+    counts = projects.aggregate(
+        total=Count('id'),
+        active=Count('id', filter=Q(status='in_progress')),
+        completed=Count('id', filter=Q(status='completed')),
+        planning=Count('id', filter=Q(status='planning')),
+        on_hold=Count('id', filter=Q(status='on_hold')),
+    )
+
     budget_stats = projects.aggregate(
         total_budget=Sum('budget'),
         avg_budget=Avg('budget'),
-        min_budget=Avg('budget'),  # Would be Min in real implementation
-        max_budget=Avg('budget')   # Would be Max in real implementation
+        min_budget=Min('budget'),
+        max_budget=Max('budget'),
     )
-    
-    # Status distribution
-    status_distribution = projects.values('status').annotate(
-        count=Count('id'),
-        percentage=Count('id') * 100.0 / total_projects if total_projects > 0 else 0
-    ).order_by('-count')
-    
-    # Priority distribution
-    priority_distribution = projects.values('priority').annotate(
-        count=Count('id'),
-        percentage=Count('id') * 100.0 / total_projects if total_projects > 0 else 0
-    ).order_by('-count')
-    
-    # Overdue projects
-    overdue_projects = projects.filter(
-        end_date__lt=timezone.now().date(),
-        status__in=['planning', 'in_progress']
-    ).order_by('end_date')[:10]
-    
-    # Recent projects
+
+    total = counts['total'] or 1  # avoid division by zero in annotation
+    status_distribution = list(
+        projects.values('status')
+        .annotate(count=Count('id'))
+        .order_by('-count')
+    )
+    priority_distribution = list(
+        projects.values('priority')
+        .annotate(count=Count('id'))
+        .order_by('-count')
+    )
+
+    overdue_projects = (
+        projects.filter(end_date__lt=today, status__in=['planning', 'in_progress'])
+        .select_related('manager__user')
+        .order_by('end_date')[:10]
+    )
     recent_projects = projects.order_by('-created_at')[:10]
-    
-    context = {
-        'total_projects': total_projects,
-        'active_projects': active_projects,
-        'completed_projects': completed_projects,
-        'planning_projects': planning_projects,
-        'on_hold_projects': on_hold_projects,
+
+    return render(request, 'projects/project_summary_report.html', {
+        'counts': counts,
         'budget_stats': budget_stats,
-        'status_distribution': list(status_distribution),
-        'priority_distribution': list(priority_distribution),
+        'status_distribution': status_distribution,
+        'priority_distribution': priority_distribution,
         'overdue_projects': overdue_projects,
         'recent_projects': recent_projects,
-        'report_date': timezone.now().date(),
-    }
-    
-    return render(request, 'projects/project_summary_report.html', context)
+        'report_date': today,
+    })
+
 
 @login_required
 def project_gantt_chart(request):
-    """Display Gantt chart for projects"""
     company = request.user.company
-    projects = Project.objects.filter(company=company).select_related('manager__user')
-    
-    # Prepare data for Gantt chart
+    projects = (
+        Project.objects
+        .filter(company=company)
+        .select_related('manager__user')
+        .prefetch_related('sous_taches__assigne_a__user')
+    )
+
     gantt_data = []
     for project in projects:
-        # Get project tasks
-        tasks = project.sous_taches.all()
-        for task in tasks:
-            gantt_data.append({
-                'id': task.id,
-                'text': task.titre,
-                'start_date': task.date_debut.strftime('%d-%m-%Y') if task.date_debut else '',
-                'end_date': task.date_echeance.strftime('%d-%m-%Y') if task.date_echeance else '',
-                'progress': 100 if task.status == 'termine' else 50 if task.status == 'en_cours' else 0,
-                'parent': project.id,
-                'project': project.name,
-                'assignee': task.assigne_a.user.get_full_name() if task.assigne_a else 'Unassigned',
-                'status': task.get_status_display(),
-            })
-        
-        # Add project as parent task
+        # Parent row
         gantt_data.append({
             'id': project.id,
             'text': project.name,
-            'start_date': project.start_date.strftime('%d-%m-%Y') if project.start_date else '',
-            'end_date': project.end_date.strftime('%d-%m-%Y') if project.end_date else '',
-            'progress': project.completion_percentage / 100,
+            'start_date': project.start_date.strftime('%d-%m-%Y'),
+            'end_date': project.end_date.strftime('%d-%m-%Y'),
+            'progress': round(project.completion_percentage / 100, 2),
             'parent': 0,
             'open': True,
         })
-    
-    context = {
+        # Task rows
+        for task in project.sous_taches.all():
+            gantt_data.append({
+                'id': f'task_{task.id}',
+                'text': task.titre,
+                'start_date': task.date_debut.strftime('%d-%m-%Y') if task.date_debut else '',
+                'end_date': task.date_echeance.strftime('%d-%m-%Y') if task.date_echeance else '',
+                'progress': (
+                    1.0 if task.status == 'termine'
+                    else 0.5 if task.status == 'en_cours'
+                    else 0.0
+                ),
+                'parent': project.id,
+                'project': project.name,
+                'assignee': (
+                    task.assigne_a.user.get_full_name()
+                    if task.assigne_a else 'Unassigned'
+                ),
+                'status': task.get_status_display(),
+            })
+
+    return render(request, 'projects/project_gantt_chart.html', {
         'projects': projects,
         'gantt_data': json.dumps(gantt_data),
-    }
-    
-    return render(request, 'projects/project_gantt_chart.html', context)
+    })
+
 
 @login_required
 def project_kanban(request):
-    """Display Kanban board for projects"""
     company = request.user.company
-    
-    # Get projects grouped by status
-    planning_projects = Project.objects.filter(company=company, status='planning')
-    in_progress_projects = Project.objects.filter(company=company, status='in_progress')
-    on_hold_projects = Project.objects.filter(company=company, status='on_hold')
-    completed_projects = Project.objects.filter(company=company, status='completed')
-    
-    context = {
-        'planning_projects': planning_projects,
-        'in_progress_projects': in_progress_projects,
-        'on_hold_projects': on_hold_projects,
-        'completed_projects': completed_projects,
-    }
-    
-    return render(request, 'projects/project_kanban.html', context)
+    base_qs = Project.objects.filter(company=company).select_related('manager__user')
+
+    # One query per column — acceptable for typical project counts
+    columns = {status: base_qs.filter(status=status) for status, _ in Project.STATUS_CHOICES}
+
+    return render(request, 'projects/project_kanban.html', {
+        'columns': columns,
+        'STATUS_CHOICES': Project.STATUS_CHOICES,
+    })
+
 
 @login_required
 def project_calendar(request):
-    """Display project calendar view"""
     company = request.user.company
-    projects = Project.objects.filter(company=company)
-    
-    # Prepare calendar events
-    calendar_events = []
+    projects = (
+        Project.objects
+        .filter(company=company)
+        .prefetch_related('sous_taches__assigne_a__user')
+    )
+
+    events = []
     for project in projects:
-        # Project as main event
-        calendar_events.append({
+        events.append({
             'title': project.name,
-            'start': project.start_date.isoformat() if project.start_date else '',
-            'end': project.end_date.isoformat() if project.end_date else '',
+            'start': project.start_date.isoformat(),
+            'end': project.end_date.isoformat(),
             'url': f'/projects/{project.id}/',
-            'color': _get_project_color(project.priority),
+            'color': _priority_color(project.priority),
             'extendedProps': {
                 'type': 'project',
                 'priority': project.priority,
                 'status': project.status,
-            }
+            },
         })
-        
-        # Add tasks as sub-events
         for task in project.sous_taches.all():
             if task.date_debut and task.date_echeance:
-                calendar_events.append({
+                events.append({
                     'title': task.titre,
                     'start': task.date_debut.isoformat(),
                     'end': task.date_echeance.isoformat(),
-                    'color': _get_task_color(task.status),
+                    'color': _status_color(task.status),
                     'extendedProps': {
                         'type': 'task',
                         'status': task.status,
-                        'assignee': task.assigne_a.user.get_full_name() if task.assigne_a else 'Unassigned',
-                    }
+                        'assignee': (
+                            task.assigne_a.user.get_full_name()
+                            if task.assigne_a else 'Unassigned'
+                        ),
+                    },
                 })
-    
-    context = {
-        'calendar_events': json.dumps(calendar_events),
+
+    return render(request, 'projects/project_calendar.html', {
+        'calendar_events': json.dumps(events),
         'projects': projects,
-    }
-    
-    return render(request, 'projects/project_calendar.html', context)
+    })
 
-def _get_project_color(priority):
-    """Get color based on project priority"""
-    color_map = {
-        'critical': '#dc3545',  # Red
-        'high': '#fd7e14',      # Orange
-        'medium': '#ffc107',    # Yellow
-        'low': '#198754',       # Green
-    }
-    return color_map.get(priority, '#6c757d')  # Default gray
 
-def _get_task_color(status):
-    """Get color based on task status"""
-    color_map = {
-        'termine': '#198754',    # Green
-        'en_cours': '#0dcaf0',   # Cyan
-        'a_faire': '#6c757d',    # Gray
-        'en_attente': '#ffc107', # Yellow
-        'annule': '#dc3545',     # Red
-    }
-    return color_map.get(status, '#6c757d')  # Default gray
+# ---------------------------------------------------------------------------
+# Export
+# ---------------------------------------------------------------------------
+
+@login_required
+def project_export(request):
+    """Export all company projects to Excel."""
+    import pandas as pd
+
+    company = request.user.company
+    projects = (
+        Project.objects
+        .filter(company=company)
+        .select_related('manager__user', 'created_by')
+        .prefetch_related('team_members__user', 'sous_taches')
+    )
+
+    rows = []
+    for project in projects:
+        task_stats = project.sous_taches.aggregate(
+            total=Count('id'),
+            completed=Count('id', filter=Q(status='termine')),
+        )
+        rows.append({
+            'Project ID': project.id,
+            'Name': project.name,
+            'Description': project.description[:100],
+            'Status': project.get_status_display(),
+            'Priority': project.get_priority_display(),
+            'Manager': project.manager.user.get_full_name() if project.manager else '',
+            'Team Members': ', '.join(
+                emp.user.get_full_name() for emp in project.team_members.all()
+            ),
+            'Budget': float(project.budget or 0),
+            'Start Date': project.start_date.strftime('%Y-%m-%d'),
+            'End Date': project.end_date.strftime('%Y-%m-%d'),
+            'Completion %': project.completion_percentage,
+            'Total Tasks': task_stats['total'],
+            'Completed Tasks': task_stats['completed'],
+            'Created By': project.created_by.get_full_name() if project.created_by else '',
+            'Created At': project.created_at.strftime('%Y-%m-%d %H:%M'),
+        })
+
+    df = pd.DataFrame(rows)
+    buffer = io.BytesIO()
+    with pd.ExcelWriter(buffer, engine='openpyxl') as writer:
+        df.to_excel(writer, sheet_name='Projects', index=False)
+        ws = writer.sheets['Projects']
+        for col in ws.columns:
+            letter = col[0].column_letter
+            width = min(max((len(str(c.value or '')) for c in col), default=10) + 2, 50)
+            ws.column_dimensions[letter].width = width
+
+    buffer.seek(0)
+    response = HttpResponse(
+        buffer.getvalue(),
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    )
+    response['Content-Disposition'] = 'attachment; filename="projects_export.xlsx"'
+    return response
+
+
+# ---------------------------------------------------------------------------
+# Private helpers
+# ---------------------------------------------------------------------------
+
+_PRIORITY_COLORS = {
+    'critical': '#dc3545',
+    'high': '#fd7e14',
+    'medium': '#ffc107',
+    'low': '#198754',
+}
+
+_STATUS_COLORS = {
+    'termine': '#198754',
+    'en_cours': '#0dcaf0',
+    'a_faire': '#6c757d',
+    'en_attente': '#ffc107',
+    'annule': '#dc3545',
+}
+
+
+def _priority_color(priority: str) -> str:
+    return _PRIORITY_COLORS.get(priority, '#6c757d')
+
+
+def _status_color(status: str) -> str:
+    return _STATUS_COLORS.get(status, '#6c757d')
