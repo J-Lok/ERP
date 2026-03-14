@@ -18,11 +18,22 @@ class ProjectForm(forms.ModelForm):
             'completion_percentage',
         ]
         widgets = {
-            'start_date': forms.DateInput(attrs={'type': 'date'}),
-            'end_date': forms.DateInput(attrs={'type': 'date'}),
-            'description': forms.Textarea(attrs={'rows': 4}),
-            'budget': forms.NumberInput(attrs={'step': '0.01'}),
-            'completion_percentage': forms.NumberInput(attrs={'min': 0, 'max': 100}),
+            'name': forms.TextInput(attrs={'class': 'form-control'}),
+            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 4}),
+            'status': forms.Select(attrs={'class': 'form-select'}),
+            'priority': forms.Select(attrs={'class': 'form-select'}),
+            'manager': forms.Select(attrs={'class': 'form-select'}),
+            'team_members': forms.SelectMultiple(attrs={
+                'class': 'form-select',
+                'size': '6',
+                'id': 'id_team_members',
+            }),
+            'start_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'end_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'budget': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'min': '0'}),
+            'completion_percentage': forms.NumberInput(attrs={
+                'class': 'form-control', 'min': 0, 'max': 100,
+            }),
         }
 
     def __init__(self, *args, company=None, **kwargs):

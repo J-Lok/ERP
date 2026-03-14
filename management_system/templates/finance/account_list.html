@@ -1,36 +1,149 @@
-{% extends "base.html" %}
-{% block content %}
-<h2>Accounts</h2>
-<a href="{% url 'finance:account_create' %}" class="btn btn-primary">New Account</a>
-<a href="{% url 'finance:transaction_list' %}" class="btn btn-secondary ms-2">View Transactions</a>
-<table class="table mt-2">
-    <thead><tr><th>Name</th><th>Balance</th><th>Actions</th></tr></thead>
-    <tbody>
-    {% for acct in accounts %}
-        <tr><td>{{ acct.name }}</td><td>{{ acct.balance }}</td><td><a href="{% url 'finance:account_edit' acct.pk %}" class="btn btn-sm btn-warning"><i class="fas fa-edit"></i> Edit</a> <a href="{% url 'finance:account_delete' acct.pk %}" class="btn btn-sm btn-danger"><i class="fas fa-trash"></i> Delete</a></td></tr>
-    {% empty %}
-        <tr><td colspan="3">No accounts created.</td></tr>
-    {% endfor %}
-    </tbody>
-</table>
+{% extends 'base.html' %}
+{% block title %}Finance Dashboard{% endblock %}
 
-{% if accounts.has_other_pages %}
-<nav aria-label="Page navigation">
-  <ul class="pagination">
-    {% if accounts.has_previous %}
-      <li class="page-item"><a class="page-link" href="?page={{ accounts.previous_page_number }}">Previous</a></li>
-    {% else %}
-      <li class="page-item disabled"><span class="page-link">Previous</span></li>
-    {% endif %}
-    {% for num in accounts.paginator.page_range %}
-      <li class="page-item {% if accounts.number == num %}active{% endif %}"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
-    {% endfor %}
-    {% if accounts.has_next %}
-      <li class="page-item"><a class="page-link" href="?page={{ accounts.next_page_number }}">Next</a></li>
-    {% else %}
-      <li class="page-item disabled"><span class="page-link">Next</span></li>
-    {% endif %}
-  </ul>
-</nav>
-{% endif %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h2 class="mb-0"><i class="fas fa-chart-line text-primary me-2"></i>Finance Dashboard</h2>
+  <div class="d-flex gap-2">
+    <a href="{% url 'finance:transaction_create' %}" class="btn btn-primary btn-sm">
+      <i class="fas fa-plus me-1"></i>New Transaction
+    </a>
+    <a href="{% url 'finance:account_create' %}" class="btn btn-outline-secondary btn-sm">
+      <i class="fas fa-wallet me-1"></i>New Account
+    </a>
+  </div>
+</div>
+
+<!-- KPI row -->
+<div class="row g-3 mb-4">
+  <div class="col-sm-6 col-xl-3">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-body d-flex align-items-center gap-3">
+        <div class="rounded-circle bg-primary bg-opacity-10 p-3">
+          <i class="fas fa-wallet fa-lg text-primary"></i>
+        </div>
+        <div>
+          <p class="text-muted small mb-0">Total Balance</p>
+          <h4 class="mb-0 fw-bold">{{ total_balance|floatformat:2 }}</h4>
+          <span class="text-muted small">across {{ account_count }} account{{ account_count|pluralize }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-xl-3">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-body d-flex align-items-center gap-3">
+        <div class="rounded-circle bg-success bg-opacity-10 p-3">
+          <i class="fas fa-arrow-down fa-lg text-success"></i>
+        </div>
+        <div>
+          <p class="text-muted small mb-0">Total Credits</p>
+          <h4 class="mb-0 fw-bold text-success">{{ total_credits|floatformat:2 }}</h4>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-xl-3">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-body d-flex align-items-center gap-3">
+        <div class="rounded-circle bg-danger bg-opacity-10 p-3">
+          <i class="fas fa-arrow-up fa-lg text-danger"></i>
+        </div>
+        <div>
+          <p class="text-muted small mb-0">Total Debits</p>
+          <h4 class="mb-0 fw-bold text-danger">{{ total_debits|floatformat:2 }}</h4>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-xl-3">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-body d-flex align-items-center gap-3">
+        <div class="rounded-circle {% if net_month >= 0 %}bg-success{% else %}bg-danger{% endif %} bg-opacity-10 p-3">
+          <i class="fas fa-calendar-alt fa-lg {% if net_month >= 0 %}text-success{% else %}text-danger{% endif %}"></i>
+        </div>
+        <div>
+          <p class="text-muted small mb-0">Net This Month</p>
+          <h4 class="mb-0 fw-bold {% if net_month >= 0 %}text-success{% else %}text-danger{% endif %}">
+            {% if net_month >= 0 %}+{% endif %}{{ net_month|floatformat:2 }}
+          </h4>
+          <span class="text-muted small">↑ {{ month_credits|floatformat:0 }} · ↓ {{ month_debits|floatformat:0 }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4">
+  <!-- Recent transactions -->
+  <div class="col-lg-8">
+    <div class="card shadow-sm h-100">
+      <div class="card-header bg-light d-flex justify-content-between align-items-center">
+        <span class="fw-semibold"><i class="fas fa-exchange-alt text-secondary me-2"></i>Recent Transactions</span>
+        <a href="{% url 'finance:transaction_list' %}" class="btn btn-sm btn-outline-secondary">View all</a>
+      </div>
+      <div class="card-body p-0">
+        {% if recent_txns %}
+        <div class="table-responsive">
+          <table class="table table-hover mb-0 small">
+            <thead class="table-light">
+              <tr>
+                <th>Date</th><th>Account</th><th>Description</th>
+                <th class="text-end">Credit</th><th class="text-end">Debit</th>
+              </tr>
+            </thead>
+            <tbody>
+            {% for txn in recent_txns %}
+            <tr>
+              <td class="text-muted">{{ txn.date|date:"d M Y" }}</td>
+              <td>
+                <a href="{% url 'finance:account_detail' txn.account.pk %}" class="text-decoration-none">
+                  {{ txn.account.name }}
+                </a>
+              </td>
+              <td class="text-muted">{{ txn.description|truncatechars:40|default:"—" }}</td>
+              <td class="text-end text-success fw-semibold">
+                {% if txn.transaction_type == 'credit' %}{{ txn.amount|floatformat:2 }}{% endif %}
+              </td>
+              <td class="text-end text-danger fw-semibold">
+                {% if txn.transaction_type == 'debit' %}{{ txn.amount|floatformat:2 }}{% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <div class="text-center text-muted py-4">No transactions yet.</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Top accounts -->
+  <div class="col-lg-4">
+    <div class="card shadow-sm h-100">
+      <div class="card-header bg-light d-flex justify-content-between align-items-center">
+        <span class="fw-semibold"><i class="fas fa-university text-secondary me-2"></i>Top Accounts</span>
+        <a href="{% url 'finance:account_list' %}" class="btn btn-sm btn-outline-secondary">All</a>
+      </div>
+      <div class="card-body p-0">
+        {% if top_accounts %}
+        <ul class="list-group list-group-flush">
+          {% for acct in top_accounts %}
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            <a href="{% url 'finance:account_detail' acct.pk %}" class="text-decoration-none fw-semibold">
+              {{ acct.name }}
+            </a>
+            <span class="badge bg-primary rounded-pill">{{ acct.balance|floatformat:2 }}</span>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <div class="text-center text-muted py-4">No accounts yet.</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
 {% endblock %}

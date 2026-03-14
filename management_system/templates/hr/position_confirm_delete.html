@@ -1,15 +1,20 @@
-{% extends "base.html" %}
+{% extends 'base.html' %}
+{% block title %}Delete Position — HR{% endblock %}
 {% block content %}
-<div class="alert alert-danger" role="alert">
-    <h4 class="alert-heading">Delete Position</h4>
-    <p>Are you sure you want to delete the position <strong>{{ position.title }}</strong>?</p>
-    <hr>
-    <p class="mb-0">This action cannot be undone.</p>
+<div class="card shadow-sm border-danger" style="max-width: 480px; margin: 2rem auto;">
+  <div class="card-header bg-danger text-white fw-semibold">
+    <i class="fas fa-exclamation-triangle me-2"></i>Delete Position
+  </div>
+  <div class="card-body">
+    <p>Are you sure you want to delete <strong>{{ position.title }}</strong> (Grade {{ position.salary_grade }})?</p>
+    <p class="text-muted small">Employees assigned to this position will have their position cleared.</p>
+  </div>
+  <div class="card-footer d-flex gap-2">
+    <form method="post">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-danger"><i class="fas fa-trash me-1"></i>Confirm Delete</button>
+    </form>
+    <a href="{% url 'hr:position_list' %}" class="btn btn-outline-secondary">Cancel</a>
+  </div>
 </div>
-
-<form method="post" class="d-inline">
-    {% csrf_token %}
-    <button type="submit" class="btn btn-danger"><i class="fas fa-trash"></i> Confirm Delete</button>
-    <a href="{% url 'hr:position_list' %}" class="btn btn-secondary"><i class="fas fa-times"></i> Cancel</a>
-</form>
 {% endblock %}

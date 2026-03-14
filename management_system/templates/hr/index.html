@@ -1,6 +1,164 @@
-{% extends "base.html" %}
+{% extends 'base.html' %}
+{% block title %}HR Dashboard{% endblock %}
 
 {% block content %}
-<h1>HR Dashboard</h1>
-<p>Welcome to the HR module.</p>
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h2 class="mb-0"><i class="fas fa-users-cog text-primary me-2"></i>HR Dashboard</h2>
+  <div class="d-flex gap-2">
+    <a href="{% url 'hr:leave_create' %}" class="btn btn-outline-primary btn-sm">
+      <i class="fas fa-plus me-1"></i>New Leave Request
+    </a>
+    <a href="{% url 'hr:position_list' %}" class="btn btn-outline-secondary btn-sm">
+      <i class="fas fa-briefcase me-1"></i>Positions
+    </a>
+  </div>
+</div>
+
+<!-- Stat cards -->
+<div class="row g-3 mb-4">
+  <div class="col-sm-6 col-xl-3">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-body d-flex align-items-center gap-3">
+        <div class="rounded-circle bg-warning bg-opacity-10 p-3">
+          <i class="fas fa-clock fa-lg text-warning"></i>
+        </div>
+        <div>
+          <p class="text-muted small mb-0">Pending Requests</p>
+          <h3 class="mb-0 fw-bold">{{ pending_count }}</h3>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-xl-3">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-body d-flex align-items-center gap-3">
+        <div class="rounded-circle bg-success bg-opacity-10 p-3">
+          <i class="fas fa-check-circle fa-lg text-success"></i>
+        </div>
+        <div>
+          <p class="text-muted small mb-0">Approved</p>
+          <h3 class="mb-0 fw-bold">{{ approved_count }}</h3>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-xl-3">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-body d-flex align-items-center gap-3">
+        <div class="rounded-circle bg-info bg-opacity-10 p-3">
+          <i class="fas fa-user-clock fa-lg text-info"></i>
+        </div>
+        <div>
+          <p class="text-muted small mb-0">Currently On Leave</p>
+          <h3 class="mb-0 fw-bold">{{ on_leave_now|length }}</h3>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-xl-3">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-body d-flex align-items-center gap-3">
+        <div class="rounded-circle bg-primary bg-opacity-10 p-3">
+          <i class="fas fa-briefcase fa-lg text-primary"></i>
+        </div>
+        <div>
+          <p class="text-muted small mb-0">Positions Defined</p>
+          <h3 class="mb-0 fw-bold">{{ position_count }}</h3>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4">
+  <!-- Pending requests -->
+  <div class="col-lg-7">
+    <div class="card shadow-sm h-100">
+      <div class="card-header d-flex justify-content-between align-items-center bg-light">
+        <span class="fw-semibold"><i class="fas fa-clock text-warning me-2"></i>Pending Requests</span>
+        <a href="{% url 'hr:leave_list' %}?status=pending" class="btn btn-sm btn-outline-secondary">View all</a>
+      </div>
+      <div class="card-body p-0">
+        {% if pending_requests %}
+        <ul class="list-group list-group-flush">
+          {% for leave in pending_requests %}
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            <div>
+              <span class="fw-semibold">{{ leave.employee.full_name }}</span>
+              <span class="badge bg-secondary ms-2">{{ leave.get_leave_type_display }}</span>
+              <div class="text-muted small">
+                {{ leave.start_date|date:"d M" }} → {{ leave.end_date|date:"d M Y" }}
+                <span class="ms-1">({{ leave.duration_days }} day{{ leave.duration_days|pluralize }})</span>
+              </div>
+            </div>
+            <div class="d-flex gap-1">
+              <form method="post" action="{% url 'hr:leave_approve' leave.pk %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-sm btn-success" title="Approve">
+                  <i class="fas fa-check"></i>
+                </button>
+              </form>
+              <form method="post" action="{% url 'hr:leave_deny' leave.pk %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-sm btn-danger" title="Deny">
+                  <i class="fas fa-times"></i>
+                </button>
+              </form>
+            </div>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <div class="text-center text-muted py-4">No pending requests.</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Right column -->
+  <div class="col-lg-5">
+    <!-- Currently on leave -->
+    <div class="card shadow-sm mb-3">
+      <div class="card-header bg-light fw-semibold">
+        <i class="fas fa-umbrella-beach text-info me-2"></i>Currently On Leave
+      </div>
+      <div class="card-body p-0">
+        {% if on_leave_now %}
+        <ul class="list-group list-group-flush">
+          {% for leave in on_leave_now %}
+          <li class="list-group-item d-flex justify-content-between">
+            <span class="fw-semibold">{{ leave.employee.full_name }}</span>
+            <span class="text-muted small">returns {{ leave.end_date|date:"d M" }}</span>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <div class="text-center text-muted py-3 small">Nobody on leave today.</div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Upcoming -->
+    <div class="card shadow-sm">
+      <div class="card-header bg-light fw-semibold">
+        <i class="fas fa-calendar-alt text-primary me-2"></i>Upcoming Leaves (30 days)
+      </div>
+      <div class="card-body p-0">
+        {% if upcoming %}
+        <ul class="list-group list-group-flush">
+          {% for leave in upcoming %}
+          <li class="list-group-item">
+            <span class="fw-semibold">{{ leave.employee.full_name }}</span>
+            <span class="badge bg-light text-dark border ms-2">{{ leave.get_leave_type_display }}</span>
+            <div class="text-muted small">{{ leave.start_date|date:"d M" }} → {{ leave.end_date|date:"d M Y" }}</div>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <div class="text-center text-muted py-3 small">No upcoming leaves.</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
 {% endblock %}

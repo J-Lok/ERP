@@ -54,6 +54,8 @@ class Employee(models.Model):
         ('hr', 'Human Resource'),
         ('accountant', 'Accountant'),
         ('secretary', 'Secretary'),
+        ('project_manager', 'Project Manager'),
+        ('stock_manager', 'Stock Manager'),
         ('other', 'Other'),
     ]
 
@@ -84,6 +86,14 @@ class Employee(models.Model):
     )
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='other', db_index=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='active', db_index=True)
+    position = models.ForeignKey(
+        'hr.Position',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='employees',
+        help_text='HR job position/grade for this employee.',
+    )
     date_of_birth = models.DateField(null=True, blank=True)
     date_joined = models.DateField()
     salary = models.DecimalField(

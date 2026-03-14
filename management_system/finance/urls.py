@@ -5,10 +5,15 @@ app_name = 'finance'
 
 urlpatterns = [
     path('', views.index, name='index'),
+
+    # Accounts
     path('accounts/', views.account_list, name='account_list'),
     path('accounts/new/', views.account_create, name='account_create'),
+    path('accounts/<int:pk>/', views.account_detail, name='account_detail'),
     path('accounts/<int:pk>/edit/', views.account_edit, name='account_edit'),
     path('accounts/<int:pk>/delete/', views.account_delete, name='account_delete'),
+
+    # Transactions
     path('transactions/', views.transaction_list, name='transaction_list'),
     path('transactions/new/', views.transaction_create, name='transaction_create'),
     path('transactions/<int:pk>/edit/', views.transaction_edit, name='transaction_edit'),

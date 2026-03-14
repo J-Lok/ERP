@@ -1,15 +1,29 @@
-{% extends "base.html" %}
+{% extends 'base.html' %}
+{% block title %}Delete Account — Finance{% endblock %}
 {% block content %}
-<div class="alert alert-danger" role="alert">
-    <h4 class="alert-heading">Delete Account</h4>
+<div class="card shadow-sm border-danger" style="max-width: 520px; margin: 2rem auto;">
+  <div class="card-header bg-danger text-white fw-semibold">
+    <i class="fas fa-exclamation-triangle me-2"></i>Delete Account
+  </div>
+  <div class="card-body">
     <p>Are you sure you want to delete the account <strong>{{ account.name }}</strong>?</p>
-    <hr>
-    <p class="mb-0">This action cannot be undone.</p>
+    <dl class="row mb-0">
+      <dt class="col-sm-4">Balance</dt>
+      <dd class="col-sm-8">{{ account.balance|floatformat:2 }}</dd>
+      <dt class="col-sm-4">Created</dt>
+      <dd class="col-sm-8">{{ account.created_at|date:"d M Y" }}</dd>
+    </dl>
+    <div class="alert alert-warning mt-3 mb-0 small">
+      <i class="fas fa-exclamation-circle me-1"></i>
+      All transactions linked to this account will also be deleted. This cannot be undone.
+    </div>
+  </div>
+  <div class="card-footer d-flex gap-2">
+    <form method="post">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-danger"><i class="fas fa-trash me-1"></i>Confirm Delete</button>
+    </form>
+    <a href="{% url 'finance:account_list' %}" class="btn btn-outline-secondary">Cancel</a>
+  </div>
 </div>
-
-<form method="post" class="d-inline">
-    {% csrf_token %}
-    <button type="submit" class="btn btn-danger"><i class="fas fa-trash"></i> Confirm Delete</button>
-    <a href="{% url 'finance:account_list' %}" class="btn btn-secondary"><i class="fas fa-times"></i> Cancel</a>
-</form>
 {% endblock %}
