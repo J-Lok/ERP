@@ -17,6 +17,15 @@ from django.utils import timezone
 from django.views.decorators.http import require_http_methods
 
 from employees.models import Employee
+from accounts.permissions import (
+    PROJECT_VIEW_ROLES,
+    PROJECT_WRITE_ROLES,
+    PROJECT_DELETE_ROLES,
+    PROJECT_REPORT_ROLES,
+    TASK_WRITE_ROLES,
+    TASK_DELETE_ROLES,
+    role_required,
+)
 from .forms import CommentaireForm, ProjectForm, SousTacheForm
 from .models import CommentaireTache, Project, SousTache
 
@@ -38,7 +47,7 @@ def _paginate(qs, page_number, per_page=PAGE_SIZE):
 # Project list
 # ---------------------------------------------------------------------------
 
-@login_required
+@role_required(*PROJECT_VIEW_ROLES)
 def project_list(request):
     company = request.user.company
     today = timezone.localdate()
@@ -104,7 +113,7 @@ def project_list(request):
 # Project detail
 # ---------------------------------------------------------------------------
 
-@login_required
+@role_required(*PROJECT_VIEW_ROLES)
 def project_detail(request, pk):
     company = request.user.company
     project = get_object_or_404(
@@ -144,7 +153,7 @@ def project_detail(request, pk):
 # Project CRUD
 # ---------------------------------------------------------------------------
 
-@login_required
+@role_required(*PROJECT_WRITE_ROLES)
 @require_http_methods(['GET', 'POST'])
 def project_create(request):
     company = request.user.company
@@ -180,7 +189,7 @@ def project_create(request):
     return render(request, 'projects/project_form.html', {'form': form, 'title': 'Create Project'})
 
 
-@login_required
+@role_required(*PROJECT_WRITE_ROLES)
 @require_http_methods(['GET', 'POST'])
 def project_edit(request, pk):
     company = request.user.company
@@ -212,7 +221,7 @@ def project_edit(request, pk):
     })
 
 
-@login_required
+@role_required(*PROJECT_DELETE_ROLES)
 @require_http_methods(['GET', 'POST'])
 def project_delete(request, pk):
     company = request.user.company
@@ -227,7 +236,7 @@ def project_delete(request, pk):
     return render(request, 'projects/project_confirm_delete.html', {'project': project})
 
 
-@login_required
+@role_required(*PROJECT_WRITE_ROLES)
 @require_http_methods(['POST'])
 def update_project_progress(request, pk):
     """Manually override project completion percentage."""
@@ -254,7 +263,7 @@ def update_project_progress(request, pk):
 # Sub-tasks
 # ---------------------------------------------------------------------------
 
-@login_required
+@role_required(*TASK_WRITE_ROLES)
 @require_http_methods(['POST'])
 def sous_tache_create(request, project_id):
     company = request.user.company
@@ -275,7 +284,7 @@ def sous_tache_create(request, project_id):
     return redirect('projects:project_detail', pk=project_id)
 
 
-@login_required
+@role_required(*TASK_WRITE_ROLES)
 @require_http_methods(['POST'])
 def sous_tache_edit(request, pk):
     company = request.user.company
@@ -294,7 +303,7 @@ def sous_tache_edit(request, pk):
     return redirect('projects:project_detail', pk=tache.projet_id)
 
 
-@login_required
+@role_required(*TASK_DELETE_ROLES)
 @require_http_methods(['POST'])
 def sous_tache_delete(request, pk):
     company = request.user.company
@@ -306,7 +315,7 @@ def sous_tache_delete(request, pk):
     return redirect('projects:project_detail', pk=project.pk)
 
 
-@login_required
+@role_required(*TASK_WRITE_ROLES)
 @require_http_methods(['POST'])
 def sous_tache_change_status(request, pk):
     """Change task status — delegates to SousTache.change_status()."""
@@ -323,7 +332,7 @@ def sous_tache_change_status(request, pk):
     return redirect('projects:project_detail', pk=tache.projet_id)
 
 
-@login_required
+@role_required(*TASK_WRITE_ROLES)
 @require_http_methods(['POST'])
 def toggle_subtask_completion(request, pk):
     """
@@ -343,7 +352,7 @@ def toggle_subtask_completion(request, pk):
     return JsonResponse({'project_completion': tache.projet.completion_percentage})
 
 
-@login_required
+@role_required(*PROJECT_VIEW_ROLES)
 def sous_tache_detail(request, pk):
     company = request.user.company
     tache = get_object_or_404(SousTache, pk=pk, company=company)
@@ -358,7 +367,7 @@ def sous_tache_detail(request, pk):
 # Comments
 # ---------------------------------------------------------------------------
 
-@login_required
+@role_required(*TASK_WRITE_ROLES)
 @require_http_methods(['POST'])
 def add_comment(request, tache_id):
     company = request.user.company
@@ -378,7 +387,7 @@ def add_comment(request, tache_id):
     return redirect('projects:project_detail', pk=tache.projet_id)
 
 
-@login_required
+@role_required(*TASK_WRITE_ROLES)
 @require_http_methods(['POST'])
 def delete_comment(request, pk):
     company = request.user.company
@@ -399,7 +408,7 @@ def delete_comment(request, pk):
 # Reports & visualisations
 # ---------------------------------------------------------------------------
 
-@login_required
+@role_required(*PROJECT_REPORT_ROLES)
 def project_summary_report(request):
     company = request.user.company
     projects = Project.objects.filter(company=company)
@@ -450,7 +459,7 @@ def project_summary_report(request):
     })
 
 
-@login_required
+@role_required(*PROJECT_VIEW_ROLES)
 def project_gantt_chart(request):
     company = request.user.company
     projects = (
@@ -499,7 +508,7 @@ def project_gantt_chart(request):
     })
 
 
-@login_required
+@role_required(*PROJECT_VIEW_ROLES)
 def project_kanban(request):
     company = request.user.company
     base_qs = Project.objects.filter(company=company).select_related('manager__user')
@@ -513,7 +522,7 @@ def project_kanban(request):
     })
 
 
-@login_required
+@role_required(*PROJECT_VIEW_ROLES)
 def project_calendar(request):
     company = request.user.company
     projects = (
@@ -563,7 +572,7 @@ def project_calendar(request):
 # Export
 # ---------------------------------------------------------------------------
 
-@login_required
+@role_required(*PROJECT_REPORT_ROLES)
 def project_export(request):
     """Export all company projects to Excel."""
     import pandas as pd

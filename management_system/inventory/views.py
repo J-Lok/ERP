@@ -1,5 +1,4 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db.models import Q, Count, Sum, Avg, F, Case, When, IntegerField
 from django.http import HttpResponse, JsonResponse
@@ -12,8 +11,15 @@ from datetime import datetime, timedelta
 
 from .models import Stock, StockTransaction, StockCategory
 from .forms import StockForm, StockTransactionForm, StockCategoryForm
+from accounts.permissions import (
+    INVENTORY_VIEW_ROLES,
+    INVENTORY_WRITE_ROLES,
+    INVENTORY_MANAGE_ROLES,
+    INVENTORY_REPORT_ROLES,
+    role_required,
+)
 
-@login_required
+@role_required(*INVENTORY_VIEW_ROLES)
 def stock_list(request):
     """Display list of stock items with filters"""
     company = request.user.company
@@ -70,7 +76,7 @@ def stock_list(request):
     
     return render(request, 'inventory/stock_list.html', context)
 
-@login_required
+@role_required(*INVENTORY_VIEW_ROLES)
 def stock_detail(request, pk):
     """Display stock item details"""
     company = request.user.company
@@ -96,7 +102,7 @@ def stock_detail(request, pk):
     
     return render(request, 'inventory/stock_detail.html', context)
 
-@login_required
+@role_required(*INVENTORY_WRITE_ROLES)
 def stock_create(request):
     """Create new stock item"""
     company = request.user.company
@@ -135,7 +141,7 @@ def stock_create(request):
         'title': 'Add New Stock Item'
     })
 
-@login_required
+@role_required(*INVENTORY_WRITE_ROLES)
 def stock_edit(request, pk):
     """Edit existing stock item"""
     company = request.user.company
@@ -156,7 +162,7 @@ def stock_edit(request, pk):
         'title': 'Edit Stock Item'
     })
 
-@login_required
+@role_required(*INVENTORY_MANAGE_ROLES)
 def stock_delete(request, pk):
     """Delete stock item"""
     company = request.user.company
@@ -170,7 +176,7 @@ def stock_delete(request, pk):
     
     return render(request, 'inventory/stock_confirm_delete.html', {'stock': stock})
 
-@login_required
+@role_required(*INVENTORY_MANAGE_ROLES)
 def stock_transaction(request, pk):
     """Handle stock transactions (in/out/adjustment)"""
     company = request.user.company
@@ -227,7 +233,7 @@ def stock_transaction(request, pk):
         'stock': stock
     })
 
-@login_required
+@role_required(*INVENTORY_MANAGE_ROLES)
 def stock_transaction_journal(request):
     """Display stock transaction journal"""
     company = request.user.company
@@ -270,7 +276,7 @@ def stock_transaction_journal(request):
     
     return render(request, 'inventory/stock_transaction_journal.html', context)
 
-@login_required
+@role_required(*INVENTORY_MANAGE_ROLES)
 def stock_transaction_export(request):
     """Export stock transactions to Excel"""
     company = request.user.company
@@ -351,7 +357,7 @@ def stock_transaction_export(request):
     response['Content-Disposition'] = 'attachment; filename="stock_transactions.xlsx"'
     return response
 
-@login_required
+@role_required(*INVENTORY_WRITE_ROLES)
 def stock_import(request):
     """Import stock items from Excel"""
     company = request.user.company
@@ -479,7 +485,7 @@ def stock_import(request):
     
     return render(request, 'inventory/stock_import.html')
 
-@login_required
+@role_required(*INVENTORY_REPORT_ROLES)
 def stock_export(request):
     """Export stock items to Excel"""
     company = request.user.company
@@ -539,7 +545,7 @@ def stock_export(request):
     response['Content-Disposition'] = 'attachment; filename="stock_export.xlsx"'
     return response
 
-@login_required
+@role_required(*INVENTORY_WRITE_ROLES)
 def stock_download_template(request):
     """Download Excel template for stock import"""
     sample_data = {
@@ -617,7 +623,7 @@ def stock_download_template(request):
     response['Content-Disposition'] = 'attachment; filename="stock_import_template.xlsx"'
     return response
 
-@login_required
+@role_required(*INVENTORY_MANAGE_ROLES)
 def stock_bulk_remove(request):
     """Handle bulk stock removal"""
     company = request.user.company
@@ -728,7 +734,7 @@ def stock_bulk_remove(request):
     
     return render(request, 'inventory/stock_bulk_remove.html')
 
-@login_required
+@role_required(*INVENTORY_MANAGE_ROLES)
 def stock_download_removal_template(request):
     """Download Excel template for bulk stock removal"""
     sample_data = {
@@ -770,7 +776,7 @@ def stock_download_removal_template(request):
     response['Content-Disposition'] = 'attachment; filename="stock_removal_template.xlsx"'
     return response
 
-@login_required
+@role_required(*INVENTORY_VIEW_ROLES)
 def category_list(request):
     """Display list of categories"""
     company = request.user.company
@@ -782,7 +788,7 @@ def category_list(request):
         'categories': categories
     })
 
-@login_required
+@role_required(*INVENTORY_WRITE_ROLES)
 def category_create(request):
     """Create new category"""
     company = request.user.company
@@ -803,7 +809,7 @@ def category_create(request):
         'title': 'Add New Category'
     })
 
-@login_required
+@role_required(*INVENTORY_WRITE_ROLES)
 def category_edit(request, pk):
     """Edit existing category"""
     company = request.user.company
@@ -824,7 +830,7 @@ def category_edit(request, pk):
         'title': 'Edit Category'
     })
 
-@login_required
+@role_required(*INVENTORY_MANAGE_ROLES)
 def category_delete(request, pk):
     """Delete category"""
     company = request.user.company
@@ -843,7 +849,7 @@ def category_delete(request, pk):
     
     return render(request, 'inventory/category_confirm_delete.html', {'category': category})
 
-@login_required
+@role_required(*INVENTORY_REPORT_ROLES)
 def low_stock_report(request):
     """Generate low stock report"""
     company = request.user.company
@@ -875,7 +881,7 @@ def low_stock_report(request):
     
     return render(request, 'inventory/low_stock_report.html', context)
 
-@login_required
+@role_required(*INVENTORY_REPORT_ROLES)
 def stock_valuation_report(request):
     """Generate stock valuation report"""
     company = request.user.company
@@ -918,7 +924,7 @@ def stock_valuation_report(request):
     
     return render(request, 'inventory/stock_valuation_report.html', context)
 
-@login_required
+@role_required(*INVENTORY_REPORT_ROLES)
 def stock_movement_report(request):
     """Generate stock movement report"""
     company = request.user.company
@@ -976,7 +982,7 @@ def stock_movement_report(request):
     
     return render(request, 'inventory/stock_movement_report.html', context)
 
-@login_required
+@role_required(*INVENTORY_VIEW_ROLES)
 def inventory_dashboard(request):
     """Inventory dashboard with overview"""
     company = request.user.company

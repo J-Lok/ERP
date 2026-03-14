@@ -61,10 +61,12 @@
                                 <span class="text-muted">Date Joined</span><br>
                                 <strong>{{ employee.date_joined|date:"N j, Y" }}</strong>
                             </li>
+                            {% if can_see_salary %}
                             <li class="list-group-item px-0">
                                 <span class="text-muted">Salary</span><br>
                                 <strong>${{ employee.salary|floatformat:2 }}</strong>
                             </li>
+                            {% endif %}
                         </ul>
                     </div>
 
@@ -128,8 +130,10 @@
                                     <dt class="col-5 text-muted fw-normal">Date Joined</dt>
                                     <dd class="col-7">{{ employee.date_joined|date:"N j, Y" }}</dd>
 
+                                    {% if can_see_salary %}
                                     <dt class="col-5 text-muted fw-normal">Salary</dt>
                                     <dd class="col-7">${{ employee.salary|floatformat:2 }}</dd>
+                                    {% endif %}
 
                                     <dt class="col-5 text-muted fw-normal">Record Created</dt>
                                     <dd class="col-7">{{ employee.created_at|date:"M j, Y H:i" }}</dd>

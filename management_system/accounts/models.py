@@ -103,6 +103,7 @@ class User(AbstractUser):
         ('accountant', 'Accountant'),
         ('manager', 'Manager'),
         ('secretary', 'Secretary'),
+        ('stock_manager', 'Stock Manager'),
         ('employee', 'Employee'),
     ]
 

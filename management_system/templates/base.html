@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+{% load role_tags %}
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -112,25 +113,79 @@
                                 <i class="fas fa-home"></i> Dashboard
                             </a>
                         </li>
+
+                        {# Employees — all roles can view; write/delete gated at view level #}
+                        {% if user|has_role:'admin,hr_manager,manager,accountant,secretary,stock_manager,employee' %}
                         <li class="nav-item">
                             <a class="nav-link {% if request.resolver_match.app_name == 'employees' %}active{% endif %}" 
                                href="{% url 'employees:employee_list' %}">
                                 <i class="fas fa-users"></i> Employees
                             </a>
                         </li>
+                        {% endif %}
+
+                        {# Projects #}
+                        {% if user|has_role:'admin,hr_manager,manager,accountant,secretary,stock_manager,employee' %}
                         <li class="nav-item">
                             <a class="nav-link {% if request.resolver_match.app_name == 'projects' %}active{% endif %}" 
                                href="{% url 'projects:project_list' %}">
                                 <i class="fas fa-project-diagram"></i> Projects
                             </a>
                         </li>
+                        {% endif %}
+
+                        {# Inventory — stock roles only #}
+                        {% if user|has_role:'admin,manager,hr_manager,accountant,secretary,stock_manager,employee' %}
                         <li class="nav-item">
                             <a class="nav-link {% if request.resolver_match.app_name == 'inventory' %}active{% endif %}" 
                                href="{% url 'inventory:stock_list' %}">
                                 <i class="fas fa-boxes"></i> Inventory
                             </a>
                         </li>
-                        {% if user.is_company_admin %}
+                        {% endif %}
+
+                        {# Finance — admin / accountant / manager #}
+                        {% if user|has_role:'admin,accountant,manager' %}
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.resolver_match.app_name == 'finance' %}active{% endif %}"
+                               href="{% url 'finance:account_list' %}">
+                                <i class="fas fa-wallet"></i> Finance
+                            </a>
+                        </li>
+                        {% endif %}
+
+                        {# HR — admin / hr_manager #}
+                        {% if user|has_role:'admin,hr_manager' %}
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.resolver_match.app_name == 'hr' %}active{% endif %}"
+                               href="{% url 'hr:position_list' %}">
+                                <i class="fas fa-user-tie"></i> HR
+                            </a>
+                        </li>
+                        {% endif %}
+
+                        {# Leave — self-service for everyone #}
+                        {% if user|has_role:'admin,hr_manager,manager,secretary,accountant,stock_manager,employee' %}
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.resolver_match.app_name == 'hr' and 'leave' in request.resolver_match.url_name %}active{% endif %}"
+                               href="{% url 'hr:my_leave_list' %}">
+                                <i class="fas fa-calendar-minus"></i> My Leaves
+                            </a>
+                        </li>
+                        {% endif %}
+
+                        {# CRM — admin / manager / secretary #}
+                        {% if user|has_role:'admin,manager,secretary' %}
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.resolver_match.app_name == 'crm' %}active{% endif %}"
+                               href="{% url 'crm:contact_list' %}">
+                                <i class="fas fa-address-book"></i> CRM
+                            </a>
+                        </li>
+                        {% endif %}
+
+                        {# Marketplace order management — company admin only #}
+                        {% if is_company_admin or user.is_superuser %}
                         <li class="nav-item">
                             <a class="nav-link {% if request.resolver_match.app_name == 'marketplace' and request.resolver_match.url_name == 'admin_order_dashboard' %}active{% endif %}"
                                href="{% url 'marketplace:admin_order_dashboard' %}">
@@ -138,24 +193,16 @@
                             </a>
                         </li>
                         {% endif %}
-                        <li class="nav-item">
-                            <a class="nav-link {% if request.resolver_match.app_name == 'finance' %}active{% endif %}"
-                               href="{% url 'finance:account_list' %}">
-                                <i class="fas fa-wallet"></i> Finance
+
+                        {# Company settings — company admin only #}
+                        {% if is_company_admin or user.is_superuser %}
+                        <li class="nav-item mt-3 border-top pt-3">
+                            <a class="nav-link {% if request.resolver_match.app_name == 'accounts' and request.resolver_match.url_name == 'company_profile' %}active{% endif %}"
+                               href="{% url 'accounts:company_profile' %}">
+                                <i class="fas fa-building"></i> Company Settings
                             </a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link {% if request.resolver_match.app_name == 'hr' %}active{% endif %}"
-                               href="{% url 'hr:position_list' %}">
-                                <i class="fas fa-user-tie"></i> HR
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link {% if request.resolver_match.app_name == 'crm' %}active{% endif %}"
-                               href="{% url 'crm:contact_list' %}">
-                                <i class="fas fa-address-book"></i> CRM
-                            </a>
-                        </li>
+                        {% endif %}
                     </ul>
                 </div>
             </nav>

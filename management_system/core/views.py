@@ -13,8 +13,14 @@ from django.shortcuts import redirect, render
 from django.utils import timezone
 
 from employees.models import Employee
+from finance.models import Account, Transaction
 from inventory.models import Stock
 from projects.models import Project
+from accounts.permissions import (
+    DASHBOARD_EMPLOYEE_ROLES,
+    DASHBOARD_FINANCE_ROLES,
+    DASHBOARD_HR_ROLES,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -23,30 +29,51 @@ logger = logging.getLogger(__name__)
 def dashboard(request):
     """
     Main dashboard — company-scoped statistics and recent activity.
-
-    Redirects to the login page (via @login_required) if the user is not
-    authenticated.  If the user has no company yet (edge case during
-    on-boarding), they are redirected to company registration.
+    Stats are filtered based on the user's role so sensitive data
+    (finance totals, full employee lists) are only shown to relevant roles.
     """
     company = request.user.company
+    role = request.user.role
+    is_super = request.user.is_superuser
 
     if company is None:
-        # Unanticipated state — guide the user instead of crashing
         logger.warning('User %s has no company on dashboard access.', request.user.email)
         return redirect('accounts:company_register')
 
-    # ------------------------------------------------------------------
-    # Aggregate statistics — single query per model, no N+1
-    # ------------------------------------------------------------------
-    employee_stats = (
-        Employee.objects
-        .filter(company=company)
-        .aggregate(
-            total=Count('id'),
-            active=Count('id', filter=Q(status='active')),
-        )
-    )
+    context = {
+        'company': company,
+        'now': timezone.now(),
+        # Flags used in the template to show/hide sections
+        'show_employee_stats': is_super or role in DASHBOARD_EMPLOYEE_ROLES,
+        'show_finance_stats':  is_super or role in DASHBOARD_FINANCE_ROLES,
+        'show_hr_stats':       is_super or role in DASHBOARD_HR_ROLES,
+    }
 
+    # --- Employee stats (HR / admin / manager / accountant) ---
+    if context['show_employee_stats']:
+        employee_stats = (
+            Employee.objects
+            .filter(company=company)
+            .aggregate(
+                total=Count('id'),
+                active=Count('id', filter=Q(status='active')),
+                on_leave=Count('id', filter=Q(status='on_leave')),
+            )
+        )
+        context.update({
+            'total_employees': employee_stats['total'],
+            'active_employees': employee_stats['active'],
+            'on_leave_count': employee_stats['on_leave'],
+            'recent_employees': (
+                Employee.objects
+                .filter(company=company)
+                .select_related('user')
+                .order_by('-created_at')[:5]
+            ),
+        })
+
+    # --- Project stats (everyone with project access) ---
+    today = timezone.localdate()
     project_stats = (
         Project.objects
         .filter(company=company)
@@ -54,9 +81,24 @@ def dashboard(request):
             total=Count('id'),
             active=Count('id', filter=Q(status='in_progress')),
             completed=Count('id', filter=Q(status='completed')),
+            overdue=Count('id', filter=Q(
+                end_date__lt=today, status__in=['planning', 'in_progress']
+            )),
         )
     )
+    context.update({
+        'total_projects': project_stats['total'],
+        'active_projects': project_stats['active'],
+        'completed_projects': project_stats['completed'],
+        'overdue_projects': project_stats['overdue'],
+        'recent_projects': (
+            Project.objects
+            .filter(company=company)
+            .order_by('-created_at')[:5]
+        ),
+    })
 
+    # --- Inventory stats (all roles) ---
     stock_stats = (
         Stock.objects
         .filter(company=company)
@@ -65,56 +107,36 @@ def dashboard(request):
             low=Count('id', filter=Q(quantity__lte=F('reorder_level'))),
         )
     )
-
-    # ------------------------------------------------------------------
-    # Recent activity feeds
-    # ------------------------------------------------------------------
-    recent_projects = (
-        Project.objects
-        .filter(company=company)
-        .order_by('-created_at')
-        [:5]
-    )
-
-    recent_employees = (
-        Employee.objects
-        .filter(company=company)
-        .select_related('user')
-        .order_by('-created_at')
-        [:5]
-    )
-
-    low_stock_items = (
-        Stock.objects
-        .filter(company=company, quantity__lte=F('reorder_level'))
-        .select_related()
-        .order_by('quantity')
-        [:10]
-    )
-
-    context = {
-        'company': company,
-
-        # Employee stats
-        'total_employees': employee_stats['total'],
-        'active_employees': employee_stats['active'],
-
-        # Project stats
-        'total_projects': project_stats['total'],
-        'active_projects': project_stats['active'],
-        'completed_projects': project_stats['completed'],
-
-        # Inventory stats
+    context.update({
         'total_stock_items': stock_stats['total'],
         'low_stock_count': stock_stats['low'],
+        'low_stock_items': (
+            Stock.objects
+            .filter(company=company, quantity__lte=F('reorder_level'))
+            .order_by('quantity')[:10]
+        ),
+    })
 
-        # Activity feeds
-        'recent_projects': recent_projects,
-        'recent_employees': recent_employees,
-        'low_stock_items': low_stock_items,
-
-        # Useful in templates for greeting / time-based messages
-        'now': timezone.now(),
-    }
+    # --- Finance stats (admin / accountant / manager) ---
+    if context['show_finance_stats']:
+        accounts = Account.objects.filter(company=company)
+        total_balance = accounts.aggregate(total=Sum('balance'))['total'] or 0
+        from datetime import date
+        month_start = date.today().replace(day=1)
+        monthly_credits = (
+            Transaction.objects
+            .filter(company=company, transaction_type='credit', date__gte=month_start)
+            .aggregate(total=Sum('amount'))['total'] or 0
+        )
+        monthly_debits = (
+            Transaction.objects
+            .filter(company=company, transaction_type='debit', date__gte=month_start)
+            .aggregate(total=Sum('amount'))['total'] or 0
+        )
+        context.update({
+            'total_balance': total_balance,
+            'monthly_credits': monthly_credits,
+            'monthly_debits': monthly_debits,
+        })
 
     return render(request, 'core/dashboard.html', context)

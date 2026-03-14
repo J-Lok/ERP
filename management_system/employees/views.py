@@ -10,7 +10,6 @@ import logging
 from datetime import timedelta
 
 from django.contrib import messages
-from django.contrib.auth.decorators import login_required
 from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
 from django.db import transaction
 from django.db.models import Avg, Count, Max, Min, Q, Sum
@@ -20,6 +19,15 @@ from django.utils import timezone
 from django.views.decorators.http import require_http_methods
 
 from accounts.models import User
+from accounts.permissions import (
+    DEPARTMENT_DELETE_ROLES,
+    DEPARTMENT_WRITE_ROLES,
+    EMPLOYEE_DELETE_ROLES,
+    EMPLOYEE_EXPORT_ROLES,
+    EMPLOYEE_VIEW_ROLES,
+    EMPLOYEE_WRITE_ROLES,
+    role_required,
+)
 from .forms import DepartmentForm, EmployeeForm
 from .models import Department, Employee
 
@@ -42,7 +50,7 @@ def _paginate(qs, page_number, per_page=PAGE_SIZE):
 # Employees
 # ---------------------------------------------------------------------------
 
-@login_required
+@role_required(*EMPLOYEE_VIEW_ROLES)
 def employee_list(request):
     """List employees with search, filtering, and pagination."""
     company = request.user.company
@@ -90,13 +98,17 @@ def employee_list(request):
         'selected_status': status,
         'selected_role': role,
         'stats': stats,
+        # Flat variables expected by the template stat cards
+        'total_employees': stats['total'],
+        'active_employees': stats['active'],
+        'on_leave_employees': stats['on_leave'],
         'ROLE_CHOICES': Employee.ROLE_CHOICES,
         'STATUS_CHOICES': Employee.STATUS_CHOICES,
     }
     return render(request, 'employees/employee_list.html', context)
 
 
-@login_required
+@role_required(*EMPLOYEE_VIEW_ROLES)
 def employee_detail(request, pk):
     company = request.user.company
     employee = get_object_or_404(
@@ -104,10 +116,20 @@ def employee_detail(request, pk):
         pk=pk,
         company=company,
     )
-    return render(request, 'employees/employee_detail.html', {'employee': employee})
+    # Salary is sensitive: only HR, admin, and managers see it.
+    # An employee can see their own salary.
+    can_see_salary = (
+        request.user.is_superuser
+        or request.user.role in ('admin', 'hr_manager', 'manager', 'accountant')
+        or (hasattr(request.user, 'employee_profile') and request.user.employee_profile.pk == employee.pk)
+    )
+    return render(request, 'employees/employee_detail.html', {
+        'employee': employee,
+        'can_see_salary': can_see_salary,
+    })
 
 
-@login_required
+@role_required(*EMPLOYEE_WRITE_ROLES)
 @require_http_methods(['GET', 'POST'])
 def employee_create(request):
     company = request.user.company
@@ -123,7 +145,7 @@ def employee_create(request):
     return render(request, 'employees/employee_form.html', {'form': form, 'title': 'Add Employee'})
 
 
-@login_required
+@role_required(*EMPLOYEE_WRITE_ROLES)
 @require_http_methods(['GET', 'POST'])
 def employee_edit(request, pk):
     company = request.user.company
@@ -143,7 +165,7 @@ def employee_edit(request, pk):
     })
 
 
-@login_required
+@role_required(*EMPLOYEE_DELETE_ROLES)
 @require_http_methods(['GET', 'POST'])
 def employee_delete(request, pk):
     company = request.user.company
@@ -160,7 +182,7 @@ def employee_delete(request, pk):
 # Departments
 # ---------------------------------------------------------------------------
 
-@login_required
+@role_required(*EMPLOYEE_VIEW_ROLES)
 def department_list(request):
     company = request.user.company
     departments = (
@@ -175,7 +197,7 @@ def department_list(request):
     return render(request, 'employees/department_list.html', {'departments': departments})
 
 
-@login_required
+@role_required(*DEPARTMENT_WRITE_ROLES)
 @require_http_methods(['GET', 'POST'])
 def department_create(request):
     company = request.user.company
@@ -190,7 +212,7 @@ def department_create(request):
     return render(request, 'employees/department_form.html', {'form': form, 'title': 'Add Department'})
 
 
-@login_required
+@role_required(*DEPARTMENT_WRITE_ROLES)
 @require_http_methods(['GET', 'POST'])
 def department_edit(request, pk):
     company = request.user.company
@@ -210,7 +232,7 @@ def department_edit(request, pk):
     })
 
 
-@login_required
+@role_required(*DEPARTMENT_DELETE_ROLES)
 @require_http_methods(['GET', 'POST'])
 def department_delete(request, pk):
     company = request.user.company
@@ -227,7 +249,7 @@ def department_delete(request, pk):
 # Import / Export
 # ---------------------------------------------------------------------------
 
-@login_required
+@role_required(*EMPLOYEE_EXPORT_ROLES)
 def employee_export(request):
     """Export all company employees to an .xlsx file."""
     import pandas as pd
@@ -276,7 +298,7 @@ def employee_export(request):
     return response
 
 
-@login_required
+@role_required(*EMPLOYEE_WRITE_ROLES)
 @require_http_methods(['GET', 'POST'])
 def employee_import(request):
     """Import employees from an .xlsx/.xls file."""
@@ -420,7 +442,7 @@ def employee_import(request):
     return render(request, 'employees/employee_import.html')
 
 
-@login_required
+@role_required(*EMPLOYEE_WRITE_ROLES)
 def download_employee_template(request):
     """Download a blank Excel template for bulk import."""
     import pandas as pd
@@ -470,7 +492,7 @@ def download_employee_template(request):
 # Reports
 # ---------------------------------------------------------------------------
 
-@login_required
+@role_required(*EMPLOYEE_EXPORT_ROLES)
 def employee_summary_report(request):
     company = request.user.company
     employees = Employee.objects.filter(company=company)
@@ -527,7 +549,7 @@ def employee_summary_report(request):
     })
 
 
-@login_required
+@role_required(*EMPLOYEE_EXPORT_ROLES)
 def department_report(request):
     company = request.user.company
     departments = (

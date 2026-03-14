@@ -7,6 +7,7 @@ from django.core.exceptions import ValidationError
 from django.utils import timezone
 
 from accounts.models import User
+from hr.models import Position
 from .models import Department, Employee
 
 
@@ -54,7 +55,7 @@ class EmployeeForm(forms.ModelForm):
     class Meta:
         model = Employee
         fields = [
-            'employee_id', 'department', 'role', 'status',
+            'employee_id', 'department', 'role', 'position', 'status',
             'date_of_birth', 'date_joined', 'salary', 'photo',
         ]
         widgets = {
@@ -65,6 +66,7 @@ class EmployeeForm(forms.ModelForm):
         help_texts = {
             'employee_id': 'Unique employee ID within your company (e.g. EMP-001).',
             'salary': 'Annual gross salary.',
+            'position': 'HR job position / grade (optional — created in the HR module).',
         }
 
     def __init__(self, *args, company=None, **kwargs):
@@ -77,6 +79,12 @@ class EmployeeForm(forms.ModelForm):
                 .filter(company=company, is_active=True)
                 .order_by('name')
             )
+            self.fields['position'].queryset = (
+                Position.objects
+                .filter(company=company)
+                .order_by('title')
+            )
+            self.fields['position'].empty_label = '— No position assigned —'
 
         # Editing mode: pre-populate user fields, disable account creation toggle
         if self.instance and self.instance.pk and hasattr(self.instance, 'user') and self.instance.user_id:

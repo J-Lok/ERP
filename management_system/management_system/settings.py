@@ -19,7 +19,7 @@ SECRET_KEY = 'django-insecure-your-secret-key-change-in-production'
 
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['192.168.100.223', 'localhost', '127.0.0.1']
 
 INSTALLED_APPS = [
      'accounts',

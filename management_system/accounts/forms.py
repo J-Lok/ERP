@@ -98,7 +98,7 @@ class UserRegistrationForm(UserCreationForm):
     company_domain = forms.CharField(
         max_length=200,
         widget=forms.TextInput(attrs={'placeholder': 'your-company-domain'}),
-        help_text="Your company's domain.",
+        help_text="Your company's domain (ask your administrator).",
     )
     company_password = forms.CharField(
         widget=_CURRENT_PASSWORD_WIDGET,
@@ -108,12 +108,24 @@ class UserRegistrationForm(UserCreationForm):
 
     class Meta(UserCreationForm.Meta):
         model = User
-        fields = ['first_name', 'last_name', 'email', 'phone', 'role']
+        # role is intentionally excluded — new users always start as 'employee'
+        # and an admin promotes them if needed
+        fields = ['first_name', 'last_name', 'email', 'phone']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['first_name'].required = True
+        self.fields['last_name'].required = True
 
     def clean(self):
         cleaned_data = super().clean()
         domain = cleaned_data.get('company_domain', '').lower().strip()
-        company_pw = cleaned_data.get('company_password')
+        company_pw = cleaned_data.get('company_password', '').strip()
+
+        if not domain:
+            self.add_error('company_domain', 'Please enter your company domain.')
+        if not company_pw:
+            self.add_error('company_password', 'Please enter the company password.')
 
         if domain and company_pw:
             try:
@@ -131,6 +143,7 @@ class UserRegistrationForm(UserCreationForm):
     def save(self, commit=True):
         user = super().save(commit=False)
         user.company = self.cleaned_data.get('company')
+        user.role = 'employee'  # always start as employee; admin can promote
         if commit:
             user.save()
         return user
@@ -219,7 +232,7 @@ class CompanyProfileForm(forms.ModelForm):
 
     class Meta:
         model = Company
-        fields = ['name', 'domain', 'contact_email', 'contact_phone', 'address', 'subscription_plan']
+        fields = ['name', 'domain', 'contact_email', 'contact_phone', 'address', 'subscription_plan', 'is_active']
         widgets = {
             'domain': forms.TextInput(attrs={'readonly': True}),
             'address': forms.Textarea(attrs={'rows': 3}),
