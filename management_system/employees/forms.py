@@ -172,6 +172,25 @@ class EmployeeForm(forms.ModelForm):
     # Save
     # ------------------------------------------------------------------
 
+    # Maps Employee.role (job title) → User.role (access level).
+    # Employee roles with no special privileges map to 'employee'.
+    EMPLOYEE_ROLE_TO_USER_ROLE = {
+        'manager':         'manager',
+        'project_manager': 'manager',
+        'hr':              'hr_manager',
+        'accountant':      'accountant',
+        'secretary':       'secretary',
+        'stock_manager':   'stock_manager',
+        # developer, designer, analyst, engineer, intern, other → standard employee access
+    }
+
+    def _sync_user_role(self, user, employee_role: str) -> None:
+        """Update User.role to match the Employee.role, then save."""
+        new_user_role = self.EMPLOYEE_ROLE_TO_USER_ROLE.get(employee_role, 'employee')
+        if user.role != new_user_role:
+            user.role = new_user_role
+            user.save(update_fields=['role'])
+
     def save(self, commit=True):
         employee = super().save(commit=False)
         employee.company = self.company
@@ -186,6 +205,7 @@ class EmployeeForm(forms.ModelForm):
                 company=self.company,
             )
             employee.user = user
+            self._sync_user_role(user, employee.role)
         else:
             existing_user = self.cleaned_data.get('existing_user')
             if existing_user:
@@ -197,6 +217,7 @@ class EmployeeForm(forms.ModelForm):
                     existing_user.phone = phone
                 existing_user.save(update_fields=['first_name', 'last_name', 'phone'])
                 employee.user = existing_user
+                self._sync_user_role(existing_user, employee.role)
 
         if not employee.salary:
             employee.salary = 0
