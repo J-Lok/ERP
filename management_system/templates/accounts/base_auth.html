@@ -6,91 +6,98 @@
     <title>{% block title %}{{ title|default:"ERP System" }}{% endblock %}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    {% block extra_css %}{% endblock %}
     <style>
         :root {
-            --primary-color: #4A90E2;
-            --secondary-color: #50E3C2;
-            --dark-color: #2C3E50;
+            --primary:   #4A90E2;
+            --secondary: #50E3C2;
+            --dark:      #2C3E50;
         }
-        
+
         body {
             background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
             min-height: 100vh;
             display: flex;
             align-items: center;
         }
-        
+
+        /* ---- Card shell ---- */
         .auth-card {
             border: none;
             border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            box-shadow: 0 10px 30px rgba(0,0,0,.12);
             overflow: hidden;
         }
-        
+
         .auth-header {
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-            color: white;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: #fff;
             padding: 30px;
             text-align: center;
         }
-        
+
         .auth-body {
             padding: 40px;
-            background: white;
+            background: #fff;
         }
-        
+
+        /* ---- Buttons ---- */
         .btn-primary {
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
             border: none;
             padding: 12px;
             font-weight: 600;
         }
-        
-        .btn-primary:hover {
-            opacity: 0.9;
-        }
-        
+        .btn-primary:hover { opacity: .9; }
+
+        /* ---- Inputs ---- */
         .form-control:focus {
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 0.25rem rgba(74, 144, 226, 0.25);
+            border-color: var(--primary);
+            box-shadow: 0 0 0 .25rem rgba(74,144,226,.25);
         }
-        
+
+        /* ---- Links ---- */
         .auth-links a {
-            color: var(--primary-color);
+            color: var(--primary);
             text-decoration: none;
-            transition: color 0.3s;
+            transition: color .2s;
         }
-        
         .auth-links a:hover {
-            color: var(--dark-color);
+            color: var(--dark);
             text-decoration: underline;
         }
-        
-        .alert {
-            border-radius: 10px;
-            border: none;
-        }
+
+        /* ---- Alerts ---- */
+        .alert { border-radius: 10px; border: none; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="row justify-content-center">
-            <div class="col-md-8 col-lg-6">
-                {% if messages %}
-                    {% for message in messages %}
-                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show mb-4" role="alert">
-                        {{ message }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                    {% endfor %}
-                {% endif %}
-                
-                {% block content %}{% endblock %}
-            </div>
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+
+            {# Flash messages — shown above the card so they don't shift the layout #}
+            {% if messages %}
+                {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show mb-4" role="alert">
+                    <i class="fas
+                        {% if message.tags == 'success' %}fa-check-circle
+                        {% elif message.tags == 'error' or message.tags == 'danger' %}fa-exclamation-circle
+                        {% elif message.tags == 'warning' %}fa-exclamation-triangle
+                        {% else %}fa-info-circle{% endif %} me-2" aria-hidden="true"></i>
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Dismiss"></button>
+                </div>
+                {% endfor %}
+            {% endif %}
+
+            {% block content %}{% endblock %}
+
         </div>
     </div>
-    
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    {% block extra_js %}{% endblock %}
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+{% block extra_js %}{% endblock %}
 </body>
 </html>

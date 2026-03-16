@@ -1,34 +1,154 @@
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.decorators import login_required
+"""
+crm/views.py
+
+Views for Contacts, Notes (activity log), Opportunities, and Pipeline Kanban.
+All data is scoped to request.user.company (multi-tenant safe).
+"""
+
 from django.contrib import messages
+from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
+from django.db.models import Count, Q, Sum
+from django.http import JsonResponse
+from django.shortcuts import get_object_or_404, redirect, render
+from django.utils import timezone
+from django.views.decorators.http import require_POST
+
 from accounts.decorators import role_required
+from employees.models import Employee
 
-from .models import Contact, Opportunity
-from .forms import ContactForm, OpportunityForm
+from .forms import ContactForm, NoteForm, OpportunityForm
+from .models import Contact, Note, Opportunity
+
+CRM_ROLES = ['admin', 'manager', 'secretary']
 
 
-@role_required(['admin', 'manager', 'secretary'])
+# ---------------------------------------------------------------------------
+# Dashboard / Index
+# ---------------------------------------------------------------------------
+
+@role_required(*CRM_ROLES)
 def index(request):
-    return render(request, 'crm/index.html')
+    company = request.user.company
+    today = timezone.localdate()
+
+    contacts_count = Contact.objects.filter(company=company).count()
+
+    opp_qs = Opportunity.objects.filter(company=company)
+    open_pipeline = opp_qs.exclude(stage__in=['won', 'lost']).aggregate(t=Sum('value'))['t'] or 0
+    won_value = opp_qs.filter(stage='won').aggregate(t=Sum('value'))['t'] or 0
+    overdue_followups = opp_qs.filter(
+        follow_up_date__lt=today,
+        stage__in=['prospect', 'qualified', 'proposal'],
+    ).count()
+
+    # Stage counts for mini pipeline bar
+    stage_counts = {s: 0 for s, _ in Opportunity.STAGE_CHOICES}
+    for row in opp_qs.values('stage').annotate(n=Count('id')):
+        stage_counts[row['stage']] = row['n']
+
+    # Recent follow-ups due today or overdue
+    due_followups = (
+        opp_qs
+        .filter(follow_up_date__lte=today, stage__in=['prospect', 'qualified', 'proposal'])
+        .select_related('contact', 'assigned_to__user')
+        .order_by('follow_up_date')[:5]
+    )
+
+    open_opportunity_count = opp_qs.exclude(stage__in=['won', 'lost']).count()
+
+    context = {
+        'contacts_count': contacts_count,
+        'total_contacts': contacts_count,
+        'open_pipeline': open_pipeline,
+        'won_value': won_value,
+        'overdue_followups': overdue_followups,
+        'overdue_opportunities': list(opp_qs.filter(
+            follow_up_date__lt=today,
+            stage__in=['prospect', 'qualified', 'proposal'],
+        ).select_related('contact').order_by('follow_up_date')[:5]),
+        'open_opportunity_count': open_opportunity_count,
+        'stage_counts': stage_counts,
+        'due_followups': due_followups,
+    }
+    return render(request, 'crm/index.html', context)
 
 
-@role_required(['admin', 'manager', 'secretary'])
+# ---------------------------------------------------------------------------
+# Contacts
+# ---------------------------------------------------------------------------
+
+@role_required(*CRM_ROLES)
 def contact_list(request):
     company = request.user.company
-    from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-    contacts = Contact.objects.filter(company=company).order_by('name')
-    paginator = Paginator(contacts, 25)
+    qs = (
+        Contact.objects
+        .filter(company=company)
+        .annotate(
+            opp_count=Count('opportunities'),
+            pipeline_value=Sum(
+                'opportunities__value',
+                filter=Q(opportunities__stage__in=['prospect', 'qualified', 'proposal']),
+            ),
+        )
+        .order_by('name')
+    )
+
+    query = request.GET.get('q', '').strip()
+    if query:
+        qs = qs.filter(
+            Q(name__icontains=query) |
+            Q(email__icontains=query) |
+            Q(organization__icontains=query) |
+            Q(phone__icontains=query)
+        )
+
+    org_filter = request.GET.get('organization', '').strip()
+    if org_filter:
+        qs = qs.filter(organization__icontains=org_filter)
+
+    paginator = Paginator(qs, 25)
     page = request.GET.get('page')
     try:
-        contacts_page = paginator.page(page)
+        contacts = paginator.page(page)
     except PageNotAnInteger:
-        contacts_page = paginator.page(1)
+        contacts = paginator.page(1)
     except EmptyPage:
-        contacts_page = paginator.page(paginator.num_pages)
-    return render(request, 'crm/contact_list.html', {'contacts': contacts_page})
+        contacts = paginator.page(paginator.num_pages)
+
+    # Distinct organizations for filter dropdown
+    organizations = (
+        Contact.objects
+        .filter(company=company)
+        .exclude(organization='')
+        .values_list('organization', flat=True)
+        .distinct()
+        .order_by('organization')
+    )
+
+    return render(request, 'crm/contact_list.html', {
+        'contacts': contacts,
+        'query': query,
+        'org_filter': org_filter,
+        'organizations': organizations,
+    })
 
 
-@role_required(['admin', 'manager', 'secretary'])
+@role_required(*CRM_ROLES)
+def contact_detail(request, pk):
+    company = request.user.company
+    contact = get_object_or_404(Contact, pk=pk, company=company)
+    notes = contact.notes.select_related('author').order_by('-created_at')
+    opportunities = contact.opportunities.select_related('assigned_to__user').order_by('-created_at')
+    note_form = NoteForm()
+    return render(request, 'crm/contact_detail.html', {
+        'contact': contact,
+        'notes': notes,
+        'opportunities': opportunities,
+        'note_form': note_form,
+    })
+
+
+@role_required(*CRM_ROLES)
 def contact_create(request):
     company = request.user.company
     if request.method == 'POST':
@@ -37,46 +157,14 @@ def contact_create(request):
             contact = form.save(commit=False)
             contact.company = company
             contact.save()
-            messages.success(request, 'Contact saved.')
-            return redirect('crm:contact_list')
+            messages.success(request, f'Contact "{contact.name}" created.')
+            return redirect('crm:contact_detail', pk=contact.pk)
     else:
         form = ContactForm()
     return render(request, 'crm/contact_form.html', {'form': form, 'title': 'New Contact'})
 
 
-@role_required(['admin', 'manager', 'secretary'])
-def opportunity_list(request):
-    company = request.user.company
-    from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-    opps = Opportunity.objects.filter(company=company).select_related('contact').order_by('-created_at')
-    paginator = Paginator(opps, 25)
-    page = request.GET.get('page')
-    try:
-        opportunities_page = paginator.page(page)
-    except PageNotAnInteger:
-        opportunities_page = paginator.page(1)
-    except EmptyPage:
-        opportunities_page = paginator.page(paginator.num_pages)
-    return render(request, 'crm/opportunity_list.html', {'opportunities': opportunities_page})
-
-
-@role_required(['admin', 'manager', 'secretary'])
-def opportunity_create(request):
-    company = request.user.company
-    if request.method == 'POST':
-        form = OpportunityForm(request.POST, company=company)
-        if form.is_valid():
-            opp = form.save(commit=False)
-            opp.company = company
-            opp.save()
-            messages.success(request, 'Opportunity created.')
-            return redirect('crm:opportunity_list')
-    else:
-        form = OpportunityForm(company=company)
-    return render(request, 'crm/opportunity_form.html', {'form': form, 'title': 'New Opportunity'})
-
-
-@role_required(['admin', 'manager', 'secretary'])
+@role_required(*CRM_ROLES)
 def contact_edit(request, pk):
     company = request.user.company
     contact = get_object_or_404(Contact, pk=pk, company=company)
@@ -85,13 +173,134 @@ def contact_edit(request, pk):
         if form.is_valid():
             form.save()
             messages.success(request, 'Contact updated.')
-            return redirect('crm:contact_list')
+            return redirect('crm:contact_detail', pk=contact.pk)
     else:
         form = ContactForm(instance=contact)
     return render(request, 'crm/contact_form.html', {'form': form, 'title': 'Edit Contact'})
 
 
-@role_required(['admin', 'manager', 'secretary'])
+@role_required(*CRM_ROLES)
+def contact_delete(request, pk):
+    company = request.user.company
+    contact = get_object_or_404(Contact, pk=pk, company=company)
+    if request.method == 'POST':
+        name = contact.name
+        contact.delete()
+        messages.success(request, f'Contact "{name}" deleted.')
+        return redirect('crm:contact_list')
+    return render(request, 'crm/contact_confirm_delete.html', {'contact': contact})
+
+
+# ---------------------------------------------------------------------------
+# Notes (activity log)
+# ---------------------------------------------------------------------------
+
+@role_required(*CRM_ROLES)
+@require_POST
+def note_add(request, contact_pk):
+    company = request.user.company
+    contact = get_object_or_404(Contact, pk=contact_pk, company=company)
+    form = NoteForm(request.POST)
+    if form.is_valid():
+        note = form.save(commit=False)
+        note.company = company
+        note.contact = contact
+        note.author = request.user
+        note.save()
+        messages.success(request, 'Note added.')
+    else:
+        messages.error(request, 'Could not save note. Please check the form.')
+    return redirect('crm:contact_detail', pk=contact_pk)
+
+
+@role_required(*CRM_ROLES)
+def note_delete(request, pk):
+    company = request.user.company
+    note = get_object_or_404(Note, pk=pk, company=company)
+    contact_pk = note.contact_id
+    if request.method == 'POST':
+        note.delete()
+        messages.success(request, 'Note deleted.')
+    return redirect('crm:contact_detail', pk=contact_pk)
+
+
+# ---------------------------------------------------------------------------
+# Opportunities
+# ---------------------------------------------------------------------------
+
+@role_required(*CRM_ROLES)
+def opportunity_list(request):
+    company = request.user.company
+    qs = (
+        Opportunity.objects
+        .filter(company=company)
+        .select_related('contact', 'assigned_to__user')
+        .order_by('-created_at')
+    )
+
+    # Filters
+    query = request.GET.get('q', '').strip()
+    if query:
+        qs = qs.filter(
+            Q(title__icontains=query) |
+            Q(contact__name__icontains=query) |
+            Q(contact__organization__icontains=query)
+        )
+
+    stage_filter = request.GET.get('stage', '').strip()
+    if stage_filter:
+        qs = qs.filter(stage=stage_filter)
+
+    assigned_filter = request.GET.get('assigned_to', '').strip()
+    if assigned_filter:
+        qs = qs.filter(assigned_to_id=assigned_filter)
+
+    overdue_only = request.GET.get('overdue') == '1'
+    today = timezone.localdate()
+    if overdue_only:
+        qs = qs.filter(follow_up_date__lt=today, stage__in=['prospect', 'qualified', 'proposal'])
+
+    paginator = Paginator(qs, 25)
+    page = request.GET.get('page')
+    try:
+        opportunities = paginator.page(page)
+    except PageNotAnInteger:
+        opportunities = paginator.page(1)
+    except EmptyPage:
+        opportunities = paginator.page(paginator.num_pages)
+
+    employees = Employee.objects.filter(company=company, status='active').select_related('user')
+
+    return render(request, 'crm/opportunity_list.html', {
+        'opportunities': opportunities,
+        'query': query,
+        'stage_filter': stage_filter,
+        'assigned_filter': assigned_filter,
+        'overdue_only': overdue_only,
+        'stage_choices': Opportunity.STAGE_CHOICES,
+        'employees': employees,
+        'today': today,
+    })
+
+
+@role_required(*CRM_ROLES)
+def opportunity_create(request):
+    company = request.user.company
+    if request.method == 'POST':
+        form = OpportunityForm(request.POST, company=company)
+        if form.is_valid():
+            opp = form.save(commit=False)
+            opp.company = company
+            opp.created_by = request.user
+            opp.save()
+            messages.success(request, f'Opportunity "{opp.title}" created.')
+            return redirect('crm:opportunity_list')
+    else:
+        form = OpportunityForm(company=company)
+    return render(request, 'crm/opportunity_form.html', {'form': form, 'title': 'New Opportunity'})
+
+
+@role_required(*CRM_ROLES)
 def opportunity_edit(request, pk):
     company = request.user.company
     opp = get_object_or_404(Opportunity, pk=pk, company=company)
@@ -106,23 +315,70 @@ def opportunity_edit(request, pk):
     return render(request, 'crm/opportunity_form.html', {'form': form, 'title': 'Edit Opportunity'})
 
 
-@role_required(['admin', 'manager', 'secretary'])
-def contact_delete(request, pk):
-    company = request.user.company
-    contact = get_object_or_404(Contact, pk=pk, company=company)
-    if request.method == 'POST':
-        messages.success(request, f'Contact {contact.name} deleted.')
-        contact.delete()
-        return redirect('crm:contact_list')
-    return render(request, 'crm/contact_confirm_delete.html', {'contact': contact})
-
-
-@role_required(['admin', 'manager', 'secretary'])
+@role_required(*CRM_ROLES)
 def opportunity_delete(request, pk):
     company = request.user.company
     opp = get_object_or_404(Opportunity, pk=pk, company=company)
     if request.method == 'POST':
-        messages.success(request, f'Opportunity {opp.title} deleted.')
+        title = opp.title
         opp.delete()
+        messages.success(request, f'Opportunity "{title}" deleted.')
         return redirect('crm:opportunity_list')
     return render(request, 'crm/opportunity_confirm_delete.html', {'opportunity': opp})
+
+
+@role_required(*CRM_ROLES)
+@require_POST
+def opportunity_advance_stage(request, pk):
+    """AJAX endpoint: advance an opportunity to a new stage."""
+    company = request.user.company
+    opp = get_object_or_404(Opportunity, pk=pk, company=company)
+    new_stage = request.POST.get('stage', '')
+    try:
+        opp.advance_stage(new_stage)
+        return JsonResponse({'status': 'ok', 'stage': opp.stage, 'label': opp.get_stage_display()})
+    except ValueError as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+
+
+# ---------------------------------------------------------------------------
+# Pipeline / Kanban
+# ---------------------------------------------------------------------------
+
+@role_required(*CRM_ROLES)
+def pipeline(request):
+    """Kanban board — opportunities grouped by stage."""
+    company = request.user.company
+    qs = (
+        Opportunity.objects
+        .filter(company=company)
+        .select_related('contact', 'assigned_to__user')
+        .order_by('-value')
+    )
+
+    # Optional filter by assignee
+    assigned_filter = request.GET.get('assigned_to', '').strip()
+    if assigned_filter:
+        qs = qs.filter(assigned_to_id=assigned_filter)
+
+    stages = Opportunity.STAGE_CHOICES
+    columns = []
+    for stage_key, stage_label in stages:
+        items = [o for o in qs if o.stage == stage_key]
+        total = sum(o.value for o in items)
+        columns.append({
+            'key': stage_key,
+            'label': stage_label,
+            'items': items,
+            'count': len(items),
+            'total': total,
+        })
+
+    employees = Employee.objects.filter(company=company, status='active').select_related('user')
+
+    return render(request, 'crm/pipeline.html', {
+        'columns': columns,
+        'employees': employees,
+        'assigned_filter': assigned_filter,
+        'stage_choices': stages,
+    })

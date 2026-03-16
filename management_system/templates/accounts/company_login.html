@@ -1,41 +1,49 @@
 {% extends 'accounts/base_auth.html' %}
 {% load crispy_forms_tags %}
 
+{% block title %}Company Login — ERP System{% endblock %}
+
 {% block content %}
 <div class="auth-card">
     <div class="auth-header">
-        <h1 class="h3 mb-2"><i class="fas fa-building me-2"></i>Company Login</h1>
-        <p class="mb-0">Access your company's management system</p>
+        <i class="fas fa-building fa-2x mb-2" aria-hidden="true"></i>
+        <h1 class="h3 mb-1">Company Login</h1>
+        <p class="mb-0 opacity-75">Access your company's management system</p>
     </div>
-    
+
     <div class="auth-body">
         <form method="post" novalidate>
             {% csrf_token %}
+
+            {% if form.non_field_errors %}
+            <div class="alert alert-danger" role="alert">
+                <i class="fas fa-exclamation-circle me-2" aria-hidden="true"></i>
+                {{ form.non_field_errors }}
+            </div>
+            {% endif %}
+
             {{ form|crispy }}
-            
-            <div class="d-grid gap-2 mb-4">
+
+            <div class="d-grid mt-4 mb-3">
                 <button type="submit" class="btn btn-primary btn-lg">
-                    <i class="fas fa-sign-in-alt me-2"></i>Login to Company
+                    <i class="fas fa-sign-in-alt me-2" aria-hidden="true"></i>Login
                 </button>
             </div>
-            
-            <!-- Password reset link -->
+
             <div class="text-center mb-3">
-                <a href="{% url 'accounts:password_reset' %}">Forgot your password?</a>
+                <a href="{% url 'accounts:password_reset' %}" class="small">Forgot your password?</a>
             </div>
-            
-            <div class="auth-links text-center">
+
+            <hr class="my-3">
+
+            <div class="auth-links text-center small">
                 <p class="mb-2">
                     Don't have a company account?
-                    <a href="{% url 'accounts:company_register' %}" class="fw-bold">
-                        Register Company
-                    </a>
+                    <a href="{% url 'accounts:company_register' %}" class="fw-semibold">Register Company</a>
                 </p>
                 <p class="mb-0">
                     Joining an existing company?
-                    <a href="{% url 'accounts:user_register' %}" class="fw-bold">
-                        Join as Team Member
-                    </a>
+                    <a href="{% url 'accounts:user_register' %}" class="fw-semibold">Join as Team Member</a>
                 </p>
             </div>
         </form>
@@ -45,10 +53,9 @@
 
 {% block extra_js %}
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Auto-focus first input
-    const firstInput = document.querySelector('input[type="text"], input[type="email"], input[type="password"]');
-    if (firstInput) firstInput.focus();
+document.addEventListener('DOMContentLoaded', function () {
+    const first = document.querySelector('input[type="text"], input[type="email"], input[type="password"]');
+    if (first) first.focus();
 });
 </script>
 {% endblock %}
