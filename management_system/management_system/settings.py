@@ -52,6 +52,9 @@ INSTALLED_APPS = [
     
     # CRM module
     'crm',
+    
+    # Meetings module
+    'meetings',
 ]
 
 MIDDLEWARE = [

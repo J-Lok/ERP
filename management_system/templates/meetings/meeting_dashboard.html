@@ -1,0 +1,208 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Meeting Reports{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="h3 mb-0">
+                <i class="fas fa-calendar-alt"></i> Meeting Dashboard
+            </h1>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'meetings:meeting_create' %}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> New Meeting
+            </a>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-2">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h6 class="card-title">Total Meetings</h6>
+                    <h3>{{ total_meetings }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <h6 class="card-title">Upcoming</h6>
+                    <h3>{{ upcoming_count }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h6 class="card-title">Completed</h6>
+                    <h3>{{ completed_count }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <h6 class="card-title">Pending Actions</h6>
+                    <h3>{{ pending_actions }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card bg-danger text-white">
+                <div class="card-body">
+                    <h6 class="card-title">Overdue</h6>
+                    <h3>{{ overdue_actions }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <a href="{% url 'meetings:report' %}" class="card card-link text-decoration-none h-100">
+                <div class="card-body">
+                    <h6 class="card-title">Reports</h6>
+                    <i class="fas fa-chart-line fa-2x text-secondary"></i>
+                </div>
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Upcoming Meetings -->
+        <div class="col-lg-6">
+            <div class="card mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">
+                        <i class="fas fa-calendar-check"></i> Upcoming Meetings
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    {% if upcoming_meetings %}
+                        <div class="list-group list-group-flush">
+                            {% for meeting in upcoming_meetings %}
+                                <a href="{% url 'meetings:meeting_detail' meeting.id %}" class="list-group-item list-group-item-action">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <h6 class="mb-1">{{ meeting.title }}</h6>
+                                        <small class="badge bg-{{ meeting.priority|lower }}">
+                                            {{ meeting.get_priority_display }}
+                                        </small>
+                                    </div>
+                                    <p class="mb-1">
+                                        <i class="fas fa-clock"></i> {{ meeting.scheduled_date|date:"M d, Y H:i" }}
+                                    </p>
+                                    {% if meeting.location %}
+                                        <small class="text-muted">
+                                            <i class="fas fa-map-marker-alt"></i> {{ meeting.location }}
+                                        </small>
+                                    {% endif %}
+                                </a>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center p-4">
+                            <p class="text-muted">No upcoming meetings scheduled</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- My Action Items -->
+        <div class="col-lg-6">
+            <div class="card mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">
+                        <i class="fas fa-tasks"></i> My Action Items
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    {% if my_actions %}
+                        <div class="list-group list-group-flush">
+                            {% for action in my_actions %}
+                                <div class="list-group-item">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <h6 class="mb-1">{{ action.title }}</h6>
+                                        <span class="badge bg-{{ action.status|lower }}">
+                                            {{ action.get_status_display }}
+                                        </span>
+                                    </div>
+                                    <p class="mb-1 text-muted">{{ action.meeting.title }}</p>
+                                    <small>
+                                        <i class="fas fa-calendar"></i> Due: {{ action.due_date|date:"M d, Y" }}
+                                        {% if action.is_overdue %}
+                                            <span class="badge bg-danger ms-2">Overdue</span>
+                                        {% endif %}
+                                    </small>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center p-4">
+                            <p class="text-muted">No pending action items</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Recent Meetings -->
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">
+                        <i class="fas fa-history"></i> Recent Meetings
+                    </h5>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Title</th>
+                                <th>Type</th>
+                                <th>Date</th>
+                                <th>Status</th>
+                                <th>Organizer</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for meeting in recent_meetings %}
+                                <tr>
+                                    <td><strong>{{ meeting.title }}</strong></td>
+                                    <td>
+                                        <span class="badge bg-secondary">
+                                            {{ meeting.get_meeting_type_display }}
+                                        </span>
+                                    </td>
+                                    <td>{{ meeting.scheduled_date|date:"M d, Y H:i" }}</td>
+                                    <td>
+                                        <span class="badge bg-{{ meeting.status|lower }}">
+                                            {{ meeting.get_status_display }}
+                                        </span>
+                                    </td>
+                                    <td>{{ meeting.organizer.user.get_full_name }}</td>
+                                    <td>
+                                        <a href="{% url 'meetings:meeting_detail' meeting.id %}" class="btn btn-sm btn-outline-primary">
+                                            View
+                                        </a>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="card-footer bg-light text-end">
+                    <a href="{% url 'meetings:meeting_list' %}" class="btn btn-sm btn-outline-secondary">
+                        View All Meetings
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

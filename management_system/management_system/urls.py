@@ -36,6 +36,9 @@ urlpatterns = [
     
     # crm app endpoints
     path('crm/', include('crm.urls')),
+    
+    # meetings app endpoints
+    path('meetings/', include('meetings.urls')),
 ]
 
 if settings.DEBUG:

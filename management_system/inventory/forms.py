@@ -21,6 +21,10 @@ class StockForm(forms.ModelForm):
         if self.company:
             # Filter categories to only those in the company
             self.fields['category'].queryset = StockCategory.objects.filter(company=self.company)
+        
+        # Make category and supplier_name non-required fields
+        self.fields['category'].required = False
+        self.fields['supplier_name'].required = False
 
 class StockTransactionForm(forms.ModelForm):
     class Meta:

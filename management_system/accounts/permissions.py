@@ -59,6 +59,12 @@ LEAVE_SUBMIT_ROLES = ('admin', 'hr_manager', 'manager', 'secretary', 'accountant
 # CRM app
 CRM_ROLES = ('admin', 'manager', 'secretary')
 
+# Meetings app
+MEETINGS_VIEW_ROLES   = ('admin', 'hr_manager', 'manager', 'secretary', 'accountant', 'employee')
+MEETINGS_WRITE_ROLES  = ('admin', 'hr_manager', 'manager', 'secretary')
+MEETINGS_DELETE_ROLES = ('admin', 'manager')
+MEETINGS_REPORT_ROLES = ('admin', 'manager', 'accountant')
+
 # Marketplace admin
 MARKETPLACE_ADMIN_ROLES = ('admin',)
 

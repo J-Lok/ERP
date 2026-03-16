@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+
+{% block title %}Delete Confirmation{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <div class="alert alert-danger" role="alert">
+                <i class="fas fa-exclamation-triangle"></i> 
+                <strong>Confirm Deletion</strong>
+            </div>
+            <div class="card">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Are you sure?</h5>
+                    <p class="card-text text-muted">
+                        You are about to delete the action item:
+                    </p>
+                    <p class="fw-bold">{{ action_item.title }}</p>
+                    <p class="text-muted small">This action cannot be undone.</p>
+                    
+                    <form method="post" class="d-inline">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-trash"></i> Delete
+                        </button>
+                        <a href="{% url 'meetings:meeting_detail' action_item.meeting.id %}" class="btn btn-outline-secondary">
+                            Cancel
+                        </a>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

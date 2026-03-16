@@ -184,6 +184,16 @@
                         </li>
                         {% endif %}
 
+                        {# Meetings — all roles can view; write/delete gated at view level #}
+                        {% if user|has_role:'admin,hr_manager,manager,secretary,accountant,employee' %}
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.resolver_match.app_name == 'meetings' %}active{% endif %}"
+                               href="{% url 'meetings:dashboard' %}">
+                                <i class="fas fa-calendar-alt"></i> Meetings
+                            </a>
+                        </li>
+                        {% endif %}
+
                         {# Marketplace order management — company admin only #}
                         {% if is_company_admin or user.is_superuser %}
                         <li class="nav-item">
