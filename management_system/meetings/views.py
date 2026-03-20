@@ -459,6 +459,32 @@ def action_item_toggle_status(request, pk):
     return redirect('meetings:meeting_detail', pk=action_item.meeting.pk)
 
 
+@require_http_methods(['POST'])
+def action_item_toggle_completion(request, pk):
+    """Toggle action item is_completed checkbox via AJAX."""
+    import json
+    action_item = get_object_or_404(ActionItem, pk=pk)
+    company = _get_company(request)
+    
+    if action_item.meeting.company != company:
+        return JsonResponse({'error': 'Unauthorized', 'success': False}, status=403)
+    
+    try:
+        data = json.loads(request.body)
+        is_completed = data.get('is_completed', False)
+        
+        action_item.is_completed = is_completed
+        if is_completed:
+            action_item.actual_completion_date = timezone.now().date()
+        else:
+            action_item.actual_completion_date = None
+        action_item.save()
+        
+        return JsonResponse({'success': True})
+    except Exception as e:
+        return JsonResponse({'error': str(e), 'success': False}, status=400)
+
+
 # ---------------------------------------------------------------------------
 # Attachments
 # ---------------------------------------------------------------------------

@@ -148,7 +148,7 @@
                             <span class="fw-bold">{{ stock.quantity }}</span>
                             <small class="text-muted">{{ stock.get_unit_display }}</small>
                         </td>
-                        <td>FCFA {{ stock.unit_price|floatformat:0 }}</td>
+                        <td>FCFA {{ stock.cost_price|floatformat:0 }}</td>
                         <td>
                             <strong>FCFA {{ stock.total_value|floatformat:0 }}</strong>
                         </td>

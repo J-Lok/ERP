@@ -16,7 +16,7 @@
                             <p class="text-muted small mb-0">{{ item.stock.item_code }}</p>
                         </div>
                         <div class="col-md-2">
-                            <p class="mb-0"><strong>FCFA {{ item.stock.unit_price }}</strong></p>
+                            <p class="mb-0"><strong>FCFA {{ item.stock.selling_price }}</strong></p>
                         </div>
                         <div class="col-md-2">
                             <form method="post" action="{% url 'marketplace:update_cart_item' item.pk %}" class="d-inline">

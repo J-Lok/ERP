@@ -888,20 +888,20 @@ def stock_valuation_report(request):
     
     # Get all stock items with calculated total value
     stocks = Stock.objects.filter(company=company).select_related('category').annotate(
-        calculated_total_value=F('quantity') * F('unit_price')
+        calculated_total_value=F('quantity') * F('cost_price')
     ).order_by('-calculated_total_value')
     
     # Calculate statistics
     total_items = stocks.count()
     total_quantity = stocks.aggregate(total=Sum('quantity'))['total'] or 0
-    total_value = stocks.aggregate(total=Sum(F('quantity') * F('unit_price')))['total'] or 0
-    avg_unit_price = stocks.aggregate(avg=Avg('unit_price'))['avg'] or 0
+    total_value = stocks.aggregate(total=Sum(F('quantity') * F('cost_price')))['total'] or 0
+    avg_cost_price = stocks.aggregate(avg=Avg('cost_price'))['avg'] or 0
     
     # Group by category
     category_summary = Stock.objects.filter(company=company).values('category__name').annotate(
         count=Count('id'),
         total_quantity=Sum('quantity'),
-        total_value=Sum(F('quantity') * F('unit_price'))
+        total_value=Sum(F('quantity') * F('cost_price'))
     ).order_by('-total_value')
     
     # Top 10 most valuable items
@@ -915,7 +915,7 @@ def stock_valuation_report(request):
         'total_items': total_items,
         'total_quantity': total_quantity,
         'total_value': total_value,
-        'avg_unit_price': avg_unit_price,
+        'avg_cost_price': avg_cost_price,
         'category_summary': list(category_summary),
         'top_items': top_items,
         'bottom_items': bottom_items,

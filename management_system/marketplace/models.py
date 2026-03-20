@@ -72,7 +72,7 @@ class CartItem(models.Model):
     
     @property
     def subtotal(self):
-        return self.quantity * self.stock.unit_price
+        return self.quantity * self.stock.selling_price
 
 
 class Order(models.Model):

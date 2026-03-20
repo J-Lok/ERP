@@ -32,11 +32,13 @@ class Stock(models.Model):
     description = models.TextField(blank=True)
     quantity = models.IntegerField(validators=[MinValueValidator(0)])
     unit = models.CharField(max_length=10, choices=UNIT_CHOICES, default='pcs')
-    unit_price = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
+    cost_price = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)], help_text='Cost price for inventory')
+    selling_price = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)], help_text='Selling price for marketplace')
     reorder_level = models.IntegerField(validators=[MinValueValidator(0)])
     supplier_name = models.CharField(max_length=200)
     supplier_contact = models.CharField(max_length=100, blank=True)
     location = models.CharField(max_length=200, blank=True)
+    is_marketplace_visible = models.BooleanField(default=True, help_text='Show this item on the marketplace')
     last_restocked = models.DateField(null=True, blank=True)
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -54,7 +56,11 @@ class Stock(models.Model):
     
     @property
     def total_value(self):
-        return self.quantity * self.unit_price
+        return self.quantity * self.cost_price
+    
+    @property
+    def total_selling_value(self):
+        return self.quantity * self.selling_price
     
     @property
     def needs_reorder(self):

@@ -240,10 +240,7 @@ class ActionItem(models.Model):
     
     # Completion tracking
     actual_completion_date = models.DateField(null=True, blank=True)
-    completion_percentage = models.IntegerField(default=0, validators=[
-        MinValueValidator(0),
-        MaxValueValidator(100)
-    ])
+    is_completed = models.BooleanField(default=False)
     
     notes = models.TextField(blank=True, help_text='Internal notes or progress updates')
     
@@ -271,7 +268,7 @@ class ActionItem(models.Model):
         """Mark action item as completed."""
         self.status = 'completed'
         self.actual_completion_date = timezone.now().date()
-        self.completion_percentage = 100
+        self.is_completed = True
         self.save()
 
 

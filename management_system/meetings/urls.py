@@ -29,6 +29,7 @@ urlpatterns = [
     path('action/<int:pk>/edit/', views.action_item_edit, name='action_item_edit'),
     path('action/<int:pk>/delete/', views.action_item_delete, name='action_item_delete'),
     path('action/<int:pk>/toggle/', views.action_item_toggle_status, name='action_item_toggle'),
+    path('action-item/<int:pk>/toggle-completion/', views.action_item_toggle_completion, name='action_item_toggle_completion'),
     
     # Attachments
     path('<int:meeting_pk>/attachment/upload/', views.attachment_upload, name='attachment_upload'),

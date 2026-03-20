@@ -63,10 +63,17 @@
                             {{ form.quantity|as_crispy_field }}
                         </div>
                         <div class="col-md-4">
-                            {{ form.unit_price|as_crispy_field }}
+                            {{ form.cost_price|as_crispy_field }}
                         </div>
                         <div class="col-md-4">
+                            {{ form.selling_price|as_crispy_field }}
+                        </div>
+                        
+                        <div class="col-md-4">
                             {{ form.reorder_level|as_crispy_field }}
+                        </div>
+                        <div class="col-md-4">
+                            {{ form.is_marketplace_visible|as_crispy_field }}
                         </div>
                         
                         <div class="col-12 mt-4">

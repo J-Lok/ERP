@@ -123,7 +123,7 @@ class ActionItemForm(forms.ModelForm):
         model = ActionItem
         fields = [
             'title', 'description', 'assigned_to', 'due_date',
-            'priority', 'status', 'completion_percentage', 'notes'
+            'priority', 'status', 'is_completed', 'notes'
         ]
         widgets = {
             'title': forms.TextInput(attrs={
@@ -142,11 +142,8 @@ class ActionItemForm(forms.ModelForm):
             }),
             'priority': forms.Select(attrs={'class': 'form-select'}),
             'status': forms.Select(attrs={'class': 'form-select'}),
-            'completion_percentage': forms.NumberInput(attrs={
-                'class': 'form-control',
-                'min': 0,
-                'max': 100,
-                'step': 10,
+            'is_completed': forms.CheckboxInput(attrs={
+                'class': 'form-check-input',
             }),
             'notes': forms.Textarea(attrs={
                 'class': 'form-control',

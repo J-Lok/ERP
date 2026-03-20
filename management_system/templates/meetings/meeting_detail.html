@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load crispy_forms_tags %}
+{% load meeting_filters %}
 
 {% block title %}{{ meeting.title }}{% endblock %}
 
@@ -172,9 +173,17 @@
                     {% for action in action_items %}
                         <div class="list-group-item">
                             <div class="d-flex justify-content-between align-items-start">
-                                <div>
-                                    <h6 class="mb-1">{{ action.title }}</h6>
-                                    <small class="text-muted">
+                                <div class="flex-grow-1">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <input type="checkbox" class="form-check-input action-item-checkbox" 
+                                               data-action-id="{{ action.id }}"
+                                               {% if action.is_completed %}checked{% endif %}
+                                               style="cursor: pointer;">
+                                        <h6 class="mb-0" style="{% if action.is_completed %}text-decoration: line-through; color: #6c757d;{% endif %}">
+                                            {{ action.title }}
+                                        </h6>
+                                    </div>
+                                    <small class="text-muted d-block mt-1">
                                         {% if action.assigned_to %}
                                             Assigned to: {{ action.assigned_to.user.get_full_name }}
                                         {% endif %}
@@ -251,4 +260,29 @@
         </div>
     </div>
 </div>
+
+<script>
+document.querySelectorAll('.action-item-checkbox').forEach(checkbox => {
+    checkbox.addEventListener('change', function() {
+        const actionId = this.dataset.actionId;
+        const isCompleted = this.checked;
+        
+        fetch(`/meetings/action-item/${actionId}/toggle-completion/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            },
+            body: JSON.stringify({ is_completed: isCompleted })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            }
+        })
+        .catch(error => console.error('Error:', error));
+    });
+});
+</script>
 {% endblock %}

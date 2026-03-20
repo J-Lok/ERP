@@ -48,8 +48,8 @@
     <div class="col-md-3">
         <div class="card bg-warning text-white">
             <div class="card-body text-center">
-                <h3 class="mb-0">FCFA  {{ avg_unit_price|floatformat:0 }}</h3>
-                <small>Avg Unit Price</small>
+                <h3 class="mb-0">FCFA  {{ avg_cost_price|floatformat:0 }}</h3>
+                <small>Avg Cost Price</small>
             </div>
         </div>
     </div>
@@ -145,7 +145,7 @@
                                 </td>
                                 <td>{{ item.category.name|default:"—" }}</td>
                                 <td>{{ item.quantity }}</td>
-                                <td>FCFA  {{ item.unit_price|floatformat:0 }}</td>
+                                <td>FCFA  {{ item.cost_price|floatformat:0 }}</td>
                                 <td class="text-success">
                                     <strong>FCFA  {{ item.calculated_total_value|floatformat:0 }}</strong>
                                 </td>
@@ -189,7 +189,7 @@
                                 </td>
                                 <td>{{ item.category.name|default:"—" }}</td>
                                 <td>{{ item.quantity }}</td>
-                                <td>FCFA  {{ item.unit_price|floatformat:0 }}</td>
+                                <td>FCFA  {{ item.cost_price|floatformat:0 }}</td>
                                 <td class="text-warning">
                                     <strong>FCFA  {{ item.calculated_total_value|floatformat:0 }}</strong>
                                 </td>
@@ -220,7 +220,7 @@
                         <th>Name</th>
                         <th>Category</th>
                         <th>Quantity</th>
-                        <th>Unit Price</th>
+                        <th>Cost Price</th>
                         <th>Total Value</th>
                         <th>Status</th>
                     </tr>
@@ -232,7 +232,7 @@
                         <td>{{ stock.name }}</td>
                         <td>{{ stock.category.name|default:"—" }}</td>
                         <td>{{ stock.quantity }}</td>
-                        <td>FCFA  {{ stock.unit_price|floatformat:0 }}</td>
+                        <td>FCFA  {{ stock.cost_price|floatformat:0 }}</td>
                         <td>
                             <strong class="{% if stock.calculated_total_value > 1000 %}text-success{% endif %}">
                                 FCFA  {{ stock.calculated_total_value|floatformat:0 }}

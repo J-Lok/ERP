@@ -140,7 +140,8 @@ def shop(request):
     # Get available stock items from this company
     stocks = Stock.objects.filter(
         company=company,
-        quantity__gt=0
+        quantity__gt=0,
+        is_marketplace_visible=True
     ).select_related('category').order_by('-created_at')
     
     # Apply search
@@ -419,7 +420,7 @@ def checkout(request):
                             item_name=cart_item.stock.name,
                             item_code=cart_item.stock.item_code,
                             quantity=cart_item.quantity,
-                            unit_price=cart_item.stock.unit_price,
+                            unit_price=cart_item.stock.selling_price,
                             subtotal=cart_item.subtotal
                         )
                         

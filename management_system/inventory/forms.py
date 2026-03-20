@@ -6,12 +6,13 @@ class StockForm(forms.ModelForm):
     class Meta:
         model = Stock
         fields = ['item_code', 'name', 'category', 'description','image', 'quantity', 
-                  'unit', 'unit_price', 'reorder_level', 'supplier_name', 
-                  'supplier_contact', 'location', 'last_restocked']
+                  'unit', 'cost_price', 'selling_price', 'reorder_level', 'supplier_name', 
+                  'supplier_contact', 'location', 'is_marketplace_visible', 'last_restocked']
         widgets = {
             'last_restocked': forms.DateInput(attrs={'type': 'date'}),
             'description': forms.Textarea(attrs={'rows': 3}),
              'image': forms.FileInput(attrs={'class': 'form-control', 'accept': 'image/*'}),
+             'is_marketplace_visible': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
     
     def __init__(self, *args, **kwargs):
