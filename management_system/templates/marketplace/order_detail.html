@@ -92,32 +92,32 @@
                                             <small class="text-muted">Code: {{ item.item_code }}</small>
                                         </div>
                                     </td>
-                                    <td>FCFA {{ item.unit_price|floatformat:2 }}</td>
+                                    <td>FCFA {{ item.unit_price|floatformat:0 }}</td>
                                     <td>{{ item.quantity }}</td>
-                                    <td class="text-end"><strong>FCFA {{ item.subtotal|floatformat:2 }}</strong></td>
+                                    <td class="text-end"><strong>FCFA {{ item.subtotal|floatformat:0 }}</strong></td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
                             <tfoot class="table-group-divider">
                                 <tr>
                                     <td colspan="3" class="text-end"><strong>Subtotal:</strong></td>
-                                    <td class="text-end">FCFA {{ order.subtotal|floatformat:2 }}</td>
+                                    <td class="text-end">FCFA {{ order.subtotal|floatformat:0 }}</td>
                                 </tr>
                                 {% if order.tax %}
                                 <tr>
                                     <td colspan="3" class="text-end"><strong>Tax:</strong></td>
-                                    <td class="text-end">FCFA {{ order.tax|floatformat:2 }}</td>
+                                    <td class="text-end">FCFA {{ order.tax|floatformat:0 }}</td>
                                 </tr>
                                 {% endif %}
                                 {% if order.shipping %}
                                 <tr>
                                     <td colspan="3" class="text-end"><strong>Shipping:</strong></td>
-                                    <td class="text-end">FCFA {{ order.shipping|floatformat:2 }}</td>
+                                    <td class="text-end">FCFA {{ order.shipping|floatformat:0 }}</td>
                                 </tr>
                                 {% endif %}
                                 <tr class="table-primary">
                                     <td colspan="3" class="text-end"><h5 class="mb-0 fw-bold">TOTAL:</h5></td>
-                                    <td class="text-end"><h5 class="mb-0 fw-bold">FCFA {{ order.total|floatformat:2 }}</h5></td>
+                                    <td class="text-end"><h5 class="mb-0 fw-bold">FCFA {{ order.total|floatformat:0 }}</h5></td>
                                 </tr>
                             </tfoot>
                         </table>

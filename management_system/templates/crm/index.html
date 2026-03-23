@@ -43,7 +43,7 @@
                 </div>
                 <div>
                     <p class="text-muted small mb-0">Open Pipeline</p>
-                    <h3 class="mb-0 fw-bold">${{ open_pipeline|floatformat:0|default:"0" }}</h3>
+                    <h3 class="mb-0 fw-bold">FCFA {{ open_pipeline|floatformat:0|default:"0" }}</h3>
                 </div>
             </div>
         </div>
@@ -71,7 +71,7 @@
                 </div>
                 <div>
                     <p class="text-muted small mb-0">Won This Month</p>
-                    <h3 class="mb-0 fw-bold">${{ won_this_month|floatformat:0|default:"0" }}</h3>
+                    <h3 class="mb-0 fw-bold">FCFA {{ won_this_month|floatformat:0|default:"0" }}</h3>
                 </div>
             </div>
         </div>
@@ -184,7 +184,7 @@
                                         {{ opp.get_stage_display }}
                                     </span>
                                 </td>
-                                <td class="text-end fw-semibold">${{ opp.value|floatformat:0 }}</td>
+                                <td class="text-end fw-semibold">FCFA {{ opp.value|floatformat:0 }}</td>
                             </tr>
                             {% empty %}
                             <tr>

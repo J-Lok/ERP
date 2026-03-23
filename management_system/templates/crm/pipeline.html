@@ -52,7 +52,7 @@
         <span class="badge bg-white text-dark">{{ col.count }}</span>
       </div>
     </div>
-    <div class="text-muted small text-center mb-2">${{ col.total|floatformat:0 }}</div>
+    <div class="text-muted small text-center mb-2">FCFA {{ col.total|floatformat:0 }}</div>
 
     <!-- Cards -->
     {% for opp in col.items %}
@@ -69,7 +69,7 @@
           {% if opp.contact.organization %}<br>
           <i class="fas fa-building me-1"></i>{{ opp.contact.organization }}{% endif %}
         </p>
-        <p class="fw-bold text-success mb-2">${{ opp.value|floatformat:0 }}</p>
+        <p class="fw-bold text-success mb-2">FCFA {{ opp.value|floatformat:0 }}</p>
 
         {% if opp.assigned_to %}
         <p class="small text-muted mb-1">

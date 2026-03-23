@@ -24,7 +24,7 @@
         </div>
         <div>
           <p class="text-muted small mb-0">Total Balance</p>
-          <h4 class="mb-0 fw-bold">{{ total_balance|floatformat:2 }}</h4>
+          <h4 class="mb-0 fw-bold">{{ total_balance|floatformat:0 }}</h4>
           <span class="text-muted small">across {{ account_count }} account{{ account_count|pluralize }}</span>
         </div>
       </div>
@@ -38,7 +38,7 @@
         </div>
         <div>
           <p class="text-muted small mb-0">Total Credits</p>
-          <h4 class="mb-0 fw-bold text-success">{{ total_credits|floatformat:2 }}</h4>
+          <h4 class="mb-0 fw-bold text-success">{{ total_credits|floatformat:0 }}</h4>
         </div>
       </div>
     </div>
@@ -51,7 +51,7 @@
         </div>
         <div>
           <p class="text-muted small mb-0">Total Debits</p>
-          <h4 class="mb-0 fw-bold text-danger">{{ total_debits|floatformat:2 }}</h4>
+          <h4 class="mb-0 fw-bold text-danger">{{ total_debits|floatformat:0 }}</h4>
         </div>
       </div>
     </div>
@@ -65,7 +65,7 @@
         <div>
           <p class="text-muted small mb-0">Net This Month</p>
           <h4 class="mb-0 fw-bold {% if net_month >= 0 %}text-success{% else %}text-danger{% endif %}">
-            {% if net_month >= 0 %}+{% endif %}{{ net_month|floatformat:2 }}
+            {% if net_month >= 0 %}+{% endif %}{{ net_month|floatformat:0 }}
           </h4>
           <span class="text-muted small">↑ {{ month_credits|floatformat:0 }} · ↓ {{ month_debits|floatformat:0 }}</span>
         </div>

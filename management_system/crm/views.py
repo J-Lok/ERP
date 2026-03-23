@@ -85,7 +85,7 @@ def contact_list(request):
         .filter(company=company)
         .annotate(
             opp_count=Count('opportunities'),
-            pipeline_value=Sum(
+            total_pipeline_value=Sum(
                 'opportunities__value',
                 filter=Q(opportunities__stage__in=['prospect', 'qualified', 'proposal']),
             ),

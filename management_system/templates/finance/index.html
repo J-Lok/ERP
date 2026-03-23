@@ -24,7 +24,7 @@
         </div>
         <div>
           <p class="text-muted small mb-0">Total Balance</p>
-          <h4 class="mb-0 fw-bold">{{ total_balance|floatformat:2 }}</h4>
+          <h4 class="mb-0 fw-bold">{{ total_balance|floatformat:0 }}</h4>
           <span class="text-muted small">across {{ account_count }} account{{ account_count|pluralize }}</span>
         </div>
       </div>
@@ -38,7 +38,7 @@
         </div>
         <div>
           <p class="text-muted small mb-0">Total Credits</p>
-          <h4 class="mb-0 fw-bold text-success">{{ total_credits|floatformat:2 }}</h4>
+          <h4 class="mb-0 fw-bold text-success">{{ total_credits|floatformat:0 }}</h4>
         </div>
       </div>
     </div>
@@ -51,7 +51,7 @@
         </div>
         <div>
           <p class="text-muted small mb-0">Total Debits</p>
-          <h4 class="mb-0 fw-bold text-danger">{{ total_debits|floatformat:2 }}</h4>
+          <h4 class="mb-0 fw-bold text-danger">{{ total_debits|floatformat:0 }}</h4>
         </div>
       </div>
     </div>
@@ -65,7 +65,7 @@
         <div>
           <p class="text-muted small mb-0">Net This Month</p>
           <h4 class="mb-0 fw-bold {% if net_month >= 0 %}text-success{% else %}text-danger{% endif %}">
-            {% if net_month >= 0 %}+{% endif %}{{ net_month|floatformat:2 }}
+            {% if net_month >= 0 %}+{% endif %}{{ net_month|floatformat:0 }}
           </h4>
           <span class="text-muted small">↑ {{ month_credits|floatformat:0 }} · ↓ {{ month_debits|floatformat:0 }}</span>
         </div>
@@ -103,10 +103,10 @@
               </td>
               <td class="text-muted">{{ txn.description|truncatechars:40|default:"—" }}</td>
               <td class="text-end text-success fw-semibold">
-                {% if txn.transaction_type == 'credit' %}{{ txn.amount|floatformat:2 }}{% endif %}
+                {% if txn.transaction_type == 'credit' %}{{ txn.amount|floatformat:0 }}{% endif %}
               </td>
               <td class="text-end text-danger fw-semibold">
-                {% if txn.transaction_type == 'debit' %}{{ txn.amount|floatformat:2 }}{% endif %}
+                {% if txn.transaction_type == 'debit' %}{{ txn.amount|floatformat:0 }}{% endif %}
               </td>
             </tr>
             {% endfor %}
@@ -135,7 +135,7 @@
             <a href="{% url 'finance:account_detail' acct.pk %}" class="text-decoration-none fw-semibold">
               {{ acct.name }}
             </a>
-            <span class="badge bg-primary rounded-pill">{{ acct.balance|floatformat:2 }}</span>
+            <span class="badge bg-primary rounded-pill">{{ acct.balance|floatformat:0 }}</span>
           </li>
           {% endfor %}
         </ul>
