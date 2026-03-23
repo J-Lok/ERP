@@ -53,7 +53,7 @@ class OrderAdmin(admin.ModelAdmin):
             'fields': ('subtotal', 'tax', 'shipping', 'total')
         }),
         ('Shipping Address', {
-            'fields': ('shipping_address', 'shipping_city', 'shipping_country', 'shipping_postal_code')
+            'fields': ('shipping_address', 'shipping_city', 'shipping_country', 'shipping_phone')
         }),
         ('Additional Info', {
             'fields': ('notes',)

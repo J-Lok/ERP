@@ -107,7 +107,7 @@ class Order(models.Model):
     shipping_address = models.TextField()
     shipping_city = models.CharField(max_length=100)
     shipping_country = models.CharField(max_length=100)
-    shipping_postal_code = models.CharField(max_length=20)
+    shipping_phone = models.CharField(max_length=20)
     
     # Timestamps
     created_at = models.DateTimeField(auto_now_add=True)

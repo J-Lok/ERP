@@ -424,11 +424,17 @@ def stock_import(request):
                             stock.description = str(row.get('description', '')).strip()
                             stock.quantity = int(row.get('quantity', 0) or 0)
                             stock.unit = str(row.get('unit', 'pcs')).strip()
-                            stock.unit_price = float(row.get('unit_price', 0) or 0)
+                            stock.cost_price = float(row.get('cost_price', 0) or 0)
+                            stock.selling_price = float(row.get('selling_price', 0) or 0)
                             stock.reorder_level = int(row.get('reorder_level', 0) or 0)
                             stock.supplier_name = str(row.get('supplier_name', '')).strip()
                             stock.supplier_contact = str(row.get('supplier_contact', '')).strip()
                             stock.location = str(row.get('location', '')).strip()
+                            
+                            # Update is_marketplace_visible if provided
+                            if 'is_marketplace_visible' in df.columns and pd.notna(row.get('is_marketplace_visible')):
+                                value = str(row.get('is_marketplace_visible')).strip().lower()
+                                stock.is_marketplace_visible = value in ('true', 'yes', '1', 'y')
                             
                             # Update last_restocked if quantity increased
                             if 'quantity' in df.columns and pd.notna(row.get('quantity')):
@@ -440,6 +446,11 @@ def stock_import(request):
                             updated_count += 1
                         else:
                             # Create new item
+                            is_visible = True
+                            if 'is_marketplace_visible' in df.columns and pd.notna(row.get('is_marketplace_visible')):
+                                value = str(row.get('is_marketplace_visible')).strip().lower()
+                                is_visible = value in ('true', 'yes', '1', 'y')
+                            
                             stock = Stock(
                                 company=company,
                                 item_code=item_code,
@@ -448,11 +459,13 @@ def stock_import(request):
                                 description=str(row.get('description', '')).strip(),
                                 quantity=int(row.get('quantity', 0) or 0),
                                 unit=str(row.get('unit', 'pcs')).strip(),
-                                unit_price=float(row.get('unit_price', 0) or 0),
+                                cost_price=float(row.get('cost_price', 0) or 0),
+                                selling_price=float(row.get('selling_price', 0) or 0),
                                 reorder_level=int(row.get('reorder_level', 0) or 0),
                                 supplier_name=str(row.get('supplier_name', '')).strip(),
                                 supplier_contact=str(row.get('supplier_contact', '')).strip(),
                                 location=str(row.get('location', '')).strip(),
+                                is_marketplace_visible=is_visible,
                                 created_by=request.user,
                             )
                             
@@ -555,11 +568,13 @@ def stock_download_template(request):
         'description': 'Sample description',
         'quantity': 100,
         'unit': 'pcs',
-        'unit_price': 10.50,
+        'cost_price': 10.50,
+        'selling_price': 15.99,
         'reorder_level': 20,
         'supplier_name': 'Sample Supplier Inc.',
         'supplier_contact': 'contact@supplier.com',
         'location': 'Warehouse A, Shelf B2',
+        'is_marketplace_visible': True,
     }
     
     df = pd.DataFrame([sample_data])
@@ -579,6 +594,8 @@ def stock_download_template(request):
             'No',
             'No',
             'No',
+            'No',
+            'No',
         ],
         'Description': [
             'Unique item code',
@@ -587,11 +604,13 @@ def stock_download_template(request):
             'Item description',
             'Initial quantity',
             'Unit: pcs, kg, ltr, box, set',
-            'Price per unit',
+            'Cost price per unit (for inventory valuation)',
+            'Selling price per unit (for marketplace)',
             'Reorder level',
             'Supplier name',
             'Supplier contact info',
             'Storage location',
+            'Show on marketplace (true/false)',
         ],
         'Example': [
             sample_data['item_code'],
@@ -600,11 +619,13 @@ def stock_download_template(request):
             sample_data['description'],
             str(sample_data['quantity']),
             sample_data['unit'],
-            f"{sample_data['unit_price']:.2f}",
+            f"{sample_data['cost_price']:.2f}",
+            f"{sample_data['selling_price']:.2f}",
             str(sample_data['reorder_level']),
             sample_data['supplier_name'],
             sample_data['supplier_contact'],
             sample_data['location'],
+            'true',
         ]
     })
     

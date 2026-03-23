@@ -77,12 +77,12 @@ class ClientProfileForm(forms.ModelForm):
 class CheckoutForm(forms.ModelForm):
     class Meta:
         model = Order
-        fields = ['shipping_address', 'shipping_city', 'shipping_country', 'shipping_postal_code', 'notes']
+        fields = ['shipping_address', 'shipping_city', 'shipping_country', 'shipping_phone', 'notes']
         widgets = {
             'shipping_address': forms.Textarea(attrs={'rows': 3, 'class': 'form-control'}),
             'shipping_city': forms.TextInput(attrs={'class': 'form-control'}),
             'shipping_country': forms.TextInput(attrs={'class': 'form-control'}),
-            'shipping_postal_code': forms.TextInput(attrs={'class': 'form-control'}),
+            'shipping_phone': forms.TextInput(attrs={'class': 'form-control', 'type': 'tel'}),
             'notes': forms.Textarea(attrs={'rows': 2, 'class': 'form-control', 'placeholder': 'Any special instructions?'}),
         }
 

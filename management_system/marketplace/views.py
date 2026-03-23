@@ -454,7 +454,7 @@ def checkout(request):
             'shipping_address': client.address,
             'shipping_city': client.city,
             'shipping_country': client.country,
-            'shipping_postal_code': client.postal_code,
+            'shipping_phone': client.phone,
         })
     
     context = {
