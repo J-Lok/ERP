@@ -460,6 +460,7 @@ def action_item_toggle_status(request, pk):
 
 
 @require_http_methods(['POST'])
+@role_required('admin', 'hr_manager', 'manager', 'secretary', 'employee')
 def action_item_toggle_completion(request, pk):
     """Toggle action item is_completed checkbox via AJAX."""
     import json
