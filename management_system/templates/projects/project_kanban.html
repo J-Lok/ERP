@@ -5,18 +5,29 @@
 
 {% block extra_css %}
 <style>
+    .projects-kanban-wrap {
+        width: 100%;
+        min-width: 0;
+    }
     .kanban-board {
         display: flex;
-        gap: 20px;
+        align-items: flex-start;
+        gap: 1rem;
         overflow-x: auto;
-        padding-bottom: 20px;
+        overflow-y: visible;
+        padding-bottom: 1.25rem;
+        min-height: min(70vh, 900px);
+        -webkit-overflow-scrolling: touch;
+        scrollbar-color: #adb5bd #e9ecef;
     }
     .kanban-column {
-        flex: 0 0 300px;
-        background: #f8f9fa;
+        flex: 0 0 clamp(260px, 28vw, 320px);
+        background: #fff;
+        border: 1px solid #dee2e6;
         border-radius: 10px;
         padding: 15px;
-        min-height: 500px;
+        min-height: 480px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.06);
     }
     .kanban-column-header {
         background: white;
@@ -90,6 +101,7 @@
     </div>
 
     <!-- Kanban Board -->
+    <div class="projects-kanban-wrap">
     <div class="kanban-board">
         <!-- Planning Column -->
         <div class="kanban-column column-planning" data-status="planning">
@@ -303,6 +315,7 @@
             {% endfor %}
         </div>
     </div>
+    </div>
 </div>
 {% endblock %}
 
@@ -347,30 +360,38 @@ document.querySelectorAll('.kanban-column').forEach(column => {
 });
 
 function updateProjectStatus(projectId, newStatus) {
-    // You'll need to create an endpoint for this
-    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value || 
-                     '{{ csrf_token }}';
-    
-    fetch(`/projects/${projectId}/update-status/`, {
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value ||
+        '{{ csrf_token }}';
+    const url = "{% url 'projects:project_update_status' 999999999 %}".replace('999999999', String(projectId));
+
+    fetch(url, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
             'X-CSRFToken': csrfToken
         },
+        credentials: 'same-origin',
         body: JSON.stringify({ status: newStatus })
     })
-    .then(response => response.json())
-    .then(data => {
+    .then(async (response) => {
+        let data = {};
+        try {
+            data = await response.json();
+        } catch (e) {
+            throw new Error('Server returned an invalid response');
+        }
+        if (!response.ok) {
+            throw new Error(data.error || ('HTTP ' + response.status));
+        }
         if (data.success) {
-            // Reload the page to show updated columns
             location.reload();
         } else {
-            alert('Failed to update project status');
+            alert(data.error || 'Failed to update project status');
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        alert('An error occurred while updating the project');
+        alert(error.message || 'An error occurred while updating the project');
     });
 }
 </script>

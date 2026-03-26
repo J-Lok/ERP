@@ -71,13 +71,17 @@
                     </span>
                 </div>
             </div>
-            <div>
-                <a href="{% url 'projects:sous_tache_edit' tache.pk %}" class="btn btn-light me-2">
-                    <i class="fas fa-edit"></i>
+            <div class="d-flex gap-2">
+                <a href="{% url 'projects:sous_tache_edit' tache.pk %}" class="btn btn-light">
+                    <i class="fas fa-edit me-1"></i>Edit
                 </a>
-                <a href="{% url 'projects:sous_tache_delete' tache.pk %}" class="btn btn-outline-light">
-                    <i class="fas fa-trash"></i>
-                </a>
+                <form method="post" action="{% url 'projects:sous_tache_delete' tache.pk %}" class="d-inline"
+                      onsubmit="return confirm('Delete this task permanently?');">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-outline-light">
+                        <i class="fas fa-trash me-1"></i>Delete
+                    </button>
+                </form>
             </div>
         </div>
     </div>

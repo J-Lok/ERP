@@ -4,15 +4,29 @@
 {% block title %}Project Calendar - {{ block.super }}{% endblock %}
 
 {% block extra_css %}
-<link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css" rel="stylesheet">
+{# FullCalendar v6 global bundle injects required styles via JS; no separate CSS file exists at fullcalendar/index.global.min.css #}
 <style>
+    /* Layout + readability (FC base styles come from the script bundle) */
     #calendar {
-        max-width: 1200px;
-        margin: 0 auto;
-        background: white;
-        padding: 20px;
+        width: 100%;
+        max-width: none;
+        margin: 0;
+        min-height: 640px;
+        background: #fff;
+        padding: 1rem;
         border-radius: 10px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+    .fc .fc-toolbar-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+    }
+    .fc-theme-standard td, .fc-theme-standard th {
+        border-color: #dee2e6;
+    }
+    .fc-daygrid-day-number {
+        padding: 0.35rem 0.5rem;
+        font-weight: 500;
     }
     
     .fc-event {
@@ -148,8 +162,9 @@ document.addEventListener('DOMContentLoaded', function() {
         // Event Data
         events: events,
         
-        // Display Settings
+        // Display Settings — fixed content area so month grid stays readable
         height: 'auto',
+        contentHeight: 560,
         firstDay: 1, // Monday
         weekNumbers: true,
         weekNumberCalculation: 'ISO',
@@ -258,6 +273,11 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     calendar.render();
+    calendar.updateSize();
+
+    window.addEventListener('resize', function() {
+        calendar.updateSize();
+    });
     
     // ============ Helper Functions ============
     
@@ -329,11 +349,6 @@ document.addEventListener('DOMContentLoaded', function() {
         };
         return formatted[status] || status.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
     }
-});
-
-// Handle window resize
-window.addEventListener('resize', function() {
-    // Optional: Add resize handling if needed
 });
 </script>
 {% endblock %}

@@ -55,7 +55,10 @@
         .badge-status { padding: 5px 10px; border-radius: 15px; }
         .stat-card { text-align: center; padding: 20px; }
         .stat-card i { font-size: 3rem; margin-bottom: 10px; }
+        /* Allow main column to shrink so wide layouts (kanban, gantt) scroll instead of clipping */
+        main.col-md-10 { min-width: 0; }
     </style>
+    {% block extra_css %}{% endblock %}
 </head>
 <body>
 
@@ -148,7 +151,7 @@
                         {% if user|has_role:'admin,accountant,manager' %}
                         <li class="nav-item">
                             <a class="nav-link {% if request.resolver_match.app_name == 'finance' %}active{% endif %}"
-                               href="{% url 'finance:account_list' %}">
+                               href="{% url 'finance:index' %}">
                                 <i class="fas fa-wallet"></i> Finance
                             </a>
                         </li>
@@ -218,7 +221,7 @@
             </nav>
             {% endif %}
 
-            <main class="col-md-10 ms-sm-auto px-md-4 py-4">
+            <main class="col-md-10 ms-sm-auto px-md-4 py-4 min-w-0">
                 {% if messages %}
                     {% for message in messages %}
                     <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">

@@ -11,6 +11,7 @@ urlpatterns = [
     path('<int:pk>/edit/', views.project_edit, name='project_edit'),
     path('<int:pk>/delete/', views.project_delete, name='project_delete'),
     path('<int:pk>/update-progress/', views.update_project_progress, name='update_project_progress'),
+    path('<int:pk>/update-status/', views.project_update_status, name='project_update_status'),
     
     # Sous-tâches (Subtasks)
     path('<int:project_id>/task/create/', views.sous_tache_create, name='sous_tache_create'),

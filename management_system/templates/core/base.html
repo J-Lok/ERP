@@ -148,7 +148,7 @@
                         {% if user|has_role:'admin,accountant,manager' %}
                         <li class="nav-item">
                             <a class="nav-link {% if request.resolver_match.app_name == 'finance' %}active{% endif %}"
-                               href="{% url 'finance:account_list' %}">
+                               href="{% url 'finance:index' %}">
                                 <i class="fas fa-wallet"></i> Finance
                             </a>
                         </li>

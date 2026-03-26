@@ -32,6 +32,20 @@
     .progress-thin {
         height: 8px;
     }
+    .project-subtasks-list {
+        max-height: 220px;
+        overflow-y: auto;
+        margin-bottom: 0.75rem;
+        padding-right: 2px;
+    }
+    .project-subtasks-list .form-check {
+        padding-left: 1.5rem;
+        margin-bottom: 0.35rem;
+    }
+    .project-subtasks-list .form-check-label {
+        cursor: pointer;
+        line-height: 1.3;
+    }
 </style>
 {% endblock %}
 
@@ -215,14 +229,14 @@
                     {% endif %}
 
                     <!-- Status and Priority Badges -->
-                    <div class="mb-3">
-                        <span class="badge 
+                    <div class="mb-2">
+                        <span class="badge project-status-badge
                             {% if project.status == 'planning' %}bg-secondary
                             {% elif project.status == 'in_progress' %}bg-primary
-                            {% elif project.status == 'on_hold' %}bg-warning
+                            {% elif project.status == 'on_hold' %}bg-warning text-dark
                             {% elif project.status == 'completed' %}bg-success
                             {% elif project.status == 'cancelled' %}bg-danger
-                            {% endif %}">
+                            {% endif %}" data-project-id="{{ project.pk }}">
                             {{ project.get_status_display }}
                         </span>
                         <span class="badge 
@@ -235,22 +249,51 @@
                         </span>
                     </div>
 
+                    <!-- Subtasks (inline checklist) -->
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <small class="text-muted fw-semibold"><i class="fas fa-list-ul me-1"></i>Subtasks</small>
+                        </div>
+                        {% if project.sous_taches.all %}
+                        <div class="project-subtasks-list">
+                            {% for tache in project.sous_taches.all %}
+                            <div class="form-check">
+                                <input class="form-check-input subtask-toggle" type="checkbox"
+                                    id="st-{{ project.pk }}-{{ tache.pk }}"
+                                    data-toggle-url="{% url 'projects:toggle_subtask_completion' tache.pk %}"
+                                    {% if tache.status == 'termine' %}checked{% endif %}
+                                    {% if not can_toggle_subtasks %}disabled{% endif %}>
+                                <label class="form-check-label small" for="st-{{ project.pk }}-{{ tache.pk }}">
+                                    {{ tache.titre }}
+                                    {% if tache.assigne_a %}
+                                    <span class="text-muted">· {{ tache.assigne_a.user.get_full_name }}</span>
+                                    {% endif %}
+                                </label>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <p class="text-muted small mb-2 mb-md-0">No subtasks yet.</p>
+                        {% endif %}
+                    </div>
+
                     <!-- Progress Bar -->
                     <div class="mb-3">
                         <div class="d-flex justify-content-between align-items-center mb-1">
                             <small class="text-muted">Progress</small>
-                            <small class="fw-bold">{{ project.completion_percentage }}%</small>
+                            <small class="fw-bold project-completion-pct" data-project-id="{{ project.pk }}">{{ project.completion_percentage }}%</small>
                         </div>
                         <div class="progress progress-thin">
-                            <div class="progress-bar 
+                            <div class="progress-bar project-progress-bar
                                 {% if project.completion_percentage < 30 %}bg-danger
                                 {% elif project.completion_percentage < 70 %}bg-warning
                                 {% else %}bg-success
-                                {% endif %}" 
-                                role="progressbar" 
+                                {% endif %}"
+                                data-project-id="{{ project.pk }}"
+                                role="progressbar"
                                 style="width: {{ project.completion_percentage }}%"
-                                aria-valuenow="{{ project.completion_percentage }}" 
-                                aria-valuemin="0" 
+                                aria-valuenow="{{ project.completion_percentage }}"
+                                aria-valuemin="0"
                                 aria-valuemax="100">
                             </div>
                         </div>
@@ -332,7 +375,74 @@
 
 {% block extra_js %}
 <script>
-    // Add today's date for overdue check
-    const today = new Date('{{ today|date:"Y-m-d" }}');
+(function() {
+    const csrfToken = '{{ csrf_token }}';
+    const statusBadgeClass = {
+        planning: 'bg-secondary',
+        in_progress: 'bg-primary',
+        on_hold: 'bg-warning text-dark',
+        completed: 'bg-success',
+        cancelled: 'bg-danger'
+    };
+
+    function progressBarClass(pct) {
+        if (pct < 30) return 'bg-danger';
+        if (pct < 70) return 'bg-warning';
+        return 'bg-success';
+    }
+
+    function updateProgressBar(bar, pct) {
+        bar.style.width = pct + '%';
+        bar.setAttribute('aria-valuenow', pct);
+        bar.className = 'progress-bar project-progress-bar ' + progressBarClass(Number(pct));
+    }
+
+    document.querySelectorAll('.subtask-toggle').forEach(function(cb) {
+        cb.addEventListener('change', function() {
+            const card = this.closest('.card');
+            const url = this.dataset.toggleUrl;
+            const prev = !this.checked;
+            const fd = new FormData();
+            fd.append('checked', this.checked ? 'true' : 'false');
+            fd.append('csrfmiddlewaretoken', csrfToken);
+
+            fetch(url, {
+                method: 'POST',
+                body: fd,
+                credentials: 'same-origin',
+                headers: { 'X-CSRFToken': csrfToken }
+            })
+            .then(function(res) {
+                if (!res.ok) {
+                    throw new Error('Request failed');
+                }
+                return res.json();
+            })
+            .then(function(data) {
+                if (typeof data.project_completion !== 'number') {
+                    throw new Error('Invalid response');
+                }
+                const pctEl = card.querySelector('.project-completion-pct');
+                const bar = card.querySelector('.project-progress-bar');
+                const badge = card.querySelector('.project-status-badge');
+                if (pctEl) {
+                    pctEl.textContent = data.project_completion + '%';
+                }
+                if (bar) {
+                    updateProgressBar(bar, data.project_completion);
+                }
+                if (badge && data.project_status && data.project_status_display) {
+                    const cls = statusBadgeClass[data.project_status] || 'bg-secondary';
+                    badge.className = 'badge project-status-badge ' + cls;
+                    badge.textContent = data.project_status_display;
+                }
+            })
+            .catch(function() {
+                cb.checked = prev;
+                alert('Could not update the subtask. Please try again.');
+            });
+        });
+    });
+})();
 </script>
 {% endblock %}

@@ -10,7 +10,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
 from django.db import transaction
-from django.db.models import Avg, Count, Max, Min, Q, Sum
+from django.db.models import Avg, Count, Max, Min, Prefetch, Q, Sum
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
@@ -56,7 +56,15 @@ def project_list(request):
         Project.objects
         .filter(company=company)
         .select_related('manager__user', 'created_by')
-        .prefetch_related('team_members')
+        .prefetch_related(
+            'team_members',
+            Prefetch(
+                'sous_taches',
+                queryset=SousTache.objects.select_related('assigne_a__user').order_by(
+                    'ordre', 'created_at'
+                ),
+            ),
+        )
         .order_by('-created_at')
     )
 
@@ -95,6 +103,11 @@ def project_list(request):
 
     managers = Employee.objects.filter(company=company, status='active').select_related('user')
 
+    can_toggle_subtasks = (
+        request.user.is_superuser
+        or getattr(request.user, 'role', None) in TASK_WRITE_ROLES
+    )
+
     return render(request, 'projects/project_list.html', {
         'projects': _paginate(projects, request.GET.get('page')),
         'managers': managers,
@@ -103,9 +116,14 @@ def project_list(request):
         'selected_priority': priority,
         'selected_manager': manager_id,
         'stats': stats,
+        'total_projects': stats['total'],
+        'active_projects': stats['active'],
+        'completed_projects': stats['completed'],
+        'overdue_projects': stats['overdue'],
         'STATUS_CHOICES': Project.STATUS_CHOICES,
         'PRIORITY_CHOICES': Project.PRIORITY_CHOICES,
         'today': today,
+        'can_toggle_subtasks': can_toggle_subtasks,
     })
 
 
@@ -259,6 +277,36 @@ def update_project_progress(request, pk):
     return redirect('projects:project_detail', pk=pk)
 
 
+@login_required
+@require_http_methods(['POST'])
+def project_update_status(request, pk):
+    """JSON endpoint for Kanban drag-and-drop — update project workflow status."""
+    if not (
+        request.user.is_superuser
+        or getattr(request.user, 'role', None) in PROJECT_WRITE_ROLES
+    ):
+        return JsonResponse({'success': False, 'error': 'Permission denied'}, status=403)
+
+    company = request.user.company
+    project = get_object_or_404(Project, pk=pk, company=company)
+
+    try:
+        payload = json.loads(request.body.decode('utf-8'))
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        return JsonResponse({'success': False, 'error': 'Invalid JSON'}, status=400)
+
+    new_status = payload.get('status')
+    valid_statuses = {c[0] for c in Project.STATUS_CHOICES}
+    if new_status not in valid_statuses:
+        return JsonResponse({'success': False, 'error': 'Invalid status'}, status=400)
+
+    if project.status != new_status:
+        project.status = new_status
+        project.save(update_fields=['status', 'updated_at'])
+
+    return JsonResponse({'success': True, 'status': project.status})
+
+
 # ---------------------------------------------------------------------------
 # Sub-tasks
 # ---------------------------------------------------------------------------
@@ -285,22 +333,41 @@ def sous_tache_create(request, project_id):
 
 
 @role_required(*TASK_WRITE_ROLES)
-@require_http_methods(['POST'])
+@require_http_methods(['GET', 'POST'])
 def sous_tache_edit(request, pk):
     company = request.user.company
     tache = get_object_or_404(SousTache, pk=pk, company=company)
+    project = tache.projet
 
-    form = SousTacheForm(
-        request.POST, instance=tache, company=company, projet_id=tache.projet_id
-    )
-    if form.is_valid():
-        form.save()
-        tache.projet.update_completion_from_subtasks()
-        messages.success(request, 'Task updated.')
+    if request.method == 'POST':
+        form = SousTacheForm(
+            request.POST,
+            instance=tache,
+            company=company,
+            projet_id=tache.projet_id,
+        )
+        if form.is_valid():
+            old_status = tache.status
+            tache = form.save()
+            if tache.status != old_status:
+                tache.change_status(tache.status)
+            else:
+                tache.projet.update_completion_from_subtasks()
+            messages.success(request, 'Task updated.')
+            return redirect('projects:project_detail', pk=tache.projet_id)
+        messages.error(request, 'Could not update task. Please correct the errors below.')
     else:
-        messages.error(request, 'Could not update task.')
+        form = SousTacheForm(
+            instance=tache,
+            company=company,
+            projet_id=tache.projet_id,
+        )
 
-    return redirect('projects:project_detail', pk=tache.projet_id)
+    return render(request, 'projects/sous_tache_form.html', {
+        'form': form,
+        'tache': tache,
+        'project': project,
+    })
 
 
 @role_required(*TASK_DELETE_ROLES)
@@ -347,9 +414,15 @@ def toggle_subtask_completion(request, pk):
     new_status = 'termine' if checked else 'a_faire'
     tache.change_status(new_status)
 
-    # Re-fetch the project's updated completion percentage
-    tache.projet.refresh_from_db(fields=['completion_percentage'])
-    return JsonResponse({'project_completion': tache.projet.completion_percentage})
+    project = tache.projet
+    project.refresh_from_db(fields=['completion_percentage', 'status'])
+    return JsonResponse({
+        'ok': True,
+        'project_completion': project.completion_percentage,
+        'project_status': project.status,
+        'project_status_display': project.get_status_display(),
+        'task_status': tache.status,
+    })
 
 
 @role_required(*PROJECT_VIEW_ROLES)
@@ -511,13 +584,18 @@ def project_gantt_chart(request):
 @role_required(*PROJECT_VIEW_ROLES)
 def project_kanban(request):
     company = request.user.company
-    base_qs = Project.objects.filter(company=company).select_related('manager__user')
+    base_qs = (
+        Project.objects.filter(company=company)
+        .select_related('manager__user')
+        .prefetch_related('sous_taches')
+    )
 
-    # One query per column — acceptable for typical project counts
-    columns = {status: base_qs.filter(status=status) for status, _ in Project.STATUS_CHOICES}
-
+    # Template expects these names (four columns; cancelled is listed elsewhere if needed)
     return render(request, 'projects/project_kanban.html', {
-        'columns': columns,
+        'planning_projects': base_qs.filter(status='planning'),
+        'in_progress_projects': base_qs.filter(status='in_progress'),
+        'on_hold_projects': base_qs.filter(status='on_hold'),
+        'completed_projects': base_qs.filter(status='completed'),
         'STATUS_CHOICES': Project.STATUS_CHOICES,
     })
 

@@ -7,10 +7,12 @@
 <link href="https://cdn.dhtmlx.com/gantt/edge/dhtmlxgantt.css" rel="stylesheet">
 <style>
     .gantt_container {
-        height: 600px;
+        width: 100%;
+        min-height: 480px;
+        height: min(70vh, 900px);
         background: white;
         border-radius: 10px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
         overflow: hidden;
     }
     .gantt-controls {
@@ -18,6 +20,25 @@
         padding: 15px;
         border-radius: 10px;
         margin-bottom: 20px;
+    }
+    /* DHTMLX defaults can be low-contrast on gray backgrounds */
+    .gantt_task_line, .gantt_task_link {
+        border-radius: 2px;
+    }
+    .project-task .gantt_task_progress {
+        background-color: #3db9d3;
+    }
+    .completed-task .gantt_task_progress {
+        background-color: #65c16f;
+    }
+    .in-progress-task .gantt_task_progress {
+        background-color: #ffa940;
+    }
+    .todo-task .gantt_task_progress {
+        background-color: #999;
+    }
+    .gantt_task_line {
+        border-radius: 4px;
     }
 </style>
 {% endblock %}
@@ -48,22 +69,22 @@
         <div class="row align-items-center">
             <div class="col-md-6">
                 <div class="btn-group" role="group">
-                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="gantt.ext.zoom.setLevel('day')">
+                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="window.projectGanttZoom('day')">
                         <i class="fas fa-calendar-day me-1"></i>Day
                     </button>
-                    <button type="button" class="btn btn-sm btn-outline-primary active" onclick="gantt.ext.zoom.setLevel('week')">
+                    <button type="button" class="btn btn-sm btn-outline-primary active" onclick="window.projectGanttZoom('week')">
                         <i class="fas fa-calendar-week me-1"></i>Week
                     </button>
-                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="gantt.ext.zoom.setLevel('month')">
+                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="window.projectGanttZoom('month')">
                         <i class="fas fa-calendar-alt me-1"></i>Month
                     </button>
                 </div>
             </div>
             <div class="col-md-6 text-end">
-                <button class="btn btn-sm btn-outline-secondary" onclick="gantt.exportToPDF()">
+                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="window.projectGanttExport('pdf')">
                     <i class="fas fa-file-pdf me-1"></i>Export PDF
                 </button>
-                <button class="btn btn-sm btn-outline-secondary" onclick="gantt.exportToPNG()">
+                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="window.projectGanttExport('png')">
                     <i class="fas fa-image me-1"></i>Export PNG
                 </button>
             </div>
@@ -111,97 +132,97 @@
 {% block extra_js %}
 <script src="https://cdn.dhtmlx.com/gantt/edge/dhtmlxgantt.js"></script>
 <script>
-// Configure Gantt
-gantt.config.date_format = "%d-%m-%Y";
-gantt.config.readonly = true;
-gantt.config.show_progress = true;
+document.addEventListener('DOMContentLoaded', function() {
+    gantt.config.date_format = "%d-%m-%Y";
+    gantt.config.readonly = true;
+    gantt.config.show_progress = true;
 
-// Configure columns
-gantt.config.columns = [
-    {name: "text", label: "Task/Project", tree: true, width: 250},
-    {name: "start_date", label: "Start", align: "center", width: 100},
-    {name: "end_date", label: "End", align: "center", width: 100},
-    {name: "assignee", label: "Assignee", align: "center", width: 120},
-    {name: "status", label: "Status", align: "center", width: 100}
-];
+    gantt.config.columns = [
+        {name: "text", label: "Task/Project", tree: true, width: 250},
+        {name: "start_date", label: "Start", align: "center", width: 100},
+        {name: "end_date", label: "End", align: "center", width: 100},
+        {name: "assignee", label: "Assignee", align: "center", width: 120},
+        {name: "status", label: "Status", align: "center", width: 100}
+    ];
 
-// Custom task coloring based on status
-gantt.templates.task_class = function(start, end, task) {
-    if (task.parent == 0) {
-        return "project-task";
-    }
-    
-    if (task.progress == 100) {
-        return "completed-task";
-    } else if (task.progress > 0) {
-        return "in-progress-task";
-    }
-    return "todo-task";
-};
-
-// Zoom levels
-gantt.ext.zoom.init({
-    levels: [
-        {
-            name: "day",
-            scale_height: 60,
-            min_column_width: 70,
-            scales: [
-                {unit: "day", step: 1, format: "%d %M"}
-            ]
-        },
-        {
-            name: "week",
-            scale_height: 60,
-            min_column_width: 70,
-            scales: [
-                {unit: "week", step: 1, format: "Week #%W"},
-                {unit: "day", step: 1, format: "%d"}
-            ]
-        },
-        {
-            name: "month",
-            scale_height: 60,
-            min_column_width: 70,
-            scales: [
-                {unit: "month", step: 1, format: "%F %Y"},
-                {unit: "week", step: 1, format: "W%W"}
-            ]
+    gantt.templates.task_class = function(start, end, task) {
+        if (task.parent == 0) {
+            return "project-task";
         }
-    ]
+        if (task.progress == 100) {
+            return "completed-task";
+        }
+        if (task.progress > 0) {
+            return "in-progress-task";
+        }
+        return "todo-task";
+    };
+
+    if (gantt.ext && gantt.ext.zoom) {
+        gantt.ext.zoom.init({
+            levels: [
+                {
+                    name: "day",
+                    scale_height: 60,
+                    min_column_width: 70,
+                    scales: [
+                        {unit: "day", step: 1, format: "%d %M"}
+                    ]
+                },
+                {
+                    name: "week",
+                    scale_height: 60,
+                    min_column_width: 70,
+                    scales: [
+                        {unit: "week", step: 1, format: "Week #%W"},
+                        {unit: "day", step: 1, format: "%d"}
+                    ]
+                },
+                {
+                    name: "month",
+                    scale_height: 60,
+                    min_column_width: 70,
+                    scales: [
+                        {unit: "month", step: 1, format: "%F %Y"},
+                        {unit: "week", step: 1, format: "W%W"}
+                    ]
+                }
+            ]
+        });
+        gantt.ext.zoom.setLevel("week");
+    }
+
+    gantt.init("gantt_here");
+
+    const ganttData = {{ gantt_data|safe }};
+    gantt.parse({data: ganttData});
+
+    function resizeGantt() {
+        if (typeof gantt.setSizes === 'function') {
+            gantt.setSizes();
+        }
+    }
+    resizeGantt();
+    window.addEventListener('resize', resizeGantt);
+
+    window.projectGanttZoom = function(level) {
+        if (typeof gantt !== 'undefined' && gantt.ext && gantt.ext.zoom) {
+            gantt.ext.zoom.setLevel(level);
+            resizeGantt();
+        }
+    };
+    window.projectGanttExport = function(kind) {
+        if (typeof gantt === 'undefined') return;
+        try {
+            if (kind === 'pdf' && typeof gantt.exportToPDF === 'function') {
+                gantt.exportToPDF();
+            } else if (kind === 'png' && typeof gantt.exportToPNG === 'function') {
+                gantt.exportToPNG();
+            }
+        } catch (e) {
+            console.warn('Gantt export is not available in this build.', e);
+        }
+    };
 });
-
-// Set default zoom level
-gantt.ext.zoom.setLevel("week");
-
-// Initialize Gantt
-gantt.init("gantt_here");
-
-// Load data
-const ganttData = {{ gantt_data|safe }};
-gantt.parse({data: ganttData});
 </script>
-
-<style>
-/* Custom Gantt styles */
-.project-task .gantt_task_progress {
-    background-color: #3db9d3;
-}
-
-.completed-task .gantt_task_progress {
-    background-color: #65c16f;
-}
-
-.in-progress-task .gantt_task_progress {
-    background-color: #ffa940;
-}
-
-.todo-task .gantt_task_progress {
-    background-color: #999;
-}
-
-.gantt_task_line {
-    border-radius: 4px;
-}
-</style>
 {% endblock %}

@@ -66,13 +66,20 @@ class SousTacheForm(forms.ModelForm):
             'date_debut', 'date_echeance', 'duree_estimee', 'ordre', 'depend_de',
         ]
         widgets = {
-            'date_debut': forms.DateInput(attrs={'type': 'date'}),
-            'date_echeance': forms.DateInput(attrs={'type': 'date'}),
-            'description': forms.Textarea(attrs={'rows': 3}),
+            'titre': forms.TextInput(attrs={'class': 'form-control'}),
+            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 4}),
+            'assigne_a': forms.Select(attrs={'class': 'form-select'}),
+            'status': forms.Select(attrs={'class': 'form-select'}),
+            'priorite': forms.Select(attrs={'class': 'form-select'}),
+            'depend_de': forms.Select(attrs={'class': 'form-select'}),
+            'date_debut': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'date_echeance': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
             'duree_estimee': forms.NumberInput(attrs={
+                'class': 'form-control',
                 'min': 0, 'placeholder': 'Estimated hours',
             }),
             'ordre': forms.NumberInput(attrs={
+                'class': 'form-control',
                 'min': 0, 'placeholder': 'Display order',
             }),
         }
@@ -82,12 +89,18 @@ class SousTacheForm(forms.ModelForm):
         self.company = company
         self.projet_id = projet_id
 
+        self.fields['assigne_a'].required = False
+        self.fields['assigne_a'].empty_label = '— Unassigned —'
+
         if company:
             self.fields['assigne_a'].queryset = (
                 Employee.objects.filter(company=company, status='active')
                 .select_related('user')
                 .order_by('user__first_name', 'user__last_name')
             )
+
+        self.fields['depend_de'].required = False
+        self.fields['depend_de'].empty_label = '— None —'
 
         if company and projet_id:
             exclude_pk = self.instance.pk if self.instance.pk else None

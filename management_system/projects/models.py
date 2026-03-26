@@ -136,6 +136,28 @@ class Project(models.Model):
         if new_pct != self.completion_percentage:
             self.completion_percentage = new_pct
             self.save(update_fields=['completion_percentage', 'updated_at'])
+        self.sync_status_from_subtasks()
+
+    def sync_status_from_subtasks(self) -> None:
+        """
+        When every subtask is terminé, set project workflow status to completed.
+        If any subtask is not done and the project was completed, set back to in progress.
+        Skips projects with no subtasks or cancelled projects.
+        """
+        if self.status == 'cancelled':
+            return
+        task_qs = self.sous_taches.all()
+        if not task_qs.exists():
+            return
+        any_open = task_qs.exclude(status='termine').exists()
+        new_status = None
+        if not any_open:
+            new_status = 'completed'
+        elif self.status == 'completed':
+            new_status = 'in_progress'
+        if new_status is not None and new_status != self.status:
+            self.status = new_status
+            self.save(update_fields=['status', 'updated_at'])
 
 
 class SousTache(models.Model):
