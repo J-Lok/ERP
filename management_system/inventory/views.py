@@ -317,8 +317,8 @@ def stock_transaction_export(request):
             'Remarks': t.remarks or '',
             'User': t.user.get_full_name() if t.user else 'System',
             'Location': t.stock.location or '',
-            'Unit Price': float(t.stock.unit_price),
-            'Total Value': float(t.quantity * t.stock.unit_price),
+            'Unit Price': float(t.stock.cost_price),
+            'Total Value': float(t.quantity * t.stock.cost_price),
         })
     
     if not data:
@@ -514,7 +514,7 @@ def stock_export(request):
             'Description': stock.description,
             'Quantity': stock.quantity,
             'Unit': stock.get_unit_display(),
-            'Unit Price': float(stock.unit_price),
+            'Unit Price': float(stock.cost_price),
             'Total Value': float(stock.total_value),
             'Reorder Level': stock.reorder_level,
             'Supplier Name': stock.supplier_name,
@@ -889,7 +889,7 @@ def low_stock_report(request):
     category_summary = low_stock_items.values('category__name').annotate(
         count=Count('id'),
         total_items=Sum('quantity'),
-        total_value=Sum(F('quantity') * F('unit_price'))
+        total_value=Sum(F('quantity') * F('cost_price'))
     ).order_by('-count')
     
     context = {
@@ -1011,7 +1011,7 @@ def inventory_dashboard(request):
     # Basic statistics
     total_items = Stock.objects.filter(company=company).count()
     total_value = Stock.objects.filter(company=company).aggregate(
-        total=Sum(F('quantity') * F('unit_price'))
+        total=Sum(F('quantity') * F('cost_price'))
     )['total'] or 0
     
     low_stock_items = Stock.objects.filter(
@@ -1030,7 +1030,7 @@ def inventory_dashboard(request):
     top_categories = Stock.objects.filter(company=company).values(
         'category__name'
     ).annotate(
-        total_value=Sum(F('quantity') * F('unit_price')),
+        total_value=Sum(F('quantity') * F('cost_price')),
         item_count=Count('id')
     ).order_by('-total_value')[:5]
     

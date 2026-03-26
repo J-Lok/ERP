@@ -347,7 +347,7 @@ def view_wishlist(request):
 def add_to_wishlist(request, stock_id):
     """Add item to wishlist"""
     client = request.client
-    stock = get_object_or_404(Stock, pk=stock_id, company=client.company)
+    stock = get_object_or_404(Stock, pk=stock_id, is_marketplace_visible=True)
     
     if request.method == 'POST':
         wishlist, created = Wishlist.objects.get_or_create(client=client)
