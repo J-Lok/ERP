@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% block title %}Delete Performance Review — HR{% endblock %}
+
+{% block content %}
+<div class="card shadow-sm">
+  <div class="card-body">
+    <h2 class="mb-4">Delete Performance Review</h2>
+    <p>Are you sure you want to delete the performance review for <strong>{{ review.employee.full_name }}</strong>?</p>
+    <form method="post">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-danger">Delete</button>
+      <a href="{% url 'hr:performance_review_list' %}" class="btn btn-outline-secondary">Cancel</a>
+    </form>
+  </div>
+</div>
+{% endblock %}

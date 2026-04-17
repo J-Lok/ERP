@@ -58,6 +58,14 @@
                 </div>
             </div>
 
+            <div class="alert alert-warning d-flex align-items-start" role="note">
+                <i class="fas fa-exclamation-triangle me-2 mt-1 flex-shrink-0" aria-hidden="true"></i>
+                <div>
+                    <strong>Important:</strong> Remember your company domain! You and your team members will need it
+                    to log in and access the system. Share this domain with your team for easy access.
+                </div>
+            </div>
+
             <div class="d-grid gap-2 mt-4">
                 <button type="submit" class="btn btn-primary btn-lg">
                     <i class="fas fa-check-circle me-2" aria-hidden="true"></i>Register Company
@@ -69,4 +77,32 @@
         </form>
     </div>
 </div>
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const nameField = document.getElementById('id_name');
+    const domainField = document.getElementById('id_domain');
+
+    if (nameField && domainField) {
+        nameField.addEventListener('input', function() {
+            const name = this.value.trim();
+            if (name) {
+                // Generate domain: lowercase, replace spaces/special chars with hyphens
+                const domain = name
+                    .toLowerCase()
+                    .replace(/[^a-z0-9\s-]/g, '') // Remove special characters except spaces and hyphens
+                    .replace(/\s+/g, '-') // Replace spaces with hyphens
+                    .replace(/-+/g, '-') // Replace multiple hyphens with single
+                    .replace(/^-|-$/g, ''); // Remove leading/trailing hyphens
+
+                domainField.value = domain;
+            } else {
+                domainField.value = '';
+            }
+        });
+    }
+});
+</script>
+{% endblock %}
 {% endblock %}

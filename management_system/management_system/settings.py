@@ -74,6 +74,9 @@ INSTALLED_APPS = [
     
     # Meetings module
     'meetings',
+    
+    # Notifications module
+    'notifications',
 ]
 
 MIDDLEWARE = [

@@ -8,8 +8,17 @@
     <a href="{% url 'finance:transaction_create' %}" class="btn btn-primary btn-sm">
       <i class="fas fa-plus me-1"></i>New Transaction
     </a>
-    <a href="{% url 'finance:account_create' %}" class="btn btn-outline-secondary btn-sm">
-      <i class="fas fa-wallet me-1"></i>New Account
+    <a href="{% url 'finance:journal_create' %}" class="btn btn-outline-primary btn-sm">
+      <i class="fas fa-book-open me-1"></i>New Journal
+    </a>
+    <a href="{% url 'finance:journal_entry_create' %}" class="btn btn-outline-secondary btn-sm">
+      <i class="fas fa-file-invoice-dollar me-1"></i>New Journal Entry
+    </a>
+    <a href="{% url 'finance:client_invoice_create' %}" class="btn btn-outline-info btn-sm">
+      <i class="fas fa-file-invoice-dollar me-1"></i>New Client Invoice
+    </a>
+    <a href="{% url 'finance:supplier_invoice_create' %}" class="btn btn-outline-warning btn-sm">
+      <i class="fas fa-file-invoice me-1"></i>New Supplier Invoice
     </a>
   </div>
 </div>

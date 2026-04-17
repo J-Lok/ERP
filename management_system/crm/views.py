@@ -333,9 +333,41 @@ def opportunity_advance_stage(request, pk):
     """AJAX endpoint: advance an opportunity to a new stage."""
     company = request.user.company
     opp = get_object_or_404(Opportunity, pk=pk, company=company)
+    old_stage = opp.stage
     new_stage = request.POST.get('stage', '')
     try:
         opp.advance_stage(new_stage)
+
+        # Create notifications for important stage changes
+        if new_stage in ['won', 'lost'] and old_stage != new_stage:
+            from notifications.utils import create_notification
+            from django.contrib.auth import get_user_model
+            User = get_user_model()
+
+            # Notify managers and the person who created the opportunity
+            recipients = set()
+
+            # Add managers
+            managers = User.objects.filter(company=company, role='manager')
+            recipients.update(managers)
+
+            # Add the opportunity creator if different from current user
+            if opp.created_by and opp.created_by != request.user:
+                recipients.add(opp.created_by)
+
+            # Add assigned employee if exists
+            if opp.assigned_to and opp.assigned_to.user != request.user:
+                recipients.add(opp.assigned_to.user)
+
+            for recipient in recipients:
+                create_notification(
+                    user=recipient,
+                    notification_type=f'opportunity_{new_stage}',
+                    title=f'Opportunity {new_stage.title()}: {opp.title}',
+                    message=f'Opportunity "{opp.title}" with {opp.contact.name} has been marked as {new_stage}. Value: ${opp.value}.',
+                    related_object=opp
+                )
+
         return JsonResponse({'status': 'ok', 'stage': opp.stage, 'label': opp.get_stage_display()})
     except ValueError as e:
         return JsonResponse({'status': 'error', 'message': str(e)}, status=400)

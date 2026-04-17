@@ -39,6 +39,9 @@ urlpatterns = [
     
     # meetings app endpoints
     path('meetings/', include('meetings.urls')),
+    
+    # notifications app endpoints
+    path('notifications/', include('notifications.urls')),
 ]
 
 if settings.DEBUG:

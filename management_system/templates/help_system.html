@@ -1,0 +1,281 @@
+<!-- Help System Modal -->
+<div class="modal fade" id="helpModal" tabindex="-1" aria-labelledby="helpModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="helpModalLabel">
+          <i class="fas fa-question-circle text-primary me-2"></i>
+          <span id="helpTitle">Help</span>
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body" id="helpContent">
+        <!-- Help content will be loaded here -->
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Help Button -->
+<button id="helpButton" class="btn btn-outline-primary position-fixed" style="bottom: 100px; right: 20px; z-index: 1050;" data-bs-toggle="modal" data-bs-target="#helpModal" title="Help">
+  <i class="fas fa-question-circle"></i>
+</button>
+
+<script>
+// Help content for each app
+const helpContent = {
+  'core': {
+    title: 'Dashboard Help',
+    content: `
+      <h6><i class="fas fa-home text-primary"></i> Dashboard Overview</h6>
+      <p>The Dashboard provides a comprehensive overview of your company's key metrics and activities.</p>
+
+      <h6><i class="fas fa-chart-bar text-success"></i> Key Features:</h6>
+      <ul>
+        <li><strong>Company Statistics:</strong> View total employees, active projects, and recent activities</li>
+        <li><strong>Quick Actions:</strong> Access frequently used functions from the sidebar</li>
+        <li><strong>Notifications:</strong> Check the bell icon for system notifications and updates</li>
+        <li><strong>Role-based Access:</strong> See only the modules you have permission to access</li>
+      </ul>
+
+      <h6><i class="fas fa-lightbulb text-warning"></i> Tips:</h6>
+      <ul>
+        <li>Use the sidebar to navigate between different modules</li>
+        <li>Check notifications regularly for important updates</li>
+        <li>The dashboard updates in real-time as data changes</li>
+      </ul>
+    `
+  },
+
+  'employees': {
+    title: 'Employee Management Help',
+    content: `
+      <h6><i class="fas fa-users text-primary"></i> Employee Management Overview</h6>
+      <p>Manage your company's workforce with comprehensive employee profiles and organizational tools.</p>
+
+      <h6><i class="fas fa-user-plus text-success"></i> Key Features:</h6>
+      <ul>
+        <li><strong>Employee Directory:</strong> View and search all company employees</li>
+        <li><strong>Detailed Profiles:</strong> Access complete employee information, roles, and history</li>
+        <li><strong>Organizational Chart:</strong> Understand reporting structures and hierarchies</li>
+        <li><strong>Role Management:</strong> Assign and manage employee roles and permissions</li>
+      </ul>
+
+      <h6><i class="fas fa-lightbulb text-warning"></i> Tips:</h6>
+      <ul>
+        <li>Use the search and filter options to quickly find employees</li>
+        <li>Employee profiles include contact information, positions, and performance data</li>
+        <li>Role-based permissions control what each employee can access</li>
+      </ul>
+    `
+  },
+
+  'projects': {
+    title: 'Project Management Help',
+    content: `
+      <h6><i class="fas fa-project-diagram text-primary"></i> Project Management Overview</h6>
+      <p>Plan, track, and manage projects with task management, timelines, and team collaboration tools.</p>
+
+      <h6><i class="fas fa-tasks text-success"></i> Key Features:</h6>
+      <ul>
+        <li><strong>Project Creation:</strong> Set up projects with budgets, timelines, and team assignments</li>
+        <li><strong>Task Management:</strong> Break down projects into manageable tasks and subtasks</li>
+        <li><strong>Progress Tracking:</strong> Monitor completion percentages and project status</li>
+        <li><strong>Team Collaboration:</strong> Assign tasks and track team member contributions</li>
+        <li><strong>Kanban Board:</strong> Visual project workflow with drag-and-drop status updates</li>
+      </ul>
+
+      <h6><i class="fas fa-lightbulb text-warning"></i> Tips:</h6>
+      <ul>
+        <li>Use the Kanban board for visual project management</li>
+        <li>Regularly update task statuses to keep projects on track</li>
+        <li>Assign clear responsibilities and deadlines for each task</li>
+        <li>Monitor project budgets and resource allocation</li>
+      </ul>
+    `
+  },
+
+  'inventory': {
+    title: 'Inventory Management Help',
+    content: `
+      <h6><i class="fas fa-boxes text-primary"></i> Inventory Management Overview</h6>
+      <p>Track stock levels, manage suppliers, and monitor inventory movements with automated alerts.</p>
+
+      <h6><i class="fas fa-warehouse text-success"></i> Key Features:</h6>
+      <ul>
+        <li><strong>Stock Tracking:</strong> Monitor quantities, values, and stock movements</li>
+        <li><strong>Low Stock Alerts:</strong> Automatic notifications when items reach reorder levels</li>
+        <li><strong>Supplier Management:</strong> Track supplier information and purchase history</li>
+        <li><strong>Transaction History:</strong> Complete audit trail of all inventory movements</li>
+        <li><strong>Reporting:</strong> Generate inventory reports and analytics</li>
+      </ul>
+
+      <h6><i class="fas fa-lightbulb text-warning"></i> Tips:</h6>
+      <ul>
+        <li>Set appropriate reorder levels to prevent stockouts</li>
+        <li>Regularly review low stock alerts and reorder items promptly</li>
+        <li>Use categories to organize and filter your inventory</li>
+        <li>Keep supplier information up-to-date for efficient procurement</li>
+      </ul>
+    `
+  },
+
+  'finance': {
+    title: 'Financial Management Help',
+    content: `
+      <h6><i class="fas fa-wallet text-primary"></i> Financial Management Overview</h6>
+      <p>Manage company finances with invoicing, accounts payable/receivable, and financial reporting.</p>
+
+      <h6><i class="fas fa-calculator text-success"></i> Key Features:</h6>
+      <ul>
+        <li><strong>Client Invoicing:</strong> Create and send invoices to customers</li>
+        <li><strong>Supplier Bills:</strong> Track and pay supplier invoices</li>
+        <li><strong>Account Management:</strong> Set up chart of accounts and track balances</li>
+        <li><strong>Transaction Tracking:</strong> Record all financial transactions</li>
+        <li><strong>Financial Reports:</strong> Generate profit & loss, balance sheets, and cash flow reports</li>
+      </ul>
+
+      <h6><i class="fas fa-lightbulb text-warning"></i> Tips:</h6>
+      <ul>
+        <li>Keep accurate records of all financial transactions</li>
+        <li>Send invoices promptly and follow up on overdue payments</li>
+        <li>Regularly review financial reports to monitor business health</li>
+        <li>Use proper accounting categories for accurate reporting</li>
+      </ul>
+    `
+  },
+
+  'hr': {
+    title: 'Human Resources Help',
+    content: `
+      <h6><i class="fas fa-user-tie text-primary"></i> Human Resources Overview</h6>
+      <p>Manage employee lifecycle from recruitment to retirement with comprehensive HR tools.</p>
+
+      <h6><i class="fas fa-users-cog text-success"></i> Key Features:</h6>
+      <ul>
+        <li><strong>Leave Management:</strong> Track vacation, sick leave, and time-off requests</li>
+        <li><strong>Performance Reviews:</strong> Conduct and track employee performance evaluations</li>
+        <li><strong>Training Programs:</strong> Manage employee development and certification tracking</li>
+        <li><strong>Payroll Processing:</strong> Calculate salaries, bonuses, and deductions</li>
+        <li><strong>Position Management:</strong> Define job roles and career progression paths</li>
+      </ul>
+
+      <h6><i class="fas fa-lightbulb text-warning"></i> Tips:</h6>
+      <ul>
+        <li>Process leave requests promptly to maintain employee satisfaction</li>
+        <li>Conduct regular performance reviews to support employee development</li>
+        <li>Keep training records current for compliance and development planning</li>
+        <li>Use position management to plan for succession and career growth</li>
+      </ul>
+    `
+  },
+
+  'crm': {
+    title: 'Customer Relationship Management Help',
+    content: `
+      <h6><i class="fas fa-address-book text-primary"></i> CRM Overview</h6>
+      <p>Manage customer relationships, track sales opportunities, and drive business growth.</p>
+
+      <h6><i class="fas fa-handshake text-success"></i> Key Features:</h6>
+      <ul>
+        <li><strong>Contact Management:</strong> Store and organize customer and prospect information</li>
+        <li><strong>Opportunity Tracking:</strong> Monitor sales pipeline and deal progress</li>
+        <li><strong>Lead Management:</strong> Convert leads into customers through defined processes</li>
+        <li><strong>Activity Logging:</strong> Track all customer interactions and communications</li>
+        <li><strong>Pipeline Analytics:</strong> Analyze sales performance and forecast revenue</li>
+      </ul>
+
+      <h6><i class="fas fa-lightbulb text-warning"></i> Tips:</h6>
+      <ul>
+        <li>Keep contact information current and complete</li>
+        <li>Regularly update opportunity stages to maintain accurate pipeline data</li>
+        <li>Log all customer interactions for better relationship management</li>
+        <li>Use the pipeline view to identify bottlenecks and improve sales processes</li>
+      </ul>
+    `
+  },
+
+  'meetings': {
+    title: 'Meeting Management Help',
+    content: `
+      <h6><i class="fas fa-calendar-alt text-primary"></i> Meeting Management Overview</h6>
+      <p>Schedule, conduct, and follow up on meetings with action item tracking and documentation.</p>
+
+      <h6><i class="fas fa-calendar-check text-success"></i> Key Features:</h6>
+      <ul>
+        <li><strong>Meeting Scheduling:</strong> Plan meetings with attendees, agendas, and locations</li>
+        <li><strong>Action Item Tracking:</strong> Assign and monitor follow-up tasks from meetings</li>
+        <li><strong>Meeting Notes:</strong> Record discussions, decisions, and outcomes</li>
+        <li><strong>Document Management:</strong> Attach files and resources to meetings</li>
+        <li><strong>Attendance Tracking:</strong> Monitor who attends and participates</li>
+      </ul>
+
+      <h6><i class="fas fa-lightbulb text-warning"></i> Tips:</h6>
+      <ul>
+        <li>Send meeting invites and set clear agendas in advance</li>
+        <li>Assign action items with specific owners and deadlines</li>
+        <li>Follow up on action items to ensure completion</li>
+        <li>Use meeting notes to maintain institutional knowledge</li>
+      </ul>
+    `
+  },
+
+  'notifications': {
+    title: 'Notifications Help',
+    content: `
+      <h6><i class="fas fa-bell text-primary"></i> Notifications Overview</h6>
+      <p>Stay informed about important events and updates across the ERP system.</p>
+
+      <h6><i class="fas fa-envelope text-success"></i> Key Features:</h6>
+      <ul>
+        <li><strong>Real-time Alerts:</strong> Instant notifications for important events</li>
+        <li><strong>Unread Counter:</strong> Badge showing number of unread notifications</li>
+        <li><strong>Notification History:</strong> Complete log of all system notifications</li>
+        <li><strong>Preference Settings:</strong> Customize which notifications you receive</li>
+        <li><strong>Mark as Read:</strong> Manage notification status and archive old items</li>
+      </ul>
+
+      <h6><i class="fas fa-lightbulb text-warning"></i> Tips:</h6>
+      <ul>
+        <li>Check the bell icon regularly for important updates</li>
+        <li>Configure notification preferences to receive only relevant alerts</li>
+        <li>Use filters to find specific types of notifications</li>
+        <li>Mark notifications as read to keep your inbox organized</li>
+      </ul>
+    `
+  }
+};
+
+// Function to show help for current app
+function showHelp() {
+  const currentUrl = window.location.pathname;
+  let appName = 'core'; // default
+
+  // Determine current app from URL
+  if (currentUrl.includes('/employees/')) appName = 'employees';
+  else if (currentUrl.includes('/projects/')) appName = 'projects';
+  else if (currentUrl.includes('/inventory/')) appName = 'inventory';
+  else if (currentUrl.includes('/finance/')) appName = 'finance';
+  else if (currentUrl.includes('/hr/')) appName = 'hr';
+  else if (currentUrl.includes('/crm/')) appName = 'crm';
+  else if (currentUrl.includes('/meetings/')) appName = 'meetings';
+  else if (currentUrl.includes('/notifications/')) appName = 'notifications';
+  else if (currentUrl.includes('/accounts/') && currentUrl.includes('company_profile')) appName = 'core';
+
+  const help = helpContent[appName] || helpContent['core'];
+
+  document.getElementById('helpTitle').textContent = help.title;
+  document.getElementById('helpContent').innerHTML = help.content;
+}
+
+// Initialize help button
+document.addEventListener('DOMContentLoaded', function() {
+  const helpButton = document.getElementById('helpButton');
+  if (helpButton) {
+    helpButton.addEventListener('click', showHelp);
+  }
+});
+</script>

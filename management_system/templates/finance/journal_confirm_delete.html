@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% block title %}Delete Journal — Finance{% endblock %}
+{% block content %}
+<div class="card shadow-sm border-danger" style="max-width: 520px; margin: 2rem auto;">
+  <div class="card-header bg-danger text-white fw-semibold">
+    <i class="fas fa-exclamation-triangle me-2"></i>Delete Journal
+  </div>
+  <div class="card-body">
+    <p>Are you sure you want to delete the journal <strong>{{ journal.name }}</strong>?</p>
+    <dl class="row mb-0">
+      <dt class="col-sm-4">Code</dt>
+      <dd class="col-sm-8">{{ journal.code|default:'—' }}</dd>
+      <dt class="col-sm-4">Type</dt>
+      <dd class="col-sm-8">{{ journal.get_journal_type_display }}</dd>
+      <dt class="col-sm-4">Entries</dt>
+      <dd class="col-sm-8">{{ journal.entries.count }}</dd>
+    </dl>
+    <div class="alert alert-warning mt-3 mb-0 small">
+      <i class="fas fa-exclamation-circle me-1"></i>
+      Deleting this journal will remove all {{ journal.entries.count }} journal entries linked to it. This cannot be undone.
+    </div>
+  </div>
+  <div class="card-footer d-flex gap-2">
+    <form method="post">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-danger"><i class="fas fa-trash me-1"></i>Confirm Delete</button>
+    </form>
+    <a href="{% url 'finance:journal_detail' journal.pk %}" class="btn btn-outline-secondary">Cancel</a>
+  </div>
+</div>
+{% endblock %}

@@ -233,6 +233,18 @@ def meeting_create(request):
             meeting.save()
             form.save_m2m()  # Save many-to-many relationships
             
+            # Create notifications for all attendees
+            from notifications.utils import create_notification
+            for attendee in meeting.attendees.all():
+                if attendee != request.user.employee_profile:  # Don't notify the creator if they're an attendee
+                    create_notification(
+                        user=attendee.user,
+                        notification_type='meeting_scheduled',
+                        title=f'Meeting Scheduled: {meeting.title}',
+                        message=f'You have been invited to a meeting: "{meeting.title}" on {meeting.scheduled_date.strftime("%B %d, %Y at %I:%M %p")}.',
+                        related_object=meeting
+                    )
+            
             messages.success(request, f'Meeting "{meeting.title}" created successfully.')
             return redirect('meetings:meeting_detail', pk=meeting.pk)
     else:
@@ -375,6 +387,18 @@ def action_item_create(request, meeting_pk):
             action = form.save(commit=False)
             action.meeting = meeting
             action.save()
+            
+            # Create notification for assigned person if someone is assigned
+            if action.assigned_to:
+                from notifications.utils import create_notification
+                create_notification(
+                    user=action.assigned_to.user,
+                    notification_type='action_item_assigned',
+                    title=f'Action Item Assigned: {action.title}',
+                    message=f'You have been assigned an action item: "{action.title}" from meeting "{meeting.title}". Due date: {action.due_date.strftime("%B %d, %Y")}.',
+                    related_object=action
+                )
+            
             messages.success(request, 'Action item created successfully.')
             return redirect('meetings:meeting_detail', pk=meeting.pk)
     else:
@@ -477,6 +501,17 @@ def action_item_toggle_completion(request, pk):
         action_item.is_completed = is_completed
         if is_completed:
             action_item.actual_completion_date = timezone.now().date()
+            
+            # Create notification for meeting organizer when action item is completed
+            if action_item.meeting.organizer and action_item.meeting.organizer != request.user.employee_profile:
+                from notifications.utils import create_notification
+                create_notification(
+                    user=action_item.meeting.organizer.user,
+                    notification_type='action_item_completed',
+                    title=f'Action Item Completed: {action_item.title}',
+                    message=f'Action item "{action_item.title}" from meeting "{action_item.meeting.title}" has been completed.',
+                    related_object=action_item
+                )
         else:
             action_item.actual_completion_date = None
         action_item.save()

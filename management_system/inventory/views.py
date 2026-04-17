@@ -220,6 +220,37 @@ def stock_transaction(request, pk):
                         stock.last_restocked = timezone.now().date()
                         stock.save()
                     
+                    # Check for low stock and create notification
+                    if stock.quantity <= stock.reorder_level:
+                        from notifications.utils import create_notification
+                        from django.contrib.auth import get_user_model
+                        User = get_user_model()
+
+                        # Notify stock managers about low stock
+                        stock_managers = User.objects.filter(
+                            company=company,
+                            role='stock_manager'
+                        )
+
+                        for manager in stock_managers:
+                            # Check if notification already exists for this stock item today
+                            from notifications.models import Notification
+                            existing_notification = Notification.objects.filter(
+                                user=manager,
+                                notification_type='low_stock',
+                                related_object=stock,
+                                created_at__date=timezone.now().date()
+                            ).exists()
+
+                            if not existing_notification:
+                                create_notification(
+                                    user=manager,
+                                    notification_type='low_stock',
+                                    title=f'Low Stock Alert: {stock.name}',
+                                    message=f'Stock item "{stock.name}" (Code: {stock.item_code}) is running low. Current quantity: {stock.quantity}, Reorder level: {stock.reorder_level}.',
+                                    related_object=stock
+                                )
+                    
                     messages.success(request, f'Transaction recorded successfully! {message}')
                     return redirect('inventory:stock_detail', pk=stock.pk)
                     

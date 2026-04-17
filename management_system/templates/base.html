@@ -92,6 +92,28 @@
             justify-content: center;
             box-shadow: 0 4px 12px rgba(0,0,0,0.2);
         }
+        /* Notification dropdown styles */
+        .notification-dropdown {
+            min-width: 300px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .notification-dropdown .dropdown-header {
+            font-weight: bold;
+            color: var(--app-text);
+            padding: 8px 16px;
+            margin: 0;
+        }
+        .notification-dropdown .dropdown-item {
+            padding: 10px 16px;
+        }
+        .notification-dropdown .dropdown-item:hover {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        .notification-dropdown .text-muted {
+            color: #6c757d !important;
+        }
     </style>
     {% block extra_css %}{% endblock %}
 </head>
@@ -108,6 +130,30 @@
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle position-relative" href="#" id="notificationDropdown" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-bell"></i>
+                            {% if unread_notifications > 0 %}
+                            <span class="badge bg-danger position-absolute top-0 start-100 translate-middle">{{ unread_notifications }}</span>
+                            {% endif %}
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end notification-dropdown" aria-labelledby="notificationDropdown">
+                            <li><h6 class="dropdown-header">Notifications</h6></li>
+                            {% if unread_notifications > 0 %}
+                            <li><a class="dropdown-item" href="{% url 'notifications:notification_list' %}?filter=unread">
+                                <i class="fas fa-envelope"></i> View All Notifications
+                            </a></li>
+                            {% else %}
+                            <li><span class="dropdown-item text-muted">
+                                <i class="fas fa-check-circle"></i> No new notifications
+                            </span></li>
+                            {% endif %}
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{% url 'notifications:notification_preferences' %}">
+                                <i class="fas fa-cog"></i> Notification Settings
+                            </a></li>
+                        </ul>
+                    </li>
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
                             <i class="fas fa-user-circle"></i> {{ user.get_full_name }}
@@ -196,7 +242,7 @@
                         {% if user|has_role:'admin,hr_manager' %}
                         <li class="nav-item">
                             <a class="nav-link {% if request.resolver_match.app_name == 'hr' %}active{% endif %}"
-                               href="{% url 'hr:position_list' %}">
+                               href="{% url 'hr:index' %}">
                                 <i class="fas fa-user-tie"></i> HR
                             </a>
                         </li>

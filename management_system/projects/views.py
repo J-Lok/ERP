@@ -304,6 +304,17 @@ def project_update_status(request, pk):
         project.status = new_status
         project.save(update_fields=['status', 'updated_at'])
 
+        # Create notification for project manager if status changed
+        if project.manager and project.manager != request.user.employee_profile:
+            from notifications.utils import create_notification
+            create_notification(
+                user=project.manager.user,
+                notification_type='project_status_changed',
+                title=f'Project Status Updated: {project.name}',
+                message=f'Project "{project.name}" status changed from {project.get_status_display()} to {dict(Project.STATUS_CHOICES)[new_status]}.',
+                related_object=project
+            )
+
     return JsonResponse({'success': True, 'status': project.status})
 
 
@@ -416,6 +427,18 @@ def toggle_subtask_completion(request, pk):
 
     project = tache.projet
     project.refresh_from_db(fields=['completion_percentage', 'status'])
+
+    # Create notification for project manager when task is completed
+    if checked and project.manager and project.manager != request.user.employee_profile:
+        from notifications.utils import create_notification
+        create_notification(
+            user=project.manager.user,
+            notification_type='task_completed',
+            title=f'Task Completed: {tache.titre}',
+            message=f'Task "{tache.titre}" in project "{project.name}" has been completed.',
+            related_object=tache
+        )
+
     return JsonResponse({
         'ok': True,
         'project_completion': project.completion_percentage,
