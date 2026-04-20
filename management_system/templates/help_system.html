@@ -246,6 +246,68 @@ const helpContent = {
         <li>Mark notifications as read to keep your inbox organized</li>
       </ul>
     `
+  },
+
+  'marketplace': {
+    title: 'Marketplace & Sales Help',
+    content: `
+      <h6><i class="fas fa-shopping-cart text-primary"></i> Marketplace Overview</h6>
+      <p>Manage customer orders, shopping carts, and integrate sales transactions into your accounting system.</p>
+
+      <h6><i class="fas fa-shopping-bag text-success"></i> Key Features:</h6>
+      <ul>
+        <li><strong>Client Management:</strong> Register and manage marketplace customers</li>
+        <li><strong>Shopping Cart:</strong> Clients can browse inventory and add items to cart</li>
+        <li><strong>Order Processing:</strong> Track orders from pending to delivered status</li>
+        <li><strong>Payment Tracking:</strong> Monitor payment status and update as orders are paid</li>
+        <li><strong>Finance Integration:</strong> Automatically post paid orders to accounting</li>
+      </ul>
+
+      <h6 class="text-danger"><i class="fas fa-cog text-danger"></i> Finance Integration Setup</h6>
+      <p><strong>IMPORTANT:</strong> Before processing marketplace orders, you must configure Finance Settings for your company.</p>
+      
+      <h6 class="text-info"><i class="fas fa-info-circle text-info"></i> What Happens When an Order is Marked "Paid":</h6>
+      <ul>
+        <li>System checks for Marketplace Finance Settings for your company</li>
+        <li>Creates a balanced journal entry in your sales journal with:</li>
+        <ul>
+          <li><strong>Debit:</strong> Accounts Receivable (Asset) - for full order total</li>
+          <li><strong>Credit:</strong> Revenue account - for subtotal + shipping</li>
+          <li><strong>Credit:</strong> Tax account (if configured) - for tax amount</li>
+        </ul>
+        <li>Updates account balances automatically</li>
+        <li>Creates corresponding transaction records for reporting</li>
+        <li>Updates order with posting date and status</li>
+      </ul>
+
+      <h6 class="text-success"><i class="fas fa-check-circle text-success"></i> Required Setup Steps:</h6>
+      <p><strong>Go to Finance → Marketplace Finance Settings and configure:</strong></p>
+      <ol>
+        <li><strong>Sales Journal:</strong> Select or create a Sales/General journal for order entries</li>
+        <li><strong>Receivable Account:</strong> Choose an Asset account (tracks unpaid customer orders)</li>
+        <li><strong>Revenue Account:</strong> Choose a Revenue account (records the sales income)</li>
+        <li><strong>Tax Account:</strong> Optional Liability account (if tracking tax separately)</li>
+        <li><strong>Enable Setting:</strong> Check "Enable" to activate finance posting for this company</li>
+      </ol>
+
+      <h6 class="text-warning"><i class="fas fa-exclamation-triangle text-warning"></i> Troubleshooting:</h6>
+      <ul>
+        <li><strong>Error: "Marketplace finance settings not configured"</strong> → Go to Finance Settings and create the configuration</li>
+        <li><strong>Error: "Finance posting is disabled"</strong> → Check the "is_enabled" checkbox in Finance Settings</li>
+        <li><strong>Order won't post to finance:</strong> Verify all required accounts exist and are the correct type (Asset, Revenue, Liability)</li>
+        <li><strong>Payment status shows conflict:</strong> Don't update status and payment settings simultaneously; complete one action first</li>
+      </ul>
+
+      <h6><i class="fas fa-lightbulb text-warning"></i> Best Practices:</h6>
+      <ul>
+        <li>Set up Finance Settings <strong>before</strong> processing any marketplace orders</li>
+        <li>Use separate accounts for marketplace revenue vs. other sales channels if needed</li>
+        <li>Review your chart of accounts to ensure proper account types are assigned</li>
+        <li>Regularly reconcile marketplace receivables with accounting records</li>
+        <li>Archive old orders and clients periodically for better system performance</li>
+        <li>Monitor payment status and follow up on unpaid orders promptly</li>
+      </ul>
+    `
   }
 };
 
@@ -263,6 +325,7 @@ function showHelp() {
   else if (currentUrl.includes('/crm/')) appName = 'crm';
   else if (currentUrl.includes('/meetings/')) appName = 'meetings';
   else if (currentUrl.includes('/notifications/')) appName = 'notifications';
+  else if (currentUrl.includes('/marketplace/')) appName = 'marketplace';
   else if (currentUrl.includes('/accounts/') && currentUrl.includes('company_profile')) appName = 'core';
 
   const help = helpContent[appName] || helpContent['core'];
