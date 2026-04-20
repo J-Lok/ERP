@@ -4,6 +4,14 @@ from django.contrib import messages
 from django.db.models import Q, Count, Sum
 from django.utils import timezone
 from .models import Order, Client
+from .services import (
+    MarketplaceFinancePostingError,
+    mark_order_finance_sync_failed,
+    post_order_payment_to_finance,
+    reset_order_finance_sync,
+    reverse_order_payment_in_finance,
+    set_order_finance_sync_error,
+)
 
 
 def company_admin_required(view_func):
@@ -30,10 +38,8 @@ def admin_order_dashboard(request):
     """Order management dashboard for company admins"""
     company = request.user.company
     
-    # Get all orders that contain items from this company
-    orders = Order.objects.filter(
-        items__stock__company=company
-    ).distinct().select_related('client')
+    # Get all orders for this company
+    orders = Order.objects.filter(company=company).select_related('client')
     
     # Statistics
     total_orders = orders.count()
@@ -42,7 +48,6 @@ def admin_order_dashboard(request):
     shipped_orders = orders.filter(status='shipped').count()
     delivered_orders = orders.filter(status='delivered').count()
     
-    # Revenue from orders containing this company's products
     total_revenue = orders.filter(payment_status='paid').aggregate(
         total=Sum('total')
     )['total'] or 0
@@ -79,10 +84,10 @@ def admin_order_list(request):
     """List all orders with filters"""
     company = request.user.company
     
-    # Get orders that contain items from this company
+    # Get orders for this company
     orders = Order.objects.filter(
-        items__stock__company=company
-    ).distinct().select_related('client').order_by('-created_at')
+        company=company
+    ).select_related('client').order_by('-created_at')
     
     # Apply filters
     status = request.GET.get('status', '')
@@ -120,11 +125,7 @@ def admin_order_list(request):
 def admin_order_detail(request, pk):
     """View and manage single order"""
     company = request.user.company
-    # Check if order contains items from this company
-    order = get_object_or_404(
-        Order.objects.filter(items__stock__company=company).distinct(),
-        pk=pk
-    )
+    order = get_object_or_404(Order, pk=pk, company=company)
     
     context = {
         'order': order,
@@ -138,10 +139,7 @@ def admin_order_detail(request, pk):
 def admin_order_confirm(request, pk):
     """Confirm an order"""
     company = request.user.company
-    order = get_object_or_404(
-        Order.objects.filter(items__stock__company=company).distinct(),
-        pk=pk
-    )
+    order = get_object_or_404(Order, pk=pk, company=company)
     
     if order.status != 'pending':
         messages.warning(request, f'Order is already {order.get_status_display()}')
@@ -167,10 +165,7 @@ def admin_order_confirm(request, pk):
 def admin_order_ship(request, pk):
     """Mark order as shipped"""
     company = request.user.company
-    order = get_object_or_404(
-        Order.objects.filter(items__stock__company=company).distinct(),
-        pk=pk
-    )
+    order = get_object_or_404(Order, pk=pk, company=company)
     
     if order.status not in ['confirmed', 'processing']:
         messages.warning(request, 'Order must be confirmed before shipping')
@@ -200,10 +195,7 @@ def admin_order_ship(request, pk):
 def admin_order_deliver(request, pk):
     """Mark order as delivered"""
     company = request.user.company
-    order = get_object_or_404(
-        Order.objects.filter(items__stock__company=company).distinct(),
-        pk=pk
-    )
+    order = get_object_or_404(Order, pk=pk, company=company)
     
     if order.status != 'shipped':
         messages.warning(request, 'Order must be shipped before marking as delivered')
@@ -224,12 +216,9 @@ def admin_order_deliver(request, pk):
 @login_required
 @company_admin_required
 def admin_order_cancel(request, pk):
-    """Cancel an order (and restore stock for this company's products)"""
+    """Cancel an order and restore stock."""
     company = request.user.company
-    order = get_object_or_404(
-        Order.objects.filter(items__stock__company=company).distinct(),
-        pk=pk
-    )
+    order = get_object_or_404(Order, pk=pk, company=company)
     
     if order.status in ['delivered', 'cancelled']:
         messages.warning(request, 'Cannot cancel this order')
@@ -244,7 +233,7 @@ def admin_order_cancel(request, pk):
             with db_transaction.atomic():
                 # Restore stock quantities for this company's products only
                 restored_items = 0
-                for item in order.items.filter(stock__company=company):
+                for item in order.items.select_related('stock'):
                     stock = item.stock
                     stock.quantity = F('quantity') + item.quantity
                     stock.save()
@@ -260,23 +249,19 @@ def admin_order_cancel(request, pk):
                     )
                     restored_items += 1
                 
-                # If this was the only/last company involved, mark order as cancelled
-                total_items = order.items.count()
-                company_items = order.items.filter(stock__company=company).count()
-                
                 if restored_items > 0:
-                    if company_items == total_items:
-                        # This company had all items, so cancel the entire order
-                        order.status = 'cancelled'
-                        order.save()
-                        messages.success(request, f'Order #{order.order_number} cancelled and stock restored!')
-                    else:
-                        # Partial cancellation - add note but don't change order status
-                        order.notes = f"{order.notes}\nPartial cancellation by {company.name}: {restored_items} items restored.".strip()
-                        order.save()
-                        messages.success(request, f'Restored {restored_items} items from order #{order.order_number}. Other companies may still process remaining items.')
+                    if order.payment_status == 'paid' and order.finance_journal_entry_id:
+                        reverse_order_payment_in_finance(
+                            order,
+                            user=request.user,
+                            reason='order cancelled',
+                        )
+                        order.payment_status = 'refunded'
+                    order.status = 'cancelled'
+                    order.save(update_fields=['status', 'payment_status', 'updated_at'])
+                    messages.success(request, f'Order #{order.order_number} cancelled and stock restored!')
                 else:
-                    messages.warning(request, 'No items from your company found in this order.')
+                    messages.warning(request, 'No items were restored for this order.')
                 
         except Exception as e:
             messages.error(request, f'Error processing cancellation: {str(e)}')
@@ -291,19 +276,93 @@ def admin_order_cancel(request, pk):
 def admin_order_update_payment(request, pk):
     """Update payment status"""
     company = request.user.company
-    order = get_object_or_404(
-        Order.objects.filter(items__stock__company=company).distinct(),
-        pk=pk
-    )
+    order = get_object_or_404(Order, pk=pk, company=company)
     
     if request.method == 'POST':
         payment_status = request.POST.get('payment_status')
         
         if payment_status in dict(Order.PAYMENT_STATUS_CHOICES):
-            order.payment_status = payment_status
-            order.save()
-            
-            messages.success(request, f'Payment status updated to {order.get_payment_status_display()}')
+            if order.finance_reversal_journal_entry_id:
+                if payment_status == 'refunded':
+                    messages.success(request, 'Payment status remains Refunded; finance reversal entry already exists.')
+                else:
+                    messages.error(
+                        request,
+                        'This order has already been reversed in finance and cannot move to another payment state.'
+                    )
+                return redirect('marketplace:admin_order_detail', pk=pk)
+
+            if payment_status == 'paid':
+                order.payment_status = payment_status
+                order.save(update_fields=['payment_status', 'updated_at'])
+                try:
+                    _, created = post_order_payment_to_finance(order, user=request.user)
+                    if created:
+                        messages.success(
+                            request,
+                            f'Payment status updated to {order.get_payment_status_display()} and posted to finance.'
+                        )
+                    else:
+                        messages.success(
+                            request,
+                            f'Payment status remains {order.get_payment_status_display()}; finance entry already exists.'
+                        )
+                except MarketplaceFinancePostingError as exc:
+                    if order.finance_journal_entry_id:
+                        set_order_finance_sync_error(order, str(exc))
+                    else:
+                        mark_order_finance_sync_failed(order, str(exc))
+                    messages.warning(
+                        request,
+                        f'Payment status updated to {order.get_payment_status_display()}, but finance posting failed: {exc}'
+                    )
+            elif payment_status == 'refunded':
+                if order.payment_status != 'paid':
+                    messages.error(request, 'Only paid orders can be marked as refunded.')
+                    return redirect('marketplace:admin_order_detail', pk=pk)
+                if not order.finance_journal_entry_id:
+                    messages.error(
+                        request,
+                        'This order has no finance posting yet, so it cannot be refunded through the reversal flow.'
+                    )
+                    return redirect('marketplace:admin_order_detail', pk=pk)
+
+                try:
+                    _, created = reverse_order_payment_in_finance(
+                        order,
+                        user=request.user,
+                        reason='payment refunded',
+                    )
+                    order.payment_status = 'refunded'
+                    order.save(update_fields=['payment_status', 'updated_at'])
+                    if created:
+                        messages.success(
+                            request,
+                            'Payment status updated to Refunded and reversal entry posted to finance.'
+                        )
+                    else:
+                        messages.success(
+                            request,
+                            'Payment status remains Refunded; finance reversal entry already exists.'
+                        )
+                except MarketplaceFinancePostingError as exc:
+                    set_order_finance_sync_error(order, str(exc))
+                    messages.warning(
+                        request,
+                        f'Unable to reverse the finance posting for this refund: {exc}'
+                    )
+            else:
+                if order.finance_journal_entry_id and not order.finance_reversal_journal_entry_id:
+                    messages.error(
+                        request,
+                        'This order is already posted to finance. Use Refunded to create a reversal entry.'
+                    )
+                    return redirect('marketplace:admin_order_detail', pk=pk)
+
+                order.payment_status = payment_status
+                order.save(update_fields=['payment_status', 'updated_at'])
+                reset_order_finance_sync(order)
+                messages.success(request, f'Payment status updated to {order.get_payment_status_display()}')
         
         return redirect('marketplace:admin_order_detail', pk=pk)
     
@@ -315,9 +374,8 @@ def admin_order_update_payment(request, pk):
 def admin_client_list(request):
     """View all clients who have ordered from this company"""
     company = request.user.company
-    # Get clients who have ordered products from this company
     clients = Client.objects.filter(
-        orders__items__stock__company=company
+        orders__company=company
     ).distinct().order_by('-created_at')
     
     # Search

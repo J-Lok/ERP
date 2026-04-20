@@ -34,8 +34,9 @@ from .forms import (
     ReconciliationForm,
     TransactionMatchingForm,
     FinancialReportForm,
+    MarketplaceFinanceSettingsForm,
 )
-from .models import Account, Journal, JournalEntry, Transaction, ClientInvoice, SupplierInvoice, BankAccount, BankStatement, BankTransaction, Reconciliation, FinancialReport, ReportLine
+from .models import Account, Journal, JournalEntry, Transaction, ClientInvoice, SupplierInvoice, BankAccount, BankStatement, BankTransaction, Reconciliation, FinancialReport, ReportLine, MarketplaceFinanceSettings
 
 FINANCE_ROLES = ('admin', 'accountant', 'manager')
 
@@ -69,6 +70,7 @@ def index(request):
     )
 
     top_accounts = accounts.order_by('-balance')[:5]
+    marketplace_finance_settings = MarketplaceFinanceSettings.objects.filter(company=company).first()
 
     context = {
         'total_balance': total_balance,
@@ -81,6 +83,7 @@ def index(request):
         'recent_txns': recent_txns,
         'top_accounts': top_accounts,
         'today': today,
+        'marketplace_finance_settings': marketplace_finance_settings,
     }
     return render(request, 'finance/index.html', context)
 
@@ -958,6 +961,36 @@ def financial_report_detail(request, pk):
         'title': f'{report.get_report_type_display()} - {report.report_date}',
     }
     return render(request, 'finance/financial_report_detail.html', context)
+
+
+@role_required(*FINANCE_ROLES)
+def marketplace_finance_settings_edit(request):
+    """Create or update marketplace finance mappings for the current company."""
+    company = request.user.company
+    settings_obj = MarketplaceFinanceSettings.objects.filter(company=company).first()
+
+    if request.method == 'POST':
+        form = MarketplaceFinanceSettingsForm(
+            request.POST,
+            instance=settings_obj,
+            company=company,
+        )
+        if form.is_valid():
+            created = settings_obj is None
+            settings_obj = form.save()
+            messages.success(
+                request,
+                'Marketplace finance settings created.' if created else 'Marketplace finance settings updated.',
+            )
+            return redirect('finance:marketplace_finance_settings')
+    else:
+        form = MarketplaceFinanceSettingsForm(instance=settings_obj, company=company)
+
+    return render(request, 'finance/marketplace_finance_settings_form.html', {
+        'form': form,
+        'settings_obj': settings_obj,
+        'title': 'Marketplace Finance Settings',
+    })
 
 
 # ---------------------------------------------------------------------------

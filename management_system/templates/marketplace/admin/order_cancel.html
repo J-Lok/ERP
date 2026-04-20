@@ -52,7 +52,7 @@
                                     <span class="badge bg-warning">{{ order.get_status_display }}</span>
                                 </p>
                                 <p class="mb-1"><strong>Payment Status:</strong> 
-                                    <span class="badge bg-{% if order.payment_status == 'paid' %}success{% elif order.payment_status == 'pending' %}warning{% else %}danger{% endif %}">
+                                    <span class="badge bg-{% if order.payment_status == 'paid' %}success{% elif order.payment_status == 'pending' %}warning{% elif order.payment_status == 'refunded' %}info{% else %}danger{% endif %}">
                                         {{ order.get_payment_status_display }}
                                     </span>
                                 </p>

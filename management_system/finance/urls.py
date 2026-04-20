@@ -65,4 +65,7 @@ urlpatterns = [
     path('reports/', views.financial_report_list, name='financial_report_list'),
     path('reports/generate/', views.financial_report_generate, name='financial_report_generate'),
     path('reports/<int:pk>/', views.financial_report_detail, name='financial_report_detail'),
+
+    # Marketplace finance integration
+    path('marketplace-settings/', views.marketplace_finance_settings_edit, name='marketplace_finance_settings'),
 ]

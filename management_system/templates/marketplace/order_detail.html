@@ -39,6 +39,7 @@
                         <span class="badge ms-2
                             {% if order.payment_status == 'pending' %}bg-warning
                             {% elif order.payment_status == 'paid' %}bg-success
+                            {% elif order.payment_status == 'refunded' %}bg-info
                             {% elif order.payment_status == 'failed' %}bg-danger
                             {% endif %} fs-6">
                             {{ order.get_payment_status_display }}

@@ -3,7 +3,7 @@ from .models import (
     Account, Transaction, Journal, JournalEntry, JournalEntryLine,
     ClientInvoice, SupplierInvoice, InvoiceLine,
     BankAccount, BankStatement, BankTransaction, Reconciliation,
-    FinancialReport, ReportLine
+    FinancialReport, ReportLine, MarketplaceFinanceSettings
 )
 
 # Register your models here.
@@ -157,3 +157,24 @@ class ReportLineAdmin(admin.ModelAdmin):
     list_filter = ('line_type', 'report__report_type')
     search_fields = ('description', 'report__company__name')
     readonly_fields = ('order', 'description', 'amount', 'line_type')
+
+
+@admin.register(MarketplaceFinanceSettings)
+class MarketplaceFinanceSettingsAdmin(admin.ModelAdmin):
+    list_display = (
+        'company',
+        'sales_journal',
+        'receivable_account',
+        'revenue_account',
+        'tax_account',
+        'is_enabled',
+        'updated_at',
+    )
+    list_filter = ('is_enabled', 'company')
+    search_fields = (
+        'company__name',
+        'sales_journal__name',
+        'receivable_account__name',
+        'revenue_account__name',
+    )
+    readonly_fields = ('created_at', 'updated_at')

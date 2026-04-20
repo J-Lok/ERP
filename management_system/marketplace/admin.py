@@ -34,20 +34,19 @@ class OrderItemInline(admin.TabularInline):
 
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
-    list_display = ['order_number', 'client', 'get_companies', 'status', 'payment_status', 'total', 'created_at']
-    list_filter = ['status', 'payment_status', 'created_at']
+    list_display = ['order_number', 'client', 'company', 'status', 'payment_status', 'finance_sync_status', 'total', 'created_at']
+    list_filter = ['company', 'status', 'payment_status', 'finance_sync_status', 'created_at']
     search_fields = ['order_number', 'client__email', 'client__first_name', 'client__last_name']
-    readonly_fields = ['order_number', 'created_at', 'updated_at', 'confirmed_at', 'shipped_at', 'delivered_at']
+    readonly_fields = [
+        'order_number', 'created_at', 'updated_at', 'confirmed_at', 'shipped_at',
+        'delivered_at', 'finance_journal_entry', 'finance_reversal_journal_entry',
+        'finance_synced_at', 'finance_reversed_at'
+    ]
     inlines = [OrderItemInline]
-    
-    def get_companies(self, obj):
-        companies = obj.items.values_list('stock__company__name', flat=True).distinct()
-        return ", ".join(companies)
-    get_companies.short_description = "Companies"
     
     fieldsets = (
         ('Order Info', {
-            'fields': ('order_number', 'client', 'status', 'payment_status')
+            'fields': ('order_number', 'client', 'company', 'status', 'payment_status', 'finance_sync_status')
         }),
         ('Pricing', {
             'fields': ('subtotal', 'tax', 'shipping', 'total')
@@ -56,7 +55,10 @@ class OrderAdmin(admin.ModelAdmin):
             'fields': ('shipping_address', 'shipping_city', 'shipping_country', 'shipping_phone')
         }),
         ('Additional Info', {
-            'fields': ('notes',)
+            'fields': (
+                'notes', 'finance_journal_entry', 'finance_reversal_journal_entry',
+                'finance_synced_at', 'finance_reversed_at', 'finance_sync_error'
+            )
         }),
         ('Timestamps', {
             'fields': ('created_at', 'updated_at', 'confirmed_at', 'shipped_at', 'delivered_at'),

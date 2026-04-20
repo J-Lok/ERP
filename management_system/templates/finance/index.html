@@ -20,7 +20,28 @@
     <a href="{% url 'finance:supplier_invoice_create' %}" class="btn btn-outline-warning btn-sm">
       <i class="fas fa-file-invoice me-1"></i>New Supplier Invoice
     </a>
+    <a href="{% url 'finance:marketplace_finance_settings' %}" class="btn btn-outline-dark btn-sm">
+      <i class="fas fa-store me-1"></i>Marketplace Mapping
+    </a>
   </div>
+</div>
+
+<div class="alert {% if marketplace_finance_settings and marketplace_finance_settings.is_enabled %}alert-success{% else %}alert-warning{% endif %} d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <strong>Marketplace finance:</strong>
+    {% if marketplace_finance_settings %}
+      {% if marketplace_finance_settings.is_enabled %}
+        ready to post marketplace orders with journal <strong>{{ marketplace_finance_settings.sales_journal.name }}</strong>.
+      {% else %}
+        configured but still disabled until you are ready to activate order posting.
+      {% endif %}
+    {% else %}
+      not configured yet. Set the sales journal and accounts before Phase 3 automation.
+    {% endif %}
+  </div>
+  <a href="{% url 'finance:marketplace_finance_settings' %}" class="btn btn-sm {% if marketplace_finance_settings %}btn-outline-secondary{% else %}btn-primary{% endif %}">
+    {% if marketplace_finance_settings %}Review settings{% else %}Configure now{% endif %}
+  </a>
 </div>
 
 <!-- KPI row -->

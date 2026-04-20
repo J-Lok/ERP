@@ -4,7 +4,7 @@ from django import forms
 from django.core.exceptions import ValidationError
 from django.forms import BaseInlineFormSet, inlineformset_factory
 
-from .models import Account, JournalEntry, JournalEntryLine, Journal, Transaction, ClientInvoice, SupplierInvoice, InvoiceLine, BankAccount, BankStatement, BankTransaction, Reconciliation, FinancialReport, ReportLine
+from .models import Account, JournalEntry, JournalEntryLine, Journal, Transaction, ClientInvoice, SupplierInvoice, InvoiceLine, BankAccount, BankStatement, BankTransaction, Reconciliation, FinancialReport, ReportLine, MarketplaceFinanceSettings
 
 
 class AccountForm(forms.ModelForm):
@@ -475,3 +475,57 @@ class FinancialReportForm(forms.Form):
         required=False,
         label="End Date (optional)"
     )
+
+
+class MarketplaceFinanceSettingsForm(forms.ModelForm):
+    """Configure how marketplace orders map into finance."""
+
+    class Meta:
+        model = MarketplaceFinanceSettings
+        fields = [
+            'sales_journal',
+            'receivable_account',
+            'revenue_account',
+            'tax_account',
+            'is_enabled',
+        ]
+        widgets = {
+            'sales_journal': forms.Select(attrs={'class': 'form-select'}),
+            'receivable_account': forms.Select(attrs={'class': 'form-select'}),
+            'revenue_account': forms.Select(attrs={'class': 'form-select'}),
+            'tax_account': forms.Select(attrs={'class': 'form-select'}),
+            'is_enabled': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        self.company = kwargs.pop('company', None)
+        super().__init__(*args, **kwargs)
+
+        self.fields['tax_account'].required = False
+
+        if self.company:
+            self.instance.company = self.company
+            self.fields['sales_journal'].queryset = Journal.objects.filter(
+                company=self.company,
+                journal_type__in=('sales', 'general'),
+            ).order_by('journal_type', 'name')
+            self.fields['receivable_account'].queryset = Account.objects.filter(
+                company=self.company,
+                account_type='asset',
+            ).order_by('code', 'name')
+            self.fields['revenue_account'].queryset = Account.objects.filter(
+                company=self.company,
+                account_type='revenue',
+            ).order_by('code', 'name')
+            self.fields['tax_account'].queryset = Account.objects.filter(
+                company=self.company,
+                account_type='liability',
+            ).order_by('code', 'name')
+
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        if self.company:
+            instance.company = self.company
+        if commit:
+            instance.save()
+        return instance

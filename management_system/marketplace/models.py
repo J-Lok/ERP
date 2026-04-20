@@ -89,13 +89,44 @@ class Order(models.Model):
     PAYMENT_STATUS_CHOICES = [
         ('pending', 'Pending'),
         ('paid', 'Paid'),
+        ('refunded', 'Refunded'),
+        ('failed', 'Failed'),
+    ]
+
+    FINANCE_SYNC_STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('posted', 'Posted'),
+        ('reversed', 'Reversed'),
         ('failed', 'Failed'),
     ]
     
     order_number = models.CharField(max_length=50, unique=True)
     client = models.ForeignKey(Client, on_delete=models.CASCADE, related_name='orders')
+    company = models.ForeignKey(Company, on_delete=models.CASCADE, related_name='marketplace_orders')
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
     payment_status = models.CharField(max_length=20, choices=PAYMENT_STATUS_CHOICES, default='pending')
+    finance_sync_status = models.CharField(
+        max_length=20,
+        choices=FINANCE_SYNC_STATUS_CHOICES,
+        default='pending',
+    )
+    finance_journal_entry = models.ForeignKey(
+        'finance.JournalEntry',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='marketplace_orders',
+    )
+    finance_reversal_journal_entry = models.ForeignKey(
+        'finance.JournalEntry',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='marketplace_reversals',
+    )
+    finance_synced_at = models.DateTimeField(null=True, blank=True)
+    finance_reversed_at = models.DateTimeField(null=True, blank=True)
+    finance_sync_error = models.TextField(blank=True)
     
     # Totals
     subtotal = models.DecimalField(max_digits=10, decimal_places=2)
@@ -122,13 +153,21 @@ class Order(models.Model):
         ordering = ['-created_at']
     
     def __str__(self):
-        return f"Order #{self.order_number} - {self.client.get_full_name()}"
+        return f"Order #{self.order_number} - {self.client.get_full_name()} ({self.company.name})"
     
     def generate_order_number(self):
         """Generate unique order number"""
         import datetime
         timestamp = datetime.datetime.now().strftime('%Y%m%d%H%M%S')
         return f"ORD-{timestamp}-{self.client.id}"
+
+    @property
+    def is_finance_posted(self):
+        return self.finance_journal_entry_id is not None and self.finance_sync_status == 'posted'
+
+    @property
+    def is_finance_reversed(self):
+        return self.finance_reversal_journal_entry_id is not None and self.finance_sync_status == 'reversed'
 
 
 class OrderItem(models.Model):

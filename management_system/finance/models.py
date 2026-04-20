@@ -498,3 +498,79 @@ class ReportLine(models.Model):
 
     def __str__(self):
         return f"{self.description} - {self.amount}"
+
+
+class MarketplaceFinanceSettings(models.Model):
+    """Company-level mapping used for marketplace order accounting."""
+
+    company = models.OneToOneField(
+        'accounts.Company',
+        on_delete=models.CASCADE,
+        related_name='marketplace_finance_settings',
+    )
+    sales_journal = models.ForeignKey(
+        Journal,
+        on_delete=models.PROTECT,
+        related_name='marketplace_settings',
+    )
+    receivable_account = models.ForeignKey(
+        Account,
+        on_delete=models.PROTECT,
+        related_name='marketplace_receivable_settings',
+        help_text='Asset account used until marketplace orders are settled.',
+    )
+    revenue_account = models.ForeignKey(
+        Account,
+        on_delete=models.PROTECT,
+        related_name='marketplace_revenue_settings',
+        help_text='Revenue account credited for marketplace sales.',
+    )
+    tax_account = models.ForeignKey(
+        Account,
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name='marketplace_tax_settings',
+        help_text='Optional liability account used when marketplace tax is posted separately.',
+    )
+    is_enabled = models.BooleanField(
+        default=False,
+        help_text='Enable this after all required finance mappings are ready.',
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'Marketplace finance settings'
+        verbose_name_plural = 'Marketplace finance settings'
+
+    def __str__(self):
+        return f"Marketplace finance settings for {self.company.name}"
+
+    def clean(self):
+        super().clean()
+
+        if self.sales_journal_id and self.sales_journal.company_id != self.company_id:
+            raise ValidationError({'sales_journal': 'Journal must belong to the same company.'})
+
+        if self.receivable_account_id:
+            if self.receivable_account.company_id != self.company_id:
+                raise ValidationError({'receivable_account': 'Receivable account must belong to the same company.'})
+            if self.receivable_account.account_type != 'asset':
+                raise ValidationError({'receivable_account': 'Receivable account must be an asset account.'})
+
+        if self.revenue_account_id:
+            if self.revenue_account.company_id != self.company_id:
+                raise ValidationError({'revenue_account': 'Revenue account must belong to the same company.'})
+            if self.revenue_account.account_type != 'revenue':
+                raise ValidationError({'revenue_account': 'Revenue account must be a revenue account.'})
+
+        if self.tax_account_id:
+            if self.tax_account.company_id != self.company_id:
+                raise ValidationError({'tax_account': 'Tax account must belong to the same company.'})
+            if self.tax_account.account_type != 'liability':
+                raise ValidationError({'tax_account': 'Tax account must be a liability account.'})
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        return super().save(*args, **kwargs)
