@@ -114,6 +114,35 @@
         .notification-dropdown .text-muted {
             color: #6c757d !important;
         }
+        /* Collapsible sidebar */
+        .container-fluid > .row { flex-wrap: nowrap; }
+        nav.sidebar {
+            width: 220px;
+            min-width: 220px;
+            max-width: 220px;
+            transition: width 0.25s ease, min-width 0.25s ease, max-width 0.25s ease;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+        nav.sidebar.sidebar-collapsed { width: 64px; min-width: 64px; max-width: 64px; }
+        main { flex: 1 1 0 !important; min-width: 0; max-width: none !important; width: auto !important; }
+        .sidebar-collapsed .link-text { display: none; }
+        .sidebar-collapsed .nav-link { padding-left: 0; padding-right: 0; text-align: center; }
+        .sidebar-toggle-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--sidebar-link, #495057);
+            padding: 6px 8px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            width: 100%;
+            margin-bottom: 4px;
+            border-radius: 5px;
+        }
+        .sidebar-collapsed .sidebar-toggle-btn { justify-content: center; }
+        .sidebar-toggle-btn:hover { color: var(--primary-color, #4A90E2); background-color: rgba(74,144,226,0.1); }
     </style>
     {% block extra_css %}{% endblock %}
 </head>
@@ -188,22 +217,25 @@
     <div class="container-fluid">
         <div class="row">
             {% if user.is_authenticated %}
-            <nav class="col-md-2 d-md-block sidebar py-3">
+            <nav class="col-md-2 d-md-block sidebar py-3" id="appSidebar">
                 <div class="position-sticky">
+                    <button class="sidebar-toggle-btn" id="sidebarToggle" aria-label="Toggle sidebar">
+                        <i class="fas fa-chevron-left" id="sidebarToggleIcon"></i>
+                    </button>
                     <ul class="nav flex-column">
                         <li class="nav-item">
-                            <a class="nav-link {% if request.resolver_match.app_name == 'core' and request.resolver_match.url_name == 'dashboard' %}active{% endif %}" 
+                            <a class="nav-link {% if request.resolver_match.app_name == 'core' and request.resolver_match.url_name == 'dashboard' %}active{% endif %}"
                                href="{% url 'core:dashboard' %}">
-                                <i class="fas fa-home"></i> Dashboard
+                                <i class="fas fa-home"></i> <span class="link-text">Dashboard</span>
                             </a>
                         </li>
 
                         {# Employees — all roles can view; write/delete gated at view level #}
                         {% if user|has_role:'admin,hr_manager,manager,accountant,secretary,stock_manager,employee' %}
                         <li class="nav-item">
-                            <a class="nav-link {% if request.resolver_match.app_name == 'employees' %}active{% endif %}" 
+                            <a class="nav-link {% if request.resolver_match.app_name == 'employees' %}active{% endif %}"
                                href="{% url 'employees:employee_list' %}">
-                                <i class="fas fa-users"></i> Employees
+                                <i class="fas fa-users"></i> <span class="link-text">Employees</span>
                             </a>
                         </li>
                         {% endif %}
@@ -211,9 +243,9 @@
                         {# Projects #}
                         {% if user|has_role:'admin,hr_manager,manager,accountant,secretary,stock_manager,employee' %}
                         <li class="nav-item">
-                            <a class="nav-link {% if request.resolver_match.app_name == 'projects' %}active{% endif %}" 
+                            <a class="nav-link {% if request.resolver_match.app_name == 'projects' %}active{% endif %}"
                                href="{% url 'projects:project_list' %}">
-                                <i class="fas fa-project-diagram"></i> Projects
+                                <i class="fas fa-project-diagram"></i> <span class="link-text">Projects</span>
                             </a>
                         </li>
                         {% endif %}
@@ -221,9 +253,9 @@
                         {# Inventory — stock roles only #}
                         {% if user|has_role:'admin,manager,hr_manager,accountant,secretary,stock_manager,employee' %}
                         <li class="nav-item">
-                            <a class="nav-link {% if request.resolver_match.app_name == 'inventory' %}active{% endif %}" 
+                            <a class="nav-link {% if request.resolver_match.app_name == 'inventory' %}active{% endif %}"
                                href="{% url 'inventory:stock_list' %}">
-                                <i class="fas fa-boxes"></i> Inventory
+                                <i class="fas fa-boxes"></i> <span class="link-text">Inventory</span>
                             </a>
                         </li>
                         {% endif %}
@@ -233,7 +265,7 @@
                         <li class="nav-item">
                             <a class="nav-link {% if request.resolver_match.app_name == 'finance' %}active{% endif %}"
                                href="{% url 'finance:index' %}">
-                                <i class="fas fa-wallet"></i> Finance
+                                <i class="fas fa-wallet"></i> <span class="link-text">Finance</span>
                             </a>
                         </li>
                         {% endif %}
@@ -243,7 +275,7 @@
                         <li class="nav-item">
                             <a class="nav-link {% if request.resolver_match.app_name == 'hr' %}active{% endif %}"
                                href="{% url 'hr:index' %}">
-                                <i class="fas fa-user-tie"></i> HR
+                                <i class="fas fa-user-tie"></i> <span class="link-text">HR</span>
                             </a>
                         </li>
                         {% endif %}
@@ -253,7 +285,7 @@
                         <li class="nav-item">
                             <a class="nav-link {% if request.resolver_match.app_name == 'hr' and 'leave' in request.resolver_match.url_name %}active{% endif %}"
                                href="{% url 'hr:my_leave_list' %}">
-                                <i class="fas fa-calendar-minus"></i> My Leaves
+                                <i class="fas fa-calendar-minus"></i> <span class="link-text">My Leaves</span>
                             </a>
                         </li>
                         {% endif %}
@@ -263,7 +295,7 @@
                         <li class="nav-item">
                             <a class="nav-link {% if request.resolver_match.app_name == 'crm' %}active{% endif %}"
                                href="{% url 'crm:contact_list' %}">
-                                <i class="fas fa-address-book"></i> CRM
+                                <i class="fas fa-address-book"></i> <span class="link-text">CRM</span>
                             </a>
                         </li>
                         {% endif %}
@@ -273,7 +305,7 @@
                         <li class="nav-item">
                             <a class="nav-link {% if request.resolver_match.app_name == 'meetings' %}active{% endif %}"
                                href="{% url 'meetings:dashboard' %}">
-                                <i class="fas fa-calendar-alt"></i> Meetings
+                                <i class="fas fa-calendar-alt"></i> <span class="link-text">Meetings</span>
                             </a>
                         </li>
                         {% endif %}
@@ -283,7 +315,7 @@
                         <li class="nav-item">
                             <a class="nav-link {% if request.resolver_match.app_name == 'marketplace' and request.resolver_match.url_name == 'admin_order_dashboard' %}active{% endif %}"
                                href="{% url 'marketplace:admin_order_dashboard' %}">
-                                <i class="fas fa-shopping-cart"></i> Manage Orders
+                                <i class="fas fa-shopping-cart"></i> <span class="link-text">Manage Orders</span>
                             </a>
                         </li>
                         {% endif %}
@@ -293,7 +325,7 @@
                         <li class="nav-item mt-3 border-top pt-3">
                             <a class="nav-link {% if request.resolver_match.app_name == 'accounts' and request.resolver_match.url_name == 'company_profile' %}active{% endif %}"
                                href="{% url 'accounts:company_profile' %}">
-                                <i class="fas fa-building"></i> Company Settings
+                                <i class="fas fa-building"></i> <span class="link-text">Company Settings</span>
                             </a>
                         </li>
                         {% endif %}
@@ -357,6 +389,35 @@
                     var nextTheme = root.getAttribute('data-bs-theme') === 'dark' ? 'light' : 'dark';
                     localStorage.setItem(storageKey, nextTheme);
                     applyTheme(nextTheme);
+                });
+            }
+        })();
+    </script>
+    <script>
+        (function() {
+            var sidebar = document.getElementById('appSidebar');
+            var toggleBtn = document.getElementById('sidebarToggle');
+            var toggleIcon = document.getElementById('sidebarToggleIcon');
+            var key = 'erp-sidebar-collapsed';
+
+            function applySidebarState(collapsed, instant) {
+                if (!sidebar) return;
+                if (instant) sidebar.style.transition = 'none';
+                sidebar.classList.toggle('sidebar-collapsed', collapsed);
+                if (instant) sidebar.offsetHeight;
+                if (instant) sidebar.style.transition = '';
+                if (toggleIcon) {
+                    toggleIcon.className = collapsed ? 'fas fa-chevron-right' : 'fas fa-chevron-left';
+                }
+            }
+
+            applySidebarState(localStorage.getItem(key) === '1', true);
+
+            if (toggleBtn) {
+                toggleBtn.addEventListener('click', function() {
+                    var isCollapsed = sidebar.classList.contains('sidebar-collapsed');
+                    localStorage.setItem(key, isCollapsed ? '0' : '1');
+                    applySidebarState(!isCollapsed, false);
                 });
             }
         })();

@@ -6,10 +6,11 @@ Single source of truth for role-based access control across all apps.
 Role hierarchy (highest → lowest):
     superuser  — Django superuser, bypasses all checks
     admin      — Full company admin
+    manager    — Full access to all modules (departments, employees, projects, finance, inventory, HR, CRM, meetings, marketplace)
     hr_manager — HR management
     accountant — Finance read/write
-    manager    — Department / project management
     secretary  — CRM, scheduling
+    stock_manager — Inventory management
     employee   — Self-service only
 """
 
@@ -25,13 +26,13 @@ from django.shortcuts import redirect
 
 # Employees app
 EMPLOYEE_VIEW_ROLES   = ('admin', 'hr_manager', 'manager', 'accountant', 'secretary', 'stock_manager', 'employee')
-EMPLOYEE_WRITE_ROLES  = ('admin', 'hr_manager')
-EMPLOYEE_DELETE_ROLES = ('admin',)
-EMPLOYEE_EXPORT_ROLES = ('admin', 'hr_manager', 'accountant')
+EMPLOYEE_WRITE_ROLES  = ('admin', 'hr_manager', 'manager')
+EMPLOYEE_DELETE_ROLES = ('admin', 'manager')
+EMPLOYEE_EXPORT_ROLES = ('admin', 'hr_manager', 'accountant', 'manager')
 
 # Departments
-DEPARTMENT_WRITE_ROLES  = ('admin', 'hr_manager')
-DEPARTMENT_DELETE_ROLES = ('admin',)
+DEPARTMENT_WRITE_ROLES  = ('admin', 'hr_manager', 'manager')
+DEPARTMENT_DELETE_ROLES = ('admin', 'manager')
 
 # Projects app
 PROJECT_VIEW_ROLES   = ('admin', 'manager', 'hr_manager', 'accountant', 'secretary', 'stock_manager', 'employee')
@@ -45,7 +46,7 @@ TASK_DELETE_ROLES = ('admin', 'manager')
 
 # Inventory app
 INVENTORY_VIEW_ROLES    = ('admin', 'manager', 'hr_manager', 'accountant', 'secretary', 'stock_manager', 'employee')
-INVENTORY_WRITE_ROLES   = ('admin', 'stock_manager')
+INVENTORY_WRITE_ROLES   = ('admin', 'stock_manager', 'manager')
 INVENTORY_MANAGE_ROLES  = ('admin', 'manager', 'stock_manager')
 INVENTORY_REPORT_ROLES  = ('admin', 'manager', 'accountant', 'stock_manager')
 
@@ -53,7 +54,7 @@ INVENTORY_REPORT_ROLES  = ('admin', 'manager', 'accountant', 'stock_manager')
 FINANCE_ROLES = ('admin', 'accountant', 'manager')
 
 # HR app
-HR_ROLES           = ('admin', 'hr_manager')
+HR_ROLES           = ('admin', 'hr_manager', 'manager')
 LEAVE_SUBMIT_ROLES = ('admin', 'hr_manager', 'manager', 'secretary', 'accountant', 'stock_manager', 'employee')
 
 # CRM app
@@ -66,7 +67,7 @@ MEETINGS_DELETE_ROLES = ('admin', 'manager')
 MEETINGS_REPORT_ROLES = ('admin', 'manager', 'accountant')
 
 # Marketplace admin
-MARKETPLACE_ADMIN_ROLES = ('admin',)
+MARKETPLACE_ADMIN_ROLES = ('admin', 'manager')
 
 # Dashboard sections — which roles see which stat blocks
 DASHBOARD_FINANCE_ROLES  = ('admin', 'accountant', 'manager')
