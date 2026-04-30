@@ -24,7 +24,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 def env_bool(name: str, default: bool = False) -> bool:
     return os.getenv(name, str(default)).lower() in ('1', 'true', 'yes', 'on')
 
-SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-your-secret-key-change-in-production')
+_secret_key = os.getenv('SECRET_KEY')
+if not _secret_key:
+    if os.getenv('DATABASE_URL'):
+        raise ImproperlyConfigured('SECRET_KEY environment variable is not set.')
+    _secret_key = 'django-insecure-local-dev-only-do-not-use-in-production'
+SECRET_KEY = _secret_key
 
 DEBUG = env_bool('DEBUG', True)
 
@@ -179,7 +184,16 @@ AUTH_USER_MODEL = 'accounts.User'
 SESSION_COOKIE_AGE = 86400  # 24 hours
 SESSION_SAVE_EVERY_REQUEST = True
 
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+if DEBUG:
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+else:
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+    EMAIL_HOST = os.getenv('EMAIL_HOST', 'smtp.gmail.com')
+    EMAIL_PORT = int(os.getenv('EMAIL_PORT', '587'))
+    EMAIL_USE_TLS = True
+    EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')
+    EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
+    DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', EMAIL_HOST_USER)
 
 if not DEBUG:
     SECURE_SSL_REDIRECT = env_bool('SECURE_SSL_REDIRECT', True)
