@@ -12,10 +12,13 @@ from django.db.models import Count, F, Q, Sum
 from django.shortcuts import redirect, render
 from django.utils import timezone
 
+from datetime import timedelta
+
 from employees.models import Employee
 from finance.models import Account, Transaction
 from inventory.models import Stock
 from projects.models import Project
+from accounts.models import User
 from accounts.permissions import (
     DASHBOARD_EMPLOYEE_ROLES,
     DASHBOARD_FINANCE_ROLES,
@@ -138,5 +141,13 @@ def dashboard(request):
             'monthly_credits': monthly_credits,
             'monthly_debits': monthly_debits,
         })
+
+    # --- Online users (active in last 5 minutes, same company) ---
+    online_cutoff = timezone.now() - timedelta(minutes=5)
+    context['online_users'] = (
+        User.objects
+        .filter(company=company, last_seen__gte=online_cutoff, is_active=True)
+        .order_by('-last_seen')
+    )
 
     return render(request, 'core/dashboard.html', context)

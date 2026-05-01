@@ -136,6 +136,7 @@ class User(AbstractUser):
     )
     # Audit / activity helpers
     last_login_ip = models.GenericIPAddressField(null=True, blank=True)
+    last_seen = models.DateTimeField(null=True, blank=True, db_index=True)
 
     objects = CustomUserManager()
 
@@ -159,3 +160,12 @@ class User(AbstractUser):
     def has_role(self, *roles: str) -> bool:
         """Convenience helper: user.has_role('admin', 'manager')"""
         return self.is_superuser or self.role in roles
+
+    @property
+    def is_online(self) -> bool:
+        """True if the user was active in the last 5 minutes."""
+        if not self.last_seen:
+            return False
+        from django.utils import timezone
+        from datetime import timedelta
+        return (timezone.now() - self.last_seen) < timedelta(minutes=5)

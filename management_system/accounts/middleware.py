@@ -1,3 +1,6 @@
+from datetime import timedelta
+
+from django.utils import timezone
 from django.utils.deprecation import MiddlewareMixin
 from django.shortcuts import redirect
 from django.urls import reverse
@@ -18,14 +21,13 @@ class CompanyContextMiddleware(MiddlewareMixin):
         if user is None or not user.is_authenticated:
             return
 
-        # Use select_related to avoid an extra DB query if company fields
-        # are accessed later in the same request cycle.
-        if not hasattr(user, '_company_cached'):
-            # company is a FK so it may already be cached by Django ORM;
-            # guard prevents redundant attribute access on anonymous users.
-            pass
-
         request.company = user.company
+
+        # Update last_seen at most once per minute to avoid a DB write on every request.
+        now = timezone.now()
+        if not user.last_seen or (now - user.last_seen) > timedelta(seconds=60):
+            type(user).objects.filter(pk=user.pk).update(last_seen=now)
+            user.last_seen = now
 
 
 class RequireLoginMiddleware(MiddlewareMixin):
