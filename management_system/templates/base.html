@@ -329,6 +329,16 @@
                             </a>
                         </li>
                         {% endif %}
+
+                        {# Platform admin — superuser only #}
+                        {% if user.is_superuser %}
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.resolver_match.url_name == 'platform_dashboard' %}active{% endif %}"
+                               href="{% url 'core:platform_dashboard' %}">
+                                <i class="fas fa-globe"></i> <span class="link-text">Platform Admin</span>
+                            </a>
+                        </li>
+                        {% endif %}
                     </ul>
                 </div>
             </nav>

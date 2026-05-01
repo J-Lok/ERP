@@ -14,11 +14,14 @@ from django.utils import timezone
 
 from datetime import timedelta
 
+from django.contrib.auth.decorators import login_required
+from django.http import HttpResponseForbidden
+
 from employees.models import Employee
 from finance.models import Account, Transaction
 from inventory.models import Stock
 from projects.models import Project
-from accounts.models import User
+from accounts.models import User, Company
 from accounts.permissions import (
     DASHBOARD_EMPLOYEE_ROLES,
     DASHBOARD_FINANCE_ROLES,
@@ -151,3 +154,33 @@ def dashboard(request):
     )
 
     return render(request, 'core/dashboard.html', context)
+
+
+@login_required
+def platform_dashboard(request):
+    """Superuser-only view — global stats across all companies."""
+    if not request.user.is_superuser:
+        return HttpResponseForbidden()
+
+    online_cutoff = timezone.now() - timedelta(minutes=5)
+
+    companies = (
+        Company.objects
+        .annotate(
+            user_count=Count('users'),
+            online_count=Count('users', filter=Q(users__last_seen__gte=online_cutoff)),
+        )
+        .order_by('-created_at')
+    )
+
+    total_users   = User.objects.filter(is_active=True).count()
+    online_users  = User.objects.filter(last_seen__gte=online_cutoff, is_active=True)
+    total_companies = companies.count()
+
+    return render(request, 'core/platform_dashboard.html', {
+        'companies':       companies,
+        'total_companies': total_companies,
+        'total_users':     total_users,
+        'online_users':    online_users,
+        'online_count':    online_users.count(),
+    })
