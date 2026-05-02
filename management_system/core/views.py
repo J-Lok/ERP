@@ -146,12 +146,15 @@ def dashboard(request):
         })
 
     # --- Online users (active in last 5 minutes, same company) ---
-    online_cutoff = timezone.now() - timedelta(minutes=5)
-    context['online_users'] = (
-        User.objects
-        .filter(company=company, last_seen__gte=online_cutoff, is_active=True)
-        .order_by('-last_seen')
-    )
+    try:
+        online_cutoff = timezone.now() - timedelta(minutes=5)
+        context['online_users'] = (
+            User.objects
+            .filter(company=company, last_seen__gte=online_cutoff, is_active=True)
+            .order_by('-last_seen')
+        )
+    except Exception:
+        context['online_users'] = []
 
     return render(request, 'core/dashboard.html', context)
 

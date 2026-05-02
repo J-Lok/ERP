@@ -24,10 +24,14 @@ class CompanyContextMiddleware(MiddlewareMixin):
         request.company = user.company
 
         # Update last_seen at most once per minute to avoid a DB write on every request.
-        now = timezone.now()
-        if not user.last_seen or (now - user.last_seen) > timedelta(seconds=60):
-            type(user).objects.filter(pk=user.pk).update(last_seen=now)
-            user.last_seen = now
+        # Wrapped in try/except so a pending migration never takes down the whole app.
+        try:
+            now = timezone.now()
+            if not user.last_seen or (now - user.last_seen) > timedelta(seconds=60):
+                type(user).objects.filter(pk=user.pk).update(last_seen=now)
+                user.last_seen = now
+        except Exception:
+            pass
 
 
 class RequireLoginMiddleware(MiddlewareMixin):
