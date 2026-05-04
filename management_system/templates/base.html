@@ -5,7 +5,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>{% block title %}{{ company.name }} — Erpis{% endblock %}</title>
+  <title>{% block title %}{{ company.name }} — Zentral{% endblock %}</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -13,7 +13,7 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
 
   <style>
-    /* ── Erpis Design Tokens ── */
+    /* ── Zentral Design Tokens ── */
     :root {
       --bg:         #0d1117;
       --surface:    #161b22;
@@ -64,10 +64,10 @@
     .screen-enter { animation: fadeSlideIn 0.22s ease both; }
 
     /* ── Layout ── */
-    .erpis-shell { display: flex; height: 100vh; overflow: hidden; }
+    .zentral-shell { display: flex; height: 100vh; overflow: hidden; }
 
     /* ── Sidebar ── */
-    .erpis-sidebar {
+    .zentral-sidebar {
       width: 220px; min-width: 220px;
       background: var(--sidebar-bg);
       border-right: 1px solid var(--border);
@@ -76,12 +76,12 @@
       transition: width .25s, min-width .25s;
       overflow: hidden; flex-shrink: 0;
     }
-    .erpis-sidebar.collapsed { width: 64px; min-width: 64px; }
-    .erpis-sidebar.collapsed .link-text,
-    .erpis-sidebar.collapsed .user-info,
-    .erpis-sidebar.collapsed .brand-name { display: none !important; }
-    .erpis-sidebar.collapsed .nav-item-inner { justify-content: center; padding: 10px 0; }
-    .erpis-sidebar.collapsed .sidebar-brand { padding: 0 16px; }
+    .zentral-sidebar.collapsed { width: 64px; min-width: 64px; }
+    .zentral-sidebar.collapsed .link-text,
+    .zentral-sidebar.collapsed .user-info,
+    .zentral-sidebar.collapsed .brand-name { display: none !important; }
+    .zentral-sidebar.collapsed .nav-item-inner { justify-content: center; padding: 10px 0; }
+    .zentral-sidebar.collapsed .sidebar-brand { padding: 0 16px; }
 
     .sidebar-brand {
       height: 60px; display: flex; align-items: center;
@@ -120,7 +120,7 @@
       padding: 12px 16px; border-top: 1px solid var(--border);
       display: flex; align-items: center; gap: 10px;
     }
-    .erpis-sidebar.collapsed .sidebar-user { padding: 12px 8px; justify-content: center; }
+    .zentral-sidebar.collapsed .sidebar-user { padding: 12px 8px; justify-content: center; }
     .avatar {
       border-radius: 50%; background: #1a6b45;
       color: #fff; display: flex; align-items: center; justify-content: center;
@@ -130,10 +130,10 @@
     .user-role { font-size: 11px; color: var(--muted); }
 
     /* ── Main area ── */
-    .erpis-main { flex: 1; display: flex; flex-direction: column; min-width: 0; overflow: hidden; }
+    .zentral-main { flex: 1; display: flex; flex-direction: column; min-width: 0; overflow: hidden; }
 
     /* ── Top bar ── */
-    .erpis-topbar {
+    .zentral-topbar {
       height: 60px; display: flex; align-items: center;
       padding: 0 24px; border-bottom: 1px solid var(--border);
       background: var(--surface); gap: 16px; flex-shrink: 0;
@@ -186,7 +186,7 @@
     .notif-item:last-child { border-bottom: none; }
 
     /* ── Content ── */
-    .erpis-content {
+    .zentral-content {
       flex: 1; overflow-y: auto; padding: 32px 40px;
       background: var(--bg);
     }
@@ -351,19 +351,19 @@
     }
 
     /* Light theme adjustments */
-    [data-bs-theme="light"] .erpis-topbar { background: #ffffff !important; }
-    [data-bs-theme="light"] .erpis-content { background: var(--bg) !important; }
+    [data-bs-theme="light"] .zentral-topbar { background: #ffffff !important; }
+    [data-bs-theme="light"] .zentral-content { background: var(--bg) !important; }
     [data-bs-theme="light"] body { overflow: hidden; }
 
     /* Text utilities */
-    .text-erpis-muted  { color: var(--muted) !important; }
-    .text-erpis-accent { color: var(--accent) !important; }
-    .text-erpis-red    { color: var(--red) !important; }
-    .text-erpis-amber  { color: var(--amber) !important; }
-    .text-erpis-blue   { color: var(--blue) !important; }
+    .text-zentral-muted  { color: var(--muted) !important; }
+    .text-zentral-accent { color: var(--accent) !important; }
+    .text-zentral-red    { color: var(--red) !important; }
+    .text-zentral-amber  { color: var(--amber) !important; }
+    .text-zentral-blue   { color: var(--blue) !important; }
 
     /* Misc */
-    .border-erpis { border-color: var(--border) !important; }
+    .border-zentral { border-color: var(--border) !important; }
     .bg-surface   { background: var(--surface) !important; }
     .bg-surface2  { background: var(--surface2) !important; }
   </style>
@@ -372,14 +372,14 @@
 <body>
 
 {% if user.is_authenticated %}
-<div class="erpis-shell">
+<div class="zentral-shell">
 
   <!-- ── Sidebar ── -->
-  <aside class="erpis-sidebar {% if request.COOKIES.sidebar_collapsed == '1' %}collapsed{% endif %}" id="erpis-sidebar">
+  <aside class="zentral-sidebar {% if request.COOKIES.sidebar_collapsed == '1' %}collapsed{% endif %}" id="zentral-sidebar">
 
     <a class="sidebar-brand" href="{% url 'core:dashboard' %}">
       <div class="brand-icon"><i class="fas fa-bolt"></i></div>
-      <span class="brand-name">Erpis</span>
+      <span class="brand-name">Zentral</span>
     </a>
 
     <nav class="sidebar-nav">
@@ -495,10 +495,10 @@
   </aside>
 
   <!-- ── Main ── -->
-  <div class="erpis-main">
+  <div class="zentral-main">
 
     <!-- Top bar -->
-    <div class="erpis-topbar">
+    <div class="zentral-topbar">
       <button class="topbar-toggle" id="sidebar-toggle" aria-label="Toggle sidebar">
         <i class="fas fa-bars"></i>
       </button>
@@ -601,7 +601,7 @@
     </div>
 
     <!-- Page content -->
-    <main class="erpis-content" id="erpis-content">
+    <main class="zentral-content" id="zentral-content">
       {% if messages %}
         {% for message in messages %}
         <div class="alert alert-{{ message.tags }} alert-dismissible fade show mb-4 screen-enter" role="alert">
@@ -633,13 +633,13 @@
   const DARK = 'dark', LIGHT = 'light';
 
   function getTheme() {
-    return localStorage.getItem('erpis-theme') ||
+    return localStorage.getItem('zentral-theme') ||
       (window.matchMedia('(prefers-color-scheme: dark)').matches ? DARK : DARK);
   }
   function applyTheme(t) {
     html.setAttribute('data-bs-theme', t);
     if (icon) icon.className = t === DARK ? 'fas fa-sun' : 'fas fa-moon';
-    localStorage.setItem('erpis-theme', t);
+    localStorage.setItem('zentral-theme', t);
   }
   applyTheme(getTheme());
   const themeBtn = document.getElementById('theme-toggle');
@@ -650,9 +650,9 @@
   }
 
   // ── Sidebar collapse ──
-  const sidebar = document.getElementById('erpis-sidebar');
+  const sidebar = document.getElementById('zentral-sidebar');
   const toggle  = document.getElementById('sidebar-toggle');
-  const SK = 'erpis-sidebar-collapsed';
+  const SK = 'zentral-sidebar-collapsed';
 
   function applySidebar(collapsed, instant) {
     if (!sidebar) return;

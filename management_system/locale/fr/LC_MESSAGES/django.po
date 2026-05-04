@@ -8,7 +8,7 @@ msgstr ""
 
 # Navigation
 msgid "Management System"
-msgstr "Système de gestion"
+msgstr "Zentral"
 
 msgid "Dashboard"
 msgstr "Tableau de bord"
@@ -929,3 +929,289 @@ msgstr "Passer en mode sombre"
 
 msgid "Switch to light mode"
 msgstr "Passer en mode clair"
+
+# Auth & registration
+msgid "Welcome back"
+msgstr "Bon retour"
+
+msgid "Sign in to your company account"
+msgstr "Connectez-vous à votre compte entreprise"
+
+msgid "Sign In"
+msgstr "Se connecter"
+
+msgid "Log In"
+msgstr "Se connecter"
+
+msgid "Log in"
+msgstr "Se connecter"
+
+msgid "Don't have a company account?"
+msgstr "Pas encore de compte entreprise ?"
+
+msgid "Joining an existing company?"
+msgstr "Rejoindre une entreprise existante ?"
+
+msgid "Join"
+msgstr "Rejoindre"
+
+msgid "Join a Company"
+msgstr "Rejoindre une entreprise"
+
+msgid "Already have an account?"
+msgstr "Vous avez déjà un compte ?"
+
+msgid "Create Account"
+msgstr "Créer un compte"
+
+msgid "Create your account to join an existing company"
+msgstr "Créez votre compte pour rejoindre une entreprise"
+
+msgid "Team Member"
+msgstr "Membre de l'équipe"
+
+msgid "Forgot your password?"
+msgstr "Mot de passe oublié ?"
+
+msgid "Enter your email to receive a reset link"
+msgstr "Entrez votre email pour recevoir un lien de réinitialisation"
+
+msgid "Send Reset Link"
+msgstr "Envoyer le lien"
+
+msgid "Check Your Email"
+msgstr "Vérifiez votre email"
+
+msgid "Instructions are on their way"
+msgstr "Les instructions sont en route"
+
+msgid "We've emailed you a link to reset your password. It should arrive within a few minutes."
+msgstr "Nous vous avons envoyé un lien par email. Il devrait arriver dans quelques minutes."
+
+msgid "Can't find it? Check your spam folder, or make sure you entered the email address you registered with."
+msgstr "Vous ne le trouvez pas ? Vérifiez vos spams ou l'adresse email utilisée à l'inscription."
+
+msgid "Return to Login"
+msgstr "Retour à la connexion"
+
+msgid "Password Reset Complete"
+msgstr "Réinitialisation terminée"
+
+msgid "Password Updated"
+msgstr "Mot de passe mis à jour"
+
+msgid "Password Changed"
+msgstr "Mot de passe changé"
+
+msgid "Update Password"
+msgstr "Mettre à jour le mot de passe"
+
+msgid "Your password has been changed and is now active."
+msgstr "Votre mot de passe a été changé et est maintenant actif."
+
+msgid "Your password has been set successfully. You can now log in with your new password."
+msgstr "Votre mot de passe a été défini. Vous pouvez maintenant vous connecter."
+
+msgid "You're all set"
+msgstr "C'est fait"
+
+msgid "You will need to log in again to access your account."
+msgstr "Vous devrez vous reconnecter pour accéder à votre compte."
+
+msgid "Confirm Logout"
+msgstr "Confirmer la déconnexion"
+
+msgid "Yes, Logout"
+msgstr "Oui, se déconnecter"
+
+# Profile & company
+msgid "Personal Information"
+msgstr "Informations personnelles"
+
+msgid "Company Profile"
+msgstr "Profil de l'entreprise"
+
+msgid "Company Admin"
+msgstr "Administrateur"
+
+msgid "Company Access"
+msgstr "Accès entreprise"
+
+msgid "Company Statistics"
+msgstr "Statistiques de l'entreprise"
+
+msgid "Company password:"
+msgstr "Mot de passe entreprise :"
+
+msgid "Back to Profile"
+msgstr "Retour au profil"
+
+msgid "Back to Dashboard"
+msgstr "Retour au tableau de bord"
+
+msgid "Last Login"
+msgstr "Dernière connexion"
+
+msgid "Last IP"
+msgstr "Dernière IP"
+
+msgid "Administrator View"
+msgstr "Vue administrateur"
+
+msgid "Active Users"
+msgstr "Utilisateurs actifs"
+
+msgid "This will be shared with your team members so they can register and join your company."
+msgstr "Ceci sera partagé avec votre équipe pour qu'elle puisse s'inscrire et rejoindre votre entreprise."
+
+msgid "Remember your company domain! You and your team members will need it to log in and access the system. Share this domain with your team for easy access."
+msgstr "Retenez bien votre domaine entreprise ! Vous et vos membres en auront besoin pour vous connecter. Partagez-le avec votre équipe."
+
+msgid "Your account will be created with the"
+msgstr "Votre compte sera créé avec le"
+
+msgid "role. Your administrator can assign a different role after you log in."
+msgstr "rôle. Votre administrateur peut vous attribuer un rôle différent après connexion."
+
+# CRM extras
+msgid "Contact"
+msgstr "Contact"
+
+msgid "Contact Info"
+msgstr "Coordonnées"
+
+msgid "Total Contacts"
+msgstr "Total contacts"
+
+msgid "Recent Contacts"
+msgstr "Contacts récents"
+
+msgid "No contacts found"
+msgstr "Aucun contact trouvé"
+
+msgid "No contacts yet."
+msgstr "Aucun contact pour l'instant."
+
+msgid "add your first contact"
+msgstr "ajoutez votre premier contact"
+
+msgid "Open Opportunities"
+msgstr "Opportunités ouvertes"
+
+msgid "Open Pipeline"
+msgstr "Pipeline ouvert"
+
+msgid "Won This Month"
+msgstr "Gagnées ce mois"
+
+msgid "Top Open Opportunities"
+msgstr "Meilleures opportunités ouvertes"
+
+msgid "No open opportunities."
+msgstr "Aucune opportunité ouverte."
+
+msgid "No opportunities found."
+msgstr "Aucune opportunité trouvée."
+
+msgid "No opportunities yet."
+msgstr "Aucune opportunité pour l'instant."
+
+msgid "Overdue follow-ups"
+msgstr "Suivis en retard"
+
+msgid "overdue opportunit"
+msgstr "opportunité(s) en retard"
+
+msgid "Organisation"
+msgstr "Organisation"
+
+msgid "Opps"
+msgstr "Opps"
+
+msgid "Pipeline Value"
+msgstr "Valeur du pipeline"
+
+msgid "Pay"
+msgstr "Payer"
+
+msgid "Mark as Paid"
+msgstr "Marquer comme payé"
+
+msgid "Delete Contact?"
+msgstr "Supprimer le contact ?"
+
+msgid "Delete contact"
+msgstr "Supprimer le contact"
+
+msgid "Delete Opportunity?"
+msgstr "Supprimer l'opportunité ?"
+
+msgid "Delete this note?"
+msgstr "Supprimer cette note ?"
+
+msgid "Save Contact"
+msgstr "Enregistrer le contact"
+
+msgid "Save Opportunity"
+msgstr "Enregistrer l'opportunité"
+
+msgid "Activity Log"
+msgstr "Journal d'activité"
+
+msgid "Add Activity"
+msgstr "Ajouter une activité"
+
+msgid "No activity recorded yet."
+msgstr "Aucune activité enregistrée."
+
+msgid "Other"
+msgstr "Autre"
+
+msgid "Marketplace Client"
+msgstr "Client marketplace"
+
+# Common
+msgid "ID"
+msgstr "ID"
+
+msgid "Title"
+msgstr "Titre"
+
+msgid "New"
+msgstr "Nouveau"
+
+msgid "Help"
+msgstr "Aide"
+
+msgid "Important:"
+msgstr "Important :"
+
+msgid "Close Date"
+msgstr "Date de clôture"
+
+msgid "Employee"
+msgstr "Employé"
+
+msgid "Meeting"
+msgstr "Réunion"
+
+msgid "All stages"
+msgstr "Toutes les étapes"
+
+msgid "All assignees"
+msgstr "Tous les assignés"
+
+msgid "Added"
+msgstr "Ajouté"
+
+msgid "at"
+msgstr "à"
+
+msgid "ago"
+msgstr "il y a"
+
+msgid "This cannot be undone."
+msgstr "Cette action est irréversible."
+
+msgid "Yes, Delete"
+msgstr "Oui, supprimer"

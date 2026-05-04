@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{% block title %}Erpis{% endblock %}</title>
+  <title>{% block title %}Zentral{% endblock %}</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -107,7 +107,7 @@
 <div class="auth-wrap">
   <a class="auth-brand" href="/">
     <div class="auth-brand-icon"><i class="fas fa-bolt"></i></div>
-    <span class="auth-brand-name">Erpis</span>
+    <span class="auth-brand-name">Zentral</span>
   </a>
 
   {% if messages %}
@@ -134,13 +134,13 @@
 (function(){
   const html = document.documentElement;
   const icon = document.getElementById('theme-fab-icon');
-  const t = localStorage.getItem('erpis-theme') || 'dark';
+  const t = localStorage.getItem('zentral-theme') || 'dark';
   html.setAttribute('data-bs-theme', t);
   if (icon) icon.className = t === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
   document.getElementById('theme-fab').addEventListener('click', function() {
     const next = html.getAttribute('data-bs-theme') === 'dark' ? 'light' : 'dark';
     html.setAttribute('data-bs-theme', next);
-    localStorage.setItem('erpis-theme', next);
+    localStorage.setItem('zentral-theme', next);
     if (icon) icon.className = next === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
   });
 })();
