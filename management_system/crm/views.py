@@ -16,7 +16,9 @@ from django.views.decorators.http import require_POST
 from accounts.decorators import role_required
 from employees.models import Employee
 
-from .forms import ContactForm, NoteForm, OpportunityForm
+from finance.models import Account, Transaction
+
+from .forms import ContactForm, MarkPaidForm, NoteForm, OpportunityForm
 from .models import Contact, Note, Opportunity
 
 CRM_ROLES = ['admin', 'manager', 'secretary']
@@ -371,6 +373,79 @@ def opportunity_advance_stage(request, pk):
         return JsonResponse({'status': 'ok', 'stage': opp.stage, 'label': opp.get_stage_display()})
     except ValueError as e:
         return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+
+
+# ---------------------------------------------------------------------------
+# Payment status
+# ---------------------------------------------------------------------------
+
+@role_required(*CRM_ROLES)
+@require_POST
+def opportunity_mark_invoiced(request, pk):
+    company = request.user.company
+    opp = get_object_or_404(Opportunity, pk=pk, company=company)
+    if opp.stage != 'won':
+        messages.error(request, 'Only won opportunities can be marked as invoiced.')
+        return redirect('crm:opportunity_list')
+    if opp.payment_status == 'paid':
+        messages.warning(request, 'This opportunity is already paid.')
+        return redirect('crm:opportunity_list')
+    opp.payment_status = 'invoiced'
+    opp.save(update_fields=['payment_status', 'updated_at'])
+    messages.success(request, f'"{opp.title}" marked as invoiced.')
+    return redirect('crm:opportunity_list')
+
+
+@role_required(*CRM_ROLES)
+def opportunity_mark_paid(request, pk):
+    company = request.user.company
+    opp = get_object_or_404(Opportunity, pk=pk, company=company)
+
+    if opp.stage != 'won':
+        messages.error(request, 'Only won opportunities can be marked as paid.')
+        return redirect('crm:opportunity_list')
+    if opp.payment_status == 'paid':
+        messages.warning(request, 'This opportunity is already paid.')
+        return redirect('crm:opportunity_list')
+
+    revenue_accounts = Account.objects.filter(company=company, account_type='revenue')
+    if not revenue_accounts.exists():
+        messages.error(request, 'No revenue accounts found. Please create one in Finance first.')
+        return redirect('crm:opportunity_list')
+
+    if request.method == 'POST':
+        form = MarkPaidForm(company, request.POST)
+        if form.is_valid():
+            account = form.cleaned_data['account']
+            date = form.cleaned_data['date']
+            notes = form.cleaned_data['notes']
+            description = f'CRM — {opp.title} ({opp.contact.name})'
+            if notes:
+                description += f': {notes}'
+            txn = Transaction.objects.create(
+                company=company,
+                account=account,
+                transaction_type='credit',
+                amount=opp.value,
+                description=description,
+                date=date,
+                entered_by=request.user,
+            )
+            opp.payment_status = 'paid'
+            opp.revenue_transaction = txn
+            opp.save(update_fields=['payment_status', 'revenue_transaction', 'updated_at'])
+            messages.success(
+                request,
+                f'"{opp.title}" marked as paid. FCFA {opp.value:,.0f} credited to {account.name}.',
+            )
+            return redirect('crm:opportunity_list')
+    else:
+        form = MarkPaidForm(company)
+
+    return render(request, 'crm/opportunity_mark_paid.html', {
+        'form': form,
+        'opportunity': opp,
+    })
 
 
 # ---------------------------------------------------------------------------

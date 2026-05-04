@@ -1,8 +1,11 @@
+import datetime
+
 from django import forms
 from django.utils import timezone
 
 from .models import Contact, Note, Opportunity
 from employees.models import Employee
+from finance.models import Account
 from marketplace.models import Client
 
 
@@ -79,3 +82,28 @@ class OpportunityForm(forms.ModelForm):
         self.fields['assigned_to'].required = False
         self.fields['follow_up_date'].required = False
         self.fields['follow_up_note'].required = False
+
+
+class MarkPaidForm(forms.Form):
+    account = forms.ModelChoiceField(
+        queryset=Account.objects.none(),
+        label='Revenue Account',
+        help_text='Select the revenue account this payment should be credited to.',
+        widget=forms.Select(attrs={'class': 'form-select'}),
+    )
+    date = forms.DateField(
+        label='Payment Date',
+        widget=forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+    )
+    notes = forms.CharField(
+        required=False,
+        label='Notes',
+        widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
+    )
+
+    def __init__(self, company, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['account'].queryset = Account.objects.filter(
+            company=company, account_type='revenue'
+        ).order_by('code', 'name')
+        self.fields['date'].initial = datetime.date.today()

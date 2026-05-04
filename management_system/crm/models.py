@@ -151,6 +151,26 @@ class Opportunity(models.Model):
         null=True,
         related_name='created_opportunities',
     )
+    PAYMENT_STATUS_CHOICES = [
+        ('unpaid', 'Unpaid'),
+        ('invoiced', 'Invoiced'),
+        ('paid', 'Paid'),
+    ]
+
+    payment_status = models.CharField(
+        max_length=20,
+        choices=PAYMENT_STATUS_CHOICES,
+        default='unpaid',
+        db_index=True,
+    )
+    revenue_transaction = models.OneToOneField(
+        'finance.Transaction',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='crm_opportunity',
+    )
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -158,6 +178,7 @@ class Opportunity(models.Model):
         ordering = ['-created_at']
         indexes = [
             models.Index(fields=['company', 'stage']),
+            models.Index(fields=['company', 'payment_status']),
             models.Index(fields=['follow_up_date']),
         ]
 

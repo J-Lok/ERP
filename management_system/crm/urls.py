@@ -17,5 +17,7 @@ urlpatterns = [
     path('opportunities/<int:pk>/edit/', views.opportunity_edit, name='opportunity_edit'),
     path('opportunities/<int:pk>/delete/', views.opportunity_delete, name='opportunity_delete'),
     path('opportunities/<int:pk>/advance/', views.opportunity_advance_stage, name='opportunity_advance'),
+    path('opportunities/<int:pk>/mark-invoiced/', views.opportunity_mark_invoiced, name='opportunity_mark_invoiced'),
+    path('opportunities/<int:pk>/mark-paid/', views.opportunity_mark_paid, name='opportunity_mark_paid'),
     path('pipeline/', views.pipeline, name='pipeline'),
 ]
