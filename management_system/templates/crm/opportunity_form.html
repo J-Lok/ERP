@@ -1,11 +1,13 @@
 {% extends 'base.html' %}
+{% load i18n %}
+
 {% block title %}{{ title }} — CRM{% endblock %}
 
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
   <h2 class="mb-0"><i class="fas fa-chart-line text-primary me-2"></i>{{ title }}</h2>
   <a href="{% url 'crm:opportunity_list' %}" class="btn btn-outline-secondary btn-sm">
-    <i class="fas fa-arrow-left me-1"></i>Back
+    <i class="fas fa-arrow-left me-1"></i>{% trans "Back" %}
   </a>
 </div>
 
@@ -22,8 +24,8 @@
       </div>
       {% endfor %}
       <div class="d-flex gap-2 mt-4">
-        <button type="submit" class="btn btn-primary">Save Opportunity</button>
-        <a href="{% url 'crm:opportunity_list' %}" class="btn btn-outline-secondary">Cancel</a>
+        <button type="submit" class="btn btn-primary">{% trans "Save Opportunity" %}</button>
+        <a href="{% url 'crm:opportunity_list' %}" class="btn btn-outline-secondary">{% trans "Cancel" %}</a>
       </div>
     </form>
   </div>

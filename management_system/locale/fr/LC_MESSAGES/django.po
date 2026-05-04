@@ -1,0 +1,931 @@
+# French translations for ERP Management System
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: fr\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
+# Navigation
+msgid "Management System"
+msgstr "Système de gestion"
+
+msgid "Dashboard"
+msgstr "Tableau de bord"
+
+msgid "Employees"
+msgstr "Employés"
+
+msgid "Projects"
+msgstr "Projets"
+
+msgid "Inventory"
+msgstr "Inventaire"
+
+msgid "Finance"
+msgstr "Finance"
+
+msgid "HR"
+msgstr "RH"
+
+msgid "My Leaves"
+msgstr "Mes congés"
+
+msgid "CRM"
+msgstr "CRM"
+
+msgid "Meetings"
+msgstr "Réunions"
+
+msgid "Manage Orders"
+msgstr "Gérer les commandes"
+
+msgid "Company Settings"
+msgstr "Paramètres entreprise"
+
+msgid "Platform Admin"
+msgstr "Admin plateforme"
+
+msgid "Notifications"
+msgstr "Notifications"
+
+msgid "View All Notifications"
+msgstr "Voir toutes les notifications"
+
+msgid "No new notifications"
+msgstr "Aucune nouvelle notification"
+
+msgid "Notification Settings"
+msgstr "Paramètres de notifications"
+
+msgid "Profile"
+msgstr "Profil"
+
+msgid "Logout"
+msgstr "Déconnexion"
+
+msgid "Language"
+msgstr "Langue"
+
+msgid "English"
+msgstr "Anglais"
+
+msgid "French"
+msgstr "Français"
+
+# Auth
+msgid "Login"
+msgstr "Connexion"
+
+msgid "Company Login"
+msgstr "Connexion entreprise"
+
+msgid "Register"
+msgstr "S'inscrire"
+
+msgid "Register Company"
+msgstr "Enregistrer l'entreprise"
+
+msgid "Register New Company"
+msgstr "Nouvelle entreprise"
+
+msgid "Set up your company management system"
+msgstr "Configurez votre système de gestion"
+
+msgid "Join Company"
+msgstr "Rejoindre l'entreprise"
+
+msgid "Back to Login"
+msgstr "Retour à la connexion"
+
+msgid "Company Information"
+msgstr "Informations entreprise"
+
+msgid "Admin Account"
+msgstr "Compte administrateur"
+
+msgid "Company password"
+msgstr "Mot de passe entreprise"
+
+msgid "Company domain"
+msgstr "Domaine entreprise"
+
+msgid "Email"
+msgstr "Email"
+
+msgid "Password"
+msgstr "Mot de passe"
+
+msgid "Confirm Password"
+msgstr "Confirmer le mot de passe"
+
+msgid "Forgot password?"
+msgstr "Mot de passe oublié ?"
+
+msgid "Reset Password"
+msgstr "Réinitialiser le mot de passe"
+
+msgid "Change Password"
+msgstr "Changer le mot de passe"
+
+msgid "Password changed successfully."
+msgstr "Mot de passe modifié avec succès."
+
+msgid "Edit Profile"
+msgstr "Modifier le profil"
+
+msgid "My Profile"
+msgstr "Mon profil"
+
+# Common actions
+msgid "Save"
+msgstr "Enregistrer"
+
+msgid "Save Changes"
+msgstr "Enregistrer les modifications"
+
+msgid "Cancel"
+msgstr "Annuler"
+
+msgid "Delete"
+msgstr "Supprimer"
+
+msgid "Edit"
+msgstr "Modifier"
+
+msgid "Create"
+msgstr "Créer"
+
+msgid "Add"
+msgstr "Ajouter"
+
+msgid "Search"
+msgstr "Rechercher"
+
+msgid "Filter"
+msgstr "Filtrer"
+
+msgid "Clear"
+msgstr "Effacer"
+
+msgid "Export"
+msgstr "Exporter"
+
+msgid "Import"
+msgstr "Importer"
+
+msgid "View all"
+msgstr "Voir tout"
+
+msgid "View"
+msgstr "Voir"
+
+msgid "Back"
+msgstr "Retour"
+
+msgid "Confirm"
+msgstr "Confirmer"
+
+msgid "Submit"
+msgstr "Soumettre"
+
+msgid "Close"
+msgstr "Fermer"
+
+msgid "Actions"
+msgstr "Actions"
+
+msgid "Yes"
+msgstr "Oui"
+
+msgid "No"
+msgstr "Non"
+
+msgid "Back to Home"
+msgstr "Retour à l'accueil"
+
+# Status labels
+msgid "Active"
+msgstr "Actif"
+
+msgid "Inactive"
+msgstr "Inactif"
+
+msgid "Pending"
+msgstr "En attente"
+
+msgid "Approved"
+msgstr "Approuvé"
+
+msgid "Rejected"
+msgstr "Rejeté"
+
+msgid "Completed"
+msgstr "Terminé"
+
+msgid "In Progress"
+msgstr "En cours"
+
+msgid "Cancelled"
+msgstr "Annulé"
+
+msgid "On Hold"
+msgstr "En pause"
+
+msgid "Draft"
+msgstr "Brouillon"
+
+msgid "Published"
+msgstr "Publié"
+
+msgid "Won"
+msgstr "Gagné"
+
+msgid "Lost"
+msgstr "Perdu"
+
+msgid "Paid"
+msgstr "Payé"
+
+msgid "Unpaid"
+msgstr "Non payé"
+
+msgid "Invoiced"
+msgstr "Facturé"
+
+# Dashboard
+msgid "Welcome,"
+msgstr "Bienvenue,"
+
+msgid "Total Employees"
+msgstr "Total employés"
+
+msgid "active"
+msgstr "actif(s)"
+
+msgid "Active Projects"
+msgstr "Projets actifs"
+
+msgid "overdue"
+msgstr "en retard"
+
+msgid "completed"
+msgstr "terminé(s)"
+
+msgid "Stock Items"
+msgstr "Articles en stock"
+
+msgid "low stock"
+msgstr "stock bas"
+
+msgid "All levels OK"
+msgstr "Tous les niveaux OK"
+
+msgid "Total Balance"
+msgstr "Solde total"
+
+msgid "this month"
+msgstr "ce mois"
+
+msgid "item"
+msgstr "article"
+
+msgid "below reorder level:"
+msgstr "sous le niveau de réapprovisionnement :"
+
+msgid "left"
+msgstr "restant"
+
+msgid "Recent Projects"
+msgstr "Projets récents"
+
+msgid "Recent Employees"
+msgstr "Employés récents"
+
+msgid "Finance (this month)"
+msgstr "Finance (ce mois)"
+
+msgid "Total balance"
+msgstr "Solde total"
+
+msgid "Credits in"
+msgstr "Crédits entrants"
+
+msgid "Debits out"
+msgstr "Débits sortants"
+
+msgid "Online Now"
+msgstr "En ligne"
+
+msgid "No one else online"
+msgstr "Personne d'autre en ligne"
+
+msgid "No projects yet."
+msgstr "Aucun projet."
+
+msgid "No employees yet."
+msgstr "Aucun employé."
+
+# Table headers
+msgid "Name"
+msgstr "Nom"
+
+msgid "Status"
+msgstr "Statut"
+
+msgid "Progress"
+msgstr "Progression"
+
+msgid "Date"
+msgstr "Date"
+
+msgid "Amount"
+msgstr "Montant"
+
+msgid "Description"
+msgstr "Description"
+
+msgid "Type"
+msgstr "Type"
+
+msgid "Role"
+msgstr "Rôle"
+
+msgid "Department"
+msgstr "Département"
+
+msgid "Position"
+msgstr "Poste"
+
+msgid "Phone"
+msgstr "Téléphone"
+
+msgid "Address"
+msgstr "Adresse"
+
+msgid "Company"
+msgstr "Entreprise"
+
+msgid "Created"
+msgstr "Créé"
+
+msgid "Updated"
+msgstr "Modifié"
+
+# Employees
+msgid "Employee List"
+msgstr "Liste des employés"
+
+msgid "New Employee"
+msgstr "Nouvel employé"
+
+msgid "Employee Details"
+msgstr "Détails de l'employé"
+
+msgid "First Name"
+msgstr "Prénom"
+
+msgid "Last Name"
+msgstr "Nom de famille"
+
+msgid "Employee ID"
+msgstr "ID employé"
+
+msgid "Date of Birth"
+msgstr "Date de naissance"
+
+msgid "Hire Date"
+msgstr "Date d'embauche"
+
+msgid "On Leave"
+msgstr "En congé"
+
+msgid "Terminated"
+msgstr "Licencié"
+
+msgid "Departments"
+msgstr "Départements"
+
+msgid "New Department"
+msgstr "Nouveau département"
+
+# Projects
+msgid "Project List"
+msgstr "Liste des projets"
+
+msgid "New Project"
+msgstr "Nouveau projet"
+
+msgid "Project Details"
+msgstr "Détails du projet"
+
+msgid "Start Date"
+msgstr "Date de début"
+
+msgid "End Date"
+msgstr "Date de fin"
+
+msgid "Deadline"
+msgstr "Échéance"
+
+msgid "Priority"
+msgstr "Priorité"
+
+msgid "High"
+msgstr "Élevée"
+
+msgid "Medium"
+msgstr "Moyenne"
+
+msgid "Low"
+msgstr "Faible"
+
+msgid "Tasks"
+msgstr "Tâches"
+
+msgid "New Task"
+msgstr "Nouvelle tâche"
+
+msgid "Assigned To"
+msgstr "Assigné à"
+
+msgid "Kanban"
+msgstr "Kanban"
+
+msgid "Gantt"
+msgstr "Gantt"
+
+msgid "Calendar"
+msgstr "Calendrier"
+
+# Inventory
+msgid "Stock List"
+msgstr "Liste du stock"
+
+msgid "New Item"
+msgstr "Nouvel article"
+
+msgid "Stock Details"
+msgstr "Détails du stock"
+
+msgid "Category"
+msgstr "Catégorie"
+
+msgid "Categories"
+msgstr "Catégories"
+
+msgid "Quantity"
+msgstr "Quantité"
+
+msgid "Unit Price"
+msgstr "Prix unitaire"
+
+msgid "Reorder Level"
+msgstr "Niveau de réapprovisionnement"
+
+msgid "Low Stock Alert"
+msgstr "Alerte stock bas"
+
+msgid "Stock Movement"
+msgstr "Mouvement de stock"
+
+msgid "Add Stock"
+msgstr "Ajouter du stock"
+
+msgid "Remove Stock"
+msgstr "Retirer du stock"
+
+msgid "Supplier"
+msgstr "Fournisseur"
+
+msgid "Inventory Dashboard"
+msgstr "Tableau de bord inventaire"
+
+msgid "Stock Report"
+msgstr "Rapport de stock"
+
+# Finance
+msgid "Chart of Accounts"
+msgstr "Plan comptable"
+
+msgid "New Account"
+msgstr "Nouveau compte"
+
+msgid "Account Details"
+msgstr "Détails du compte"
+
+msgid "Transactions"
+msgstr "Transactions"
+
+msgid "New Transaction"
+msgstr "Nouvelle transaction"
+
+msgid "Credit"
+msgstr "Crédit"
+
+msgid "Debit"
+msgstr "Débit"
+
+msgid "Balance"
+msgstr "Solde"
+
+msgid "Account Type"
+msgstr "Type de compte"
+
+msgid "Asset"
+msgstr "Actif"
+
+msgid "Liability"
+msgstr "Passif"
+
+msgid "Equity"
+msgstr "Capitaux propres"
+
+msgid "Revenue"
+msgstr "Produits"
+
+msgid "Expense"
+msgstr "Charges"
+
+msgid "Journals"
+msgstr "Journaux"
+
+msgid "New Journal"
+msgstr "Nouveau journal"
+
+msgid "Journal Entries"
+msgstr "Écritures comptables"
+
+msgid "Financial Reports"
+msgstr "Rapports financiers"
+
+msgid "Invoices"
+msgstr "Factures"
+
+msgid "Client Invoices"
+msgstr "Factures clients"
+
+msgid "Supplier Invoices"
+msgstr "Factures fournisseurs"
+
+# HR
+msgid "Leave Requests"
+msgstr "Demandes de congé"
+
+msgid "New Leave Request"
+msgstr "Nouvelle demande de congé"
+
+msgid "Leave Type"
+msgstr "Type de congé"
+
+msgid "Annual Leave"
+msgstr "Congé annuel"
+
+msgid "Sick Leave"
+msgstr "Congé maladie"
+
+msgid "Start Date"
+msgstr "Date de début"
+
+msgid "End Date"
+msgstr "Date de fin"
+
+msgid "Reason"
+msgstr "Motif"
+
+msgid "Approve"
+msgstr "Approuver"
+
+msgid "Reject"
+msgstr "Rejeter"
+
+msgid "Payroll"
+msgstr "Paie"
+
+msgid "Payslips"
+msgstr "Bulletins de paie"
+
+msgid "Payroll Period"
+msgstr "Période de paie"
+
+msgid "Salary"
+msgstr "Salaire"
+
+msgid "Gross Salary"
+msgstr "Salaire brut"
+
+msgid "Net Salary"
+msgstr "Salaire net"
+
+msgid "Deductions"
+msgstr "Retenues"
+
+msgid "Allowances"
+msgstr "Allocations"
+
+msgid "Performance Reviews"
+msgstr "Évaluations"
+
+msgid "Training"
+msgstr "Formation"
+
+msgid "Skills"
+msgstr "Compétences"
+
+msgid "Positions"
+msgstr "Postes"
+
+# CRM
+msgid "Contacts"
+msgstr "Contacts"
+
+msgid "New Contact"
+msgstr "Nouveau contact"
+
+msgid "Contact Details"
+msgstr "Détails du contact"
+
+msgid "Organization"
+msgstr "Organisation"
+
+msgid "Opportunities"
+msgstr "Opportunités"
+
+msgid "New Opportunity"
+msgstr "Nouvelle opportunité"
+
+msgid "Pipeline"
+msgstr "Pipeline"
+
+msgid "Pipeline View"
+msgstr "Vue pipeline"
+
+msgid "Stage"
+msgstr "Étape"
+
+msgid "Value"
+msgstr "Valeur"
+
+msgid "Follow-up"
+msgstr "Suivi"
+
+msgid "Prospect"
+msgstr "Prospect"
+
+msgid "Qualified"
+msgstr "Qualifié"
+
+msgid "Proposal"
+msgstr "Proposition"
+
+msgid "Payment"
+msgstr "Paiement"
+
+msgid "Mark Invoiced"
+msgstr "Marquer comme facturé"
+
+msgid "Mark Paid"
+msgstr "Marquer comme payé"
+
+msgid "Revenue Account"
+msgstr "Compte de produits"
+
+msgid "Payment Date"
+msgstr "Date de paiement"
+
+msgid "Confirm Payment"
+msgstr "Confirmer le paiement"
+
+msgid "Notes"
+msgstr "Notes"
+
+msgid "Note"
+msgstr "Note"
+
+msgid "Phone Call"
+msgstr "Appel téléphonique"
+
+msgid "Add Note"
+msgstr "Ajouter une note"
+
+# Meetings
+msgid "Meeting List"
+msgstr "Liste des réunions"
+
+msgid "New Meeting"
+msgstr "Nouvelle réunion"
+
+msgid "Meeting Details"
+msgstr "Détails de la réunion"
+
+msgid "Meeting Dashboard"
+msgstr "Tableau de bord réunions"
+
+msgid "Participants"
+msgstr "Participants"
+
+msgid "Agenda"
+msgstr "Ordre du jour"
+
+msgid "Action Items"
+msgstr "Points d'action"
+
+msgid "Meeting Notes"
+msgstr "Notes de réunion"
+
+msgid "Attachments"
+msgstr "Pièces jointes"
+
+msgid "Location"
+msgstr "Lieu"
+
+msgid "Online"
+msgstr "En ligne"
+
+# Marketplace
+msgid "Shop"
+msgstr "Boutique"
+
+msgid "Cart"
+msgstr "Panier"
+
+msgid "Checkout"
+msgstr "Commander"
+
+msgid "Orders"
+msgstr "Commandes"
+
+msgid "Order Details"
+msgstr "Détails de la commande"
+
+msgid "Order Dashboard"
+msgstr "Tableau de bord commandes"
+
+msgid "Clients"
+msgstr "Clients"
+
+msgid "Client Login"
+msgstr "Connexion client"
+
+msgid "Client Register"
+msgstr "Inscription client"
+
+msgid "Product"
+msgstr "Produit"
+
+msgid "Products"
+msgstr "Produits"
+
+msgid "Price"
+msgstr "Prix"
+
+msgid "Total"
+msgstr "Total"
+
+msgid "Subtotal"
+msgstr "Sous-total"
+
+msgid "Shipping"
+msgstr "Livraison"
+
+msgid "Add to Cart"
+msgstr "Ajouter au panier"
+
+msgid "Place Order"
+msgstr "Passer la commande"
+
+msgid "Order Confirmed"
+msgstr "Commande confirmée"
+
+msgid "Order Shipped"
+msgstr "Commande expédiée"
+
+msgid "Tracking Number"
+msgstr "Numéro de suivi"
+
+msgid "Wishlist"
+msgstr "Liste de souhaits"
+
+# Notifications
+msgid "Notification List"
+msgstr "Liste des notifications"
+
+msgid "Mark as Read"
+msgstr "Marquer comme lu"
+
+msgid "Mark all as read"
+msgstr "Tout marquer comme lu"
+
+msgid "Archive"
+msgstr "Archiver"
+
+msgid "Unread"
+msgstr "Non lu"
+
+msgid "Read"
+msgstr "Lu"
+
+msgid "All"
+msgstr "Tout"
+
+# Platform admin
+msgid "Platform Admin"
+msgstr "Admin plateforme"
+
+msgid "Global view — all companies"
+msgstr "Vue globale — toutes les entreprises"
+
+msgid "Companies"
+msgstr "Entreprises"
+
+msgid "Total Users"
+msgstr "Total utilisateurs"
+
+msgid "Online Now"
+msgstr "En ligne"
+
+msgid "last 5 minutes"
+msgstr "5 dernières minutes"
+
+msgid "Nobody online right now."
+msgstr "Personne en ligne actuellement."
+
+msgid "Domain"
+msgstr "Domaine"
+
+msgid "Plan"
+msgstr "Abonnement"
+
+msgid "Users"
+msgstr "Utilisateurs"
+
+msgid "Registered"
+msgstr "Inscrit"
+
+# Error pages
+msgid "Page Not Found"
+msgstr "Page introuvable"
+
+msgid "The page you're looking for doesn't exist or has been moved."
+msgstr "La page que vous cherchez n'existe pas ou a été déplacée."
+
+msgid "Server Error"
+msgstr "Erreur serveur"
+
+msgid "Something went wrong on our end. Please try again in a moment."
+msgstr "Une erreur s'est produite. Veuillez réessayer dans un moment."
+
+msgid "Access Denied"
+msgstr "Accès refusé"
+
+msgid "You don't have permission to access this page."
+msgstr "Vous n'avez pas la permission d'accéder à cette page."
+
+# Misc
+msgid "No results found."
+msgstr "Aucun résultat trouvé."
+
+msgid "No data available."
+msgstr "Aucune donnée disponible."
+
+msgid "Loading..."
+msgstr "Chargement..."
+
+msgid "Confirm Delete"
+msgstr "Confirmer la suppression"
+
+msgid "Are you sure you want to delete"
+msgstr "Êtes-vous sûr de vouloir supprimer"
+
+msgid "This action cannot be undone."
+msgstr "Cette action est irréversible."
+
+msgid "Previous"
+msgstr "Précédent"
+
+msgid "Next"
+msgstr "Suivant"
+
+msgid "Page"
+msgstr "Page"
+
+msgid "of"
+msgstr "sur"
+
+msgid "per page"
+msgstr "par page"
+
+msgid "Select"
+msgstr "Sélectionner"
+
+msgid "None"
+msgstr "Aucun"
+
+msgid "All levels OK"
+msgstr "Tous niveaux OK"
+
+msgid "Switch to dark mode"
+msgstr "Passer en mode sombre"
+
+msgid "Switch to light mode"
+msgstr "Passer en mode clair"

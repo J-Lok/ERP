@@ -1,20 +1,21 @@
 {% extends 'base.html' %}
+{% load i18n %}
 
-{% block title %}Contacts — CRM{% endblock %}
+{% block title %}{% trans "Contacts" %} — CRM{% endblock %}
 
 {% block content %}
 
 {# ---- Page header ---- #}
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h2 class="mb-0">
-        <i class="fas fa-address-book text-primary me-2" aria-hidden="true"></i>Contacts
+        <i class="fas fa-address-book text-primary me-2" aria-hidden="true"></i>{% trans "Contacts" %}
     </h2>
     <div class="d-flex gap-2">
         <a href="{% url 'crm:opportunity_list' %}" class="btn btn-outline-secondary btn-sm">
-            <i class="fas fa-chart-line me-1" aria-hidden="true"></i>Opportunities
+            <i class="fas fa-chart-line me-1" aria-hidden="true"></i>{% trans "Opportunities" %}
         </a>
         <a href="{% url 'crm:contact_create' %}" class="btn btn-primary btn-sm">
-            <i class="fas fa-user-plus me-1" aria-hidden="true"></i>New Contact
+            <i class="fas fa-user-plus me-1" aria-hidden="true"></i>{% trans "New Contact" %}
         </a>
     </div>
 </div>
@@ -24,17 +25,17 @@
     <div class="card-body">
         <form method="get" class="row g-3 align-items-end">
             <div class="col-md-5">
-                <label for="q" class="form-label visually-hidden">Search</label>
+                <label for="q" class="form-label visually-hidden">{% trans "Search" %}</label>
                 <div class="input-group">
                     <span class="input-group-text"><i class="fas fa-search" aria-hidden="true"></i></span>
                     <input type="text" id="q" name="q" class="form-control"
-                           placeholder="Name, email, organisation…" value="{{ query }}">
+                           placeholder="{% trans 'Name, email, organisation…' %}" value="{{ query }}">
                 </div>
             </div>
             <div class="col-auto d-flex gap-2">
-                <button type="submit" class="btn btn-primary">Search</button>
+                <button type="submit" class="btn btn-primary">{% trans "Search" %}</button>
                 {% if query %}
-                <a href="{% url 'crm:contact_list' %}" class="btn btn-outline-secondary">Clear</a>
+                <a href="{% url 'crm:contact_list' %}" class="btn btn-outline-secondary">{% trans "Clear" %}</a>
                 {% endif %}
             </div>
         </form>
@@ -48,12 +49,12 @@
             <table class="table table-hover mb-0">
                 <thead class="table-light">
                     <tr>
-                        <th>Name</th>
-                        <th>Email</th>
-                        <th>Organisation</th>
-                        <th class="text-center">Opportunities</th>
-                        <th class="text-end">Pipeline Value</th>
-                        <th class="text-end">Actions</th>
+                        <th>{% trans "Name" %}</th>
+                        <th>{% trans "Email" %}</th>
+                        <th>{% trans "Organisation" %}</th>
+                        <th class="text-center">{% trans "Opportunities" %}</th>
+                        <th class="text-end">{% trans "Pipeline Value" %}</th>
+                        <th class="text-end">{% trans "Actions" %}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -83,14 +84,14 @@
                         </td>
                         <td class="text-end">
                             <div class="btn-group btn-group-sm" role="group"
-                                 aria-label="Actions for {{ contact.name }}">
+                                 aria-label="{% trans 'Actions for' %} {{ contact.name }}">
                                 <a href="{% url 'crm:contact_edit' contact.pk %}"
-                                   class="btn btn-outline-warning" title="Edit">
+                                   class="btn btn-outline-warning" title="{% trans 'Edit' %}">
                                     <i class="fas fa-edit" aria-hidden="true"></i>
                                 </a>
                                 <a href="{% url 'crm:contact_delete' contact.pk %}"
                                    class="btn btn-outline-danger js-confirm-delete"
-                                   data-name="{{ contact.name }}" title="Delete">
+                                   data-name="{{ contact.name }}" title="{% trans 'Delete' %}">
                                     <i class="fas fa-trash" aria-hidden="true"></i>
                                 </a>
                             </div>
@@ -100,12 +101,12 @@
                     <tr>
                         <td colspan="6" class="text-center py-5">
                             <i class="fas fa-address-book fa-3x text-muted mb-3 d-block" aria-hidden="true"></i>
-                            <h6 class="text-muted">No contacts found</h6>
+                            <h6 class="text-muted">{% trans "No contacts found" %}</h6>
                             <p class="small text-muted mb-3">
                                 {% if query %}
-                                    No results for "{{ query }}". Try a different search, or
+                                    {% blocktrans with q=query %}No results for "{{ q }}". Try a different search, or{% endblocktrans %}
                                 {% endif %}
-                                <a href="{% url 'crm:contact_create' %}">add your first contact</a>.
+                                <a href="{% url 'crm:contact_create' %}">{% trans "add your first contact" %}</a>.
                             </p>
                         </td>
                     </tr>
@@ -119,9 +120,9 @@
     {% if contacts.has_other_pages %}
     <div class="card-footer bg-white d-flex justify-content-between align-items-center">
         <small class="text-muted">
-            Page {{ contacts.number }} of {{ contacts.paginator.num_pages }}
+            {% blocktrans with num=contacts.number total=contacts.paginator.num_pages %}Page {{ num }} of {{ total }}{% endblocktrans %}
         </small>
-        <nav aria-label="Contact pagination">
+        <nav aria-label="{% trans 'Contact pagination' %}">
             <ul class="pagination pagination-sm mb-0">
                 <li class="page-item {% if not contacts.has_previous %}disabled{% endif %}">
                     <a class="page-link" href="?page={{ contacts.previous_page_number }}{% if query %}&q={{ query }}{% endif %}">
@@ -159,7 +160,7 @@
 document.addEventListener('DOMContentLoaded', function () {
     document.querySelectorAll('.js-confirm-delete').forEach(function (btn) {
         btn.addEventListener('click', function (e) {
-            if (!confirm('Delete contact "' + this.dataset.name + '"? This cannot be undone.')) {
+            if (!confirm('{% trans "Delete contact" %} "' + this.dataset.name + '"? {% trans "This cannot be undone." %}')) {
                 e.preventDefault();
             }
         });

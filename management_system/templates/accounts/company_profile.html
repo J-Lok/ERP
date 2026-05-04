@@ -1,7 +1,8 @@
 {% extends 'base.html' %}
+{% load i18n %}
 {% load crispy_forms_tags %}
 
-{% block title %}Company Profile — ERP System{% endblock %}
+{% block title %}{% trans "Company Profile" %} — ERP System{% endblock %}
 
 {% block content %}
 <div class="row justify-content-center">
@@ -9,9 +10,9 @@
         <div class="card shadow-sm">
             <div class="card-header bg-white d-flex justify-content-between align-items-center">
                 <h4 class="mb-0">
-                    <i class="fas fa-building me-2 text-primary" aria-hidden="true"></i>Company Profile
+                    <i class="fas fa-building me-2 text-primary" aria-hidden="true"></i>{% trans "Company Profile" %}
                 </h4>
-                <span class="badge bg-success">Administrator View</span>
+                <span class="badge bg-success">{% trans "Administrator View" %}</span>
             </div>
 
             <div class="card-body">
@@ -30,24 +31,24 @@
                     <div class="col-md-8">
                         <div class="card h-100">
                             <div class="card-body">
-                                <h6 class="card-title text-muted text-uppercase small mb-3">Company Statistics</h6>
+                                <h6 class="card-title text-muted text-uppercase small mb-3">{% trans "Company Statistics" %}</h6>
                                 <div class="row text-center g-2">
                                     <div class="col-4">
                                         <div class="p-3 bg-light rounded">
                                             <p class="display-6 mb-0 fw-bold text-primary">{{ company.active_user_count }}</p>
-                                            <small class="text-muted">Active Users</small>
+                                            <small class="text-muted">{% trans "Active Users" %}</small>
                                         </div>
                                     </div>
                                     <div class="col-4">
                                         <div class="p-3 bg-light rounded">
                                             <p class="display-6 mb-0 fw-bold text-success">{{ company.projects.count }}</p>
-                                            <small class="text-muted">Projects</small>
+                                            <small class="text-muted">{% trans "Projects" %}</small>
                                         </div>
                                     </div>
                                     <div class="col-4">
                                         <div class="p-3 bg-light rounded">
                                             <p class="display-6 mb-0 fw-bold text-info">{{ company.employees.count }}</p>
-                                            <small class="text-muted">Employees</small>
+                                            <small class="text-muted">{% trans "Employees" %}</small>
                                         </div>
                                     </div>
                                 </div>
@@ -69,7 +70,7 @@
 
                     <h5 class="mb-3">
                         <i class="fas fa-pen me-1 text-primary" aria-hidden="true"></i>
-                        Company Information
+                        {% trans "Company Information" %}
                     </h5>
                     <div class="row g-3">
                         <div class="col-md-6">{{ form.name|as_crispy_field }}</div>
@@ -84,14 +85,14 @@
                     <div class="d-flex justify-content-between mt-4 flex-wrap gap-2">
                         <div class="d-flex gap-2">
                             <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-save me-1" aria-hidden="true"></i>Save Changes
+                                <i class="fas fa-save me-1" aria-hidden="true"></i>{% trans "Save Changes" %}
                             </button>
                             <a href="{% url 'accounts:user_profile' %}" class="btn btn-outline-secondary">
-                                <i class="fas fa-user me-1" aria-hidden="true"></i>My Profile
+                                <i class="fas fa-user me-1" aria-hidden="true"></i>{% trans "My Profile" %}
                             </a>
                         </div>
                         <a href="{% url 'core:dashboard' %}" class="btn btn-outline-secondary">
-                            <i class="fas fa-arrow-left me-1" aria-hidden="true"></i>Dashboard
+                            <i class="fas fa-arrow-left me-1" aria-hidden="true"></i>{% trans "Dashboard" %}
                         </a>
                     </div>
                 </form>

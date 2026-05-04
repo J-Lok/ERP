@@ -134,6 +134,12 @@ class User(AbstractUser):
         default=False,
         help_text='Designates whether the user can manage company settings.',
     )
+    LANGUAGE_CHOICES = [
+        ('en', 'English'),
+        ('fr', 'Français'),
+    ]
+    language = models.CharField(max_length=10, choices=LANGUAGE_CHOICES, default='en')
+
     # Audit / activity helpers
     last_login_ip = models.GenericIPAddressField(null=True, blank=True)
     last_seen = models.DateTimeField(null=True, blank=True, db_index=True)

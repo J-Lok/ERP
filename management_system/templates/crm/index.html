@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load i18n %}
 
 {% block title %}CRM — {{ request.user.company.name }}{% endblock %}
 
@@ -11,10 +12,10 @@
     </h2>
     <div class="d-flex gap-2">
         <a href="{% url 'crm:contact_create' %}" class="btn btn-outline-primary btn-sm">
-            <i class="fas fa-user-plus me-1" aria-hidden="true"></i>New Contact
+            <i class="fas fa-user-plus me-1" aria-hidden="true"></i>{% trans "New Contact" %}
         </a>
         <a href="{% url 'crm:opportunity_create' %}" class="btn btn-primary btn-sm">
-            <i class="fas fa-plus me-1" aria-hidden="true"></i>New Opportunity
+            <i class="fas fa-plus me-1" aria-hidden="true"></i>{% trans "New Opportunity" %}
         </a>
     </div>
 </div>
@@ -28,7 +29,7 @@
                     <i class="fas fa-address-book fa-lg text-primary" aria-hidden="true"></i>
                 </div>
                 <div>
-                    <p class="text-muted small mb-0">Total Contacts</p>
+                    <p class="text-muted small mb-0">{% trans "Total Contacts" %}</p>
                     <h3 class="mb-0 fw-bold">{{ total_contacts|default:"0" }}</h3>
                 </div>
             </div>
@@ -42,7 +43,7 @@
                     <i class="fas fa-dollar-sign fa-lg text-success" aria-hidden="true"></i>
                 </div>
                 <div>
-                    <p class="text-muted small mb-0">Open Pipeline</p>
+                    <p class="text-muted small mb-0">{% trans "Open Pipeline" %}</p>
                     <h3 class="mb-0 fw-bold">FCFA {{ open_pipeline|floatformat:0|default:"0" }}</h3>
                 </div>
             </div>
@@ -56,7 +57,7 @@
                     <i class="fas fa-chart-line fa-lg text-info" aria-hidden="true"></i>
                 </div>
                 <div>
-                    <p class="text-muted small mb-0">Open Opportunities</p>
+                    <p class="text-muted small mb-0">{% trans "Open Opportunities" %}</p>
                     <h3 class="mb-0 fw-bold">{{ open_opportunity_count|default:"0" }}</h3>
                 </div>
             </div>
@@ -70,7 +71,7 @@
                     <i class="fas fa-trophy fa-lg text-warning" aria-hidden="true"></i>
                 </div>
                 <div>
-                    <p class="text-muted small mb-0">Won This Month</p>
+                    <p class="text-muted small mb-0">{% trans "Won This Month" %}</p>
                     <h3 class="mb-0 fw-bold">FCFA {{ won_this_month|floatformat:0|default:"0" }}</h3>
                 </div>
             </div>
@@ -83,7 +84,7 @@
 <div class="alert alert-warning d-flex align-items-start mb-4" role="alert">
     <i class="fas fa-clock me-2 mt-1 flex-shrink-0" aria-hidden="true"></i>
     <div>
-        <strong>{{ overdue_opportunities|length }} overdue opportunit{{ overdue_opportunities|length|pluralize:"y,ies" }}:</strong>
+        <strong>{{ overdue_opportunities|length }} {% trans "overdue opportunit" %}{{ overdue_opportunities|length|pluralize:"y,ies" }}:</strong>
         {% for opp in overdue_opportunities %}
             <a href="{% url 'crm:opportunity_edit' opp.pk %}" class="ms-1 badge bg-warning text-dark text-decoration-none">
                 {{ opp.title }}
@@ -102,18 +103,18 @@
             <div class="card-header bg-white d-flex justify-content-between align-items-center">
                 <h6 class="mb-0">
                     <i class="fas fa-address-book text-primary me-2" aria-hidden="true"></i>
-                    Recent Contacts
+                    {% trans "Recent Contacts" %}
                 </h6>
-                <a href="{% url 'crm:contact_list' %}" class="btn btn-outline-secondary btn-sm">View all</a>
+                <a href="{% url 'crm:contact_list' %}" class="btn btn-outline-secondary btn-sm">{% trans "View all" %}</a>
             </div>
             <div class="card-body p-0">
                 <div class="table-responsive">
                     <table class="table table-hover mb-0">
                         <thead class="table-light">
                             <tr>
-                                <th>Name</th>
-                                <th>Organisation</th>
-                                <th class="text-center">Opps</th>
+                                <th>{% trans "Name" %}</th>
+                                <th>{% trans "Organisation" %}</th>
+                                <th class="text-center">{% trans "Opps" %}</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -135,7 +136,7 @@
                             </tr>
                             {% empty %}
                             <tr>
-                                <td colspan="3" class="text-center text-muted py-3">No contacts yet.</td>
+                                <td colspan="3" class="text-center text-muted py-3">{% trans "No contacts yet." %}</td>
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -151,18 +152,18 @@
             <div class="card-header bg-white d-flex justify-content-between align-items-center">
                 <h6 class="mb-0">
                     <i class="fas fa-chart-line text-success me-2" aria-hidden="true"></i>
-                    Top Open Opportunities
+                    {% trans "Top Open Opportunities" %}
                 </h6>
-                <a href="{% url 'crm:opportunity_list' %}" class="btn btn-outline-secondary btn-sm">View all</a>
+                <a href="{% url 'crm:opportunity_list' %}" class="btn btn-outline-secondary btn-sm">{% trans "View all" %}</a>
             </div>
             <div class="card-body p-0">
                 <div class="table-responsive">
                     <table class="table table-hover mb-0">
                         <thead class="table-light">
                             <tr>
-                                <th>Title</th>
-                                <th>Stage</th>
-                                <th class="text-end">Value</th>
+                                <th>{% trans "Title" %}</th>
+                                <th>{% trans "Stage" %}</th>
+                                <th class="text-end">{% trans "Value" %}</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -188,7 +189,7 @@
                             </tr>
                             {% empty %}
                             <tr>
-                                <td colspan="3" class="text-center text-muted py-3">No open opportunities.</td>
+                                <td colspan="3" class="text-center text-muted py-3">{% trans "No open opportunities." %}</td>
                             </tr>
                             {% endfor %}
                         </tbody>

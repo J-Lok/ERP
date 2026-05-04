@@ -1,3 +1,4 @@
+{% load i18n %}
 <!-- Help System Modal -->
 <div class="modal fade" id="helpModal" tabindex="-1" aria-labelledby="helpModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-lg">
@@ -5,22 +6,22 @@
       <div class="modal-header">
         <h5 class="modal-title" id="helpModalLabel">
           <i class="fas fa-question-circle text-primary me-2"></i>
-          <span id="helpTitle">Help</span>
+          <span id="helpTitle">{% trans "Help" %}</span>
         </h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{% trans 'Close' %}"></button>
       </div>
       <div class="modal-body" id="helpContent">
         <!-- Help content will be loaded here -->
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% trans "Close" %}</button>
       </div>
     </div>
   </div>
 </div>
 
 <!-- Help Button -->
-<button id="helpButton" class="btn btn-outline-primary position-fixed" style="bottom: 100px; right: 20px; z-index: 1050;" data-bs-toggle="modal" data-bs-target="#helpModal" title="Help">
+<button id="helpButton" class="btn btn-outline-primary position-fixed" style="bottom: 100px; right: 20px; z-index: 1050;" data-bs-toggle="modal" data-bs-target="#helpModal" title="{% trans 'Help' %}">
   <i class="fas fa-question-circle"></i>
 </button>
 
@@ -265,7 +266,7 @@ const helpContent = {
 
       <h6 class="text-danger"><i class="fas fa-cog text-danger"></i> Finance Integration Setup</h6>
       <p><strong>IMPORTANT:</strong> Before processing marketplace orders, you must configure Finance Settings for your company.</p>
-      
+
       <h6 class="text-info"><i class="fas fa-info-circle text-info"></i> What Happens When an Order is Marked "Paid":</h6>
       <ul>
         <li>System checks for Marketplace Finance Settings for your company</li>

@@ -219,6 +219,19 @@ class CustomPasswordChangeView(PasswordChangeView):
 # Internal helpers
 # ---------------------------------------------------------------------------
 
+@login_required
+@require_http_methods(['POST'])
+def set_language(request):
+    """Switch the current user's interface language."""
+    lang = request.POST.get('language', 'en')
+    allowed = {code for code, _ in User.LANGUAGE_CHOICES}
+    if lang in allowed:
+        User.objects.filter(pk=request.user.pk).update(language=lang)
+        request.user.language = lang
+    next_url = request.POST.get('next') or request.META.get('HTTP_REFERER') or '/'
+    return redirect(next_url)
+
+
 def _record_login_ip(request, user: User) -> None:
     """Persist the user's login IP for basic audit purposes."""
     ip = _get_client_ip(request)

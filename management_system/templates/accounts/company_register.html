@@ -1,14 +1,15 @@
 {% extends 'accounts/base_auth.html' %}
+{% load i18n %}
 {% load crispy_forms_tags %}
 
-{% block title %}Register Company — ERP System{% endblock %}
+{% block title %}{% trans "Register Company" %} — ERP System{% endblock %}
 
 {% block content %}
 <div class="auth-card">
     <div class="auth-header">
         <i class="fas fa-plus-circle fa-2x mb-2" aria-hidden="true"></i>
-        <h1 class="h3 mb-1">Register New Company</h1>
-        <p class="mb-0 opacity-75">Set up your company management system</p>
+        <h1 class="h3 mb-1">{% trans "Register New Company" %}</h1>
+        <p class="mb-0 opacity-75">{% trans "Set up your company management system" %}</p>
     </div>
 
     <div class="auth-body">
@@ -25,7 +26,7 @@
             {# ---- Company Information ---- #}
             <h5 class="border-bottom pb-2 mb-3">
                 <i class="fas fa-building me-1 text-primary" aria-hidden="true"></i>
-                Company Information
+                {% trans "Company Information" %}
             </h5>
             <div class="row g-3 mb-4">
                 <div class="col-md-6">{{ form.name|as_crispy_field }}</div>
@@ -40,7 +41,7 @@
             {# ---- Admin Account ---- #}
             <h5 class="border-bottom pb-2 mb-3">
                 <i class="fas fa-user-shield me-1 text-primary" aria-hidden="true"></i>
-                Admin Account
+                {% trans "Admin Account" %}
             </h5>
             <div class="row g-3 mb-4">
                 <div class="col-md-6">{{ form.admin_first_name|as_crispy_field }}</div>
@@ -53,25 +54,23 @@
             <div class="alert alert-info d-flex align-items-start" role="note">
                 <i class="fas fa-info-circle me-2 mt-1 flex-shrink-0" aria-hidden="true"></i>
                 <div>
-                    <strong>Company password:</strong> This will be shared with your team members so they
-                    can register and join your company.
+                    <strong>{% trans "Company password:" %}</strong> {% trans "This will be shared with your team members so they can register and join your company." %}
                 </div>
             </div>
 
             <div class="alert alert-warning d-flex align-items-start" role="note">
                 <i class="fas fa-exclamation-triangle me-2 mt-1 flex-shrink-0" aria-hidden="true"></i>
                 <div>
-                    <strong>Important:</strong> Remember your company domain! You and your team members will need it
-                    to log in and access the system. Share this domain with your team for easy access.
+                    <strong>{% trans "Important:" %}</strong> {% trans "Remember your company domain! You and your team members will need it to log in and access the system. Share this domain with your team for easy access." %}
                 </div>
             </div>
 
             <div class="d-grid gap-2 mt-4">
                 <button type="submit" class="btn btn-primary btn-lg">
-                    <i class="fas fa-check-circle me-2" aria-hidden="true"></i>Register Company
+                    <i class="fas fa-check-circle me-2" aria-hidden="true"></i>{% trans "Register Company" %}
                 </button>
                 <a href="{% url 'accounts:company_login' %}" class="btn btn-outline-secondary">
-                    <i class="fas fa-arrow-left me-2" aria-hidden="true"></i>Back to Login
+                    <i class="fas fa-arrow-left me-2" aria-hidden="true"></i>{% trans "Back to Login" %}
                 </a>
             </div>
         </form>

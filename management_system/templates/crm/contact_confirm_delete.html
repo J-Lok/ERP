@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
+{% load i18n %}
 
-{% block title %}Delete {{ contact.name }} — CRM{% endblock %}
+{% block title %}{% trans "Delete" %} {{ contact.name }} — CRM{% endblock %}
 
 {% block content %}
 <div class="row justify-content-center">
@@ -8,34 +9,31 @@
         <div class="card shadow-sm text-center">
             <div class="card-body py-5 px-4">
                 <i class="fas fa-exclamation-triangle fa-3x text-danger mb-3" aria-hidden="true"></i>
-                <h5 class="mb-1">Delete Contact?</h5>
+                <h5 class="mb-1">{% trans "Delete Contact?" %}</h5>
                 <p class="text-muted mb-3">
-                    You are about to permanently delete
-                    <strong>{{ contact.name }}</strong>.
+                    {% blocktrans with name=contact.name %}You are about to permanently delete <strong>{{ name }}</strong>.{% endblocktrans %}
                 </p>
 
                 {% if contact.opportunity_count %}
                 <div class="alert alert-warning text-start" role="alert">
                     <i class="fas fa-link me-2" aria-hidden="true"></i>
-                    This contact has
-                    <strong>{{ contact.opportunity_count }} linked opportunit{{ contact.opportunity_count|pluralize:"y,ies" }}</strong>.
-                    Deleting the contact will also remove all associated opportunities.
+                    {% blocktrans with count=contact.opportunity_count %}This contact has <strong>{{ count }} linked opportunit{{ count|pluralize:"y,ies" }}</strong>. Deleting the contact will also remove all associated opportunities.{% endblocktrans %}
                 </div>
                 {% endif %}
 
                 <div class="alert alert-danger text-start" role="alert">
                     <i class="fas fa-exclamation-circle me-2" aria-hidden="true"></i>
-                    <strong>This cannot be undone.</strong>
+                    <strong>{% trans "This cannot be undone." %}</strong>
                 </div>
 
                 <form method="post" class="mt-4">
                     {% csrf_token %}
                     <div class="d-flex justify-content-center gap-2">
                         <button type="submit" class="btn btn-danger">
-                            <i class="fas fa-trash me-1" aria-hidden="true"></i>Yes, Delete
+                            <i class="fas fa-trash me-1" aria-hidden="true"></i>{% trans "Yes, Delete" %}
                         </button>
                         <a href="{% url 'crm:contact_list' %}" class="btn btn-outline-secondary">
-                            <i class="fas fa-times me-1" aria-hidden="true"></i>Cancel
+                            <i class="fas fa-times me-1" aria-hidden="true"></i>{% trans "Cancel" %}
                         </a>
                     </div>
                 </form>

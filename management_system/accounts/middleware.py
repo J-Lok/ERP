@@ -1,6 +1,6 @@
 from datetime import timedelta
 
-from django.utils import timezone
+from django.utils import timezone, translation
 from django.utils.deprecation import MiddlewareMixin
 from django.shortcuts import redirect
 from django.urls import reverse
@@ -22,6 +22,11 @@ class CompanyContextMiddleware(MiddlewareMixin):
             return
 
         request.company = user.company
+
+        # Activate the user's preferred language.
+        lang = getattr(user, 'language', 'en') or 'en'
+        translation.activate(lang)
+        request.LANGUAGE_CODE = lang
 
         # Update last_seen at most once per minute to avoid a DB write on every request.
         # Wrapped in try/except so a pending migration never takes down the whole app.
