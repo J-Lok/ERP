@@ -130,25 +130,33 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'management_system.wsgi.application'
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
-}
-
 database_url = os.getenv('DATABASE_URL')
+
 if database_url:
     if dj_database_url is None:
         raise ImproperlyConfigured(
             'DATABASE_URL is set, but dj-database-url is not installed. '
             'Install dependencies from requirements.txt.'
         )
-    DATABASES['default'] = dj_database_url.parse(
-        database_url,
-        conn_max_age=600,
-        ssl_require=not DEBUG,
+    DATABASES = {
+        'default': dj_database_url.parse(
+            database_url,
+            conn_max_age=600,
+            ssl_require=not DEBUG,
+        )
+    }
+elif not DEBUG:
+    raise ImproperlyConfigured(
+        'DATABASE_URL environment variable is not set. '
+        'PostgreSQL is required in production.'
     )
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
