@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep -rn \"TODO\\\\|FIXME\\\\|HACK\\\\|XXX\\\\|NotImplemented\\\\|pass$\\\\|raise NotImplemented\" management_system --include=\"*.py\")",
+      "Bash(python manage.py migrate --check)",
+      "Bash(python manage.py check --deploy)",
+      "Bash(python manage.py showmigrations --list)"
+    ]
+  }
+}

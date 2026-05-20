@@ -47,15 +47,14 @@
 <div class="row g-3 mb-4">
   <!-- Leave Management -->
   <div class="col-xl-2 col-lg-3 col-md-6">
-    <div class="card border-0 shadow-sm h-100">
+    <div class="card border-0 shadow-sm">
       <div class="card-body text-center">
-        <div class="rounded-circle bg-primary bg-opacity-10 p-3 d-inline-block mb-3">
+        <div class="rounded-circle bg-primary bg-opacity-10 p-3 d-inline-block mb-2">
           <i class="fas fa-calendar-minus fa-2x text-primary"></i>
         </div>
-        <h6 class="card-title fw-bold">Leave Management</h6>
-        <p class="card-text text-muted small">Manage employee leave requests and approvals</p>
-        <div class="d-grid gap-2">
-          <a href="{% url 'hr:leave_list' %}" class="btn btn-primary btn-sm">View All Leaves</a>
+        <h6 class="card-title fw-bold mb-1">Leave Management</h6>
+        <div class="d-grid gap-2 mt-2">
+          <a href="{% url 'hr:leave_list' %}" class="btn btn-primary btn-sm">View Leaves</a>
           <a href="{% url 'hr:leave_create' %}" class="btn btn-outline-primary btn-sm">New Request</a>
         </div>
       </div>
@@ -64,14 +63,13 @@
 
   <!-- Positions & Organization -->
   <div class="col-xl-2 col-lg-3 col-md-6">
-    <div class="card border-0 shadow-sm h-100">
+    <div class="card border-0 shadow-sm">
       <div class="card-body text-center">
-        <div class="rounded-circle bg-secondary bg-opacity-10 p-3 d-inline-block mb-3">
+        <div class="rounded-circle bg-secondary bg-opacity-10 p-3 d-inline-block mb-2">
           <i class="fas fa-briefcase fa-2x text-secondary"></i>
         </div>
-        <h6 class="card-title fw-bold">Positions</h6>
-        <p class="card-text text-muted small">Manage job positions and organizational structure</p>
-        <div class="d-grid gap-2">
+        <h6 class="card-title fw-bold mb-1">Positions</h6>
+        <div class="d-grid gap-2 mt-2">
           <a href="{% url 'hr:position_list' %}" class="btn btn-secondary btn-sm">View Positions</a>
           <a href="{% url 'hr:position_create' %}" class="btn btn-outline-secondary btn-sm">New Position</a>
         </div>
@@ -81,16 +79,15 @@
 
   <!-- Payroll Management -->
   <div class="col-xl-2 col-lg-3 col-md-6">
-    <div class="card border-0 shadow-sm h-100">
+    <div class="card border-0 shadow-sm">
       <div class="card-body text-center">
-        <div class="rounded-circle bg-success bg-opacity-10 p-3 d-inline-block mb-3">
+        <div class="rounded-circle bg-success bg-opacity-10 p-3 d-inline-block mb-2">
           <i class="fas fa-money-bill-wave fa-2x text-success"></i>
         </div>
-        <h6 class="card-title fw-bold">Payroll</h6>
-        <p class="card-text text-muted small">Process payroll, manage components and payslips</p>
-        <div class="d-grid gap-2">
-          <a href="{% url 'hr:payroll_period_list' %}" class="btn btn-success btn-sm">Payroll Periods</a>
-          <a href="{% url 'hr:salary_component_list' %}" class="btn btn-outline-success btn-sm">Salary Components</a>
+        <h6 class="card-title fw-bold mb-1">Payroll</h6>
+        <div class="d-grid gap-2 mt-2">
+          <a href="{% url 'hr:payroll_period_list' %}" class="btn btn-success btn-sm">Periods</a>
+          <a href="{% url 'hr:salary_component_list' %}" class="btn btn-outline-success btn-sm">Components</a>
           <a href="{% url 'hr:payslip_list' %}" class="btn btn-outline-success btn-sm">Payslips</a>
         </div>
       </div>
@@ -99,14 +96,13 @@
 
   <!-- Performance Management -->
   <div class="col-xl-2 col-lg-3 col-md-6">
-    <div class="card border-0 shadow-sm h-100">
+    <div class="card border-0 shadow-sm">
       <div class="card-body text-center">
-        <div class="rounded-circle bg-info bg-opacity-10 p-3 d-inline-block mb-3">
+        <div class="rounded-circle bg-info bg-opacity-10 p-3 d-inline-block mb-2">
           <i class="fas fa-chart-line fa-2x text-info"></i>
         </div>
-        <h6 class="card-title fw-bold">Performance</h6>
-        <p class="card-text text-muted small">Goals, reviews and employee development</p>
-        <div class="d-grid gap-2">
+        <h6 class="card-title fw-bold mb-1">Performance</h6>
+        <div class="d-grid gap-2 mt-2">
           <a href="{% url 'hr:performance_goal_list' %}" class="btn btn-info btn-sm">Goals</a>
           <a href="{% url 'hr:performance_review_list' %}" class="btn btn-outline-info btn-sm">Reviews</a>
         </div>
@@ -116,14 +112,13 @@
 
   <!-- Training & Development -->
   <div class="col-xl-2 col-lg-3 col-md-6">
-    <div class="card border-0 shadow-sm h-100">
+    <div class="card border-0 shadow-sm">
       <div class="card-body text-center">
-        <div class="rounded-circle bg-warning bg-opacity-10 p-3 d-inline-block mb-3">
+        <div class="rounded-circle bg-warning bg-opacity-10 p-3 d-inline-block mb-2">
           <i class="fas fa-graduation-cap fa-2x text-warning"></i>
         </div>
-        <h6 class="card-title fw-bold">Training</h6>
-        <p class="card-text text-muted small">Courses, sessions and skill development</p>
-        <div class="d-grid gap-2">
+        <h6 class="card-title fw-bold mb-1">Training</h6>
+        <div class="d-grid gap-2 mt-2">
           <a href="{% url 'hr:training_course_list' %}" class="btn btn-warning btn-sm">Courses</a>
           <a href="{% url 'hr:skill_list' %}" class="btn btn-outline-warning btn-sm">Skills</a>
         </div>

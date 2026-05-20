@@ -3,6 +3,13 @@
 
 {% block title %}{% trans "Dashboard" %} — {{ request.user.company.name }}{% endblock %}
 
+{% block extra_css %}
+<style>
+.kpi-clickable { transition: transform .15s, box-shadow .15s; cursor: pointer; }
+.kpi-clickable:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(0,0,0,.18) !important; }
+</style>
+{% endblock %}
+
 {% block content %}
 
 {# ---- Page header ---- #}
@@ -28,7 +35,8 @@
     {# Employee stats — HR / admin / manager / accountant #}
     {% if show_employee_stats %}
     <div class="col-sm-6 col-xl-3">
-        <div class="card border-0 shadow-sm h-100">
+        <a href="{% url 'employees:employee_list' %}" class="text-decoration-none d-block h-100">
+        <div class="card border-0 shadow-sm h-100 kpi-clickable">
             <div class="card-body d-flex align-items-center gap-3">
                 <div class="rounded-circle bg-primary bg-opacity-10 p-3">
                     <i class="fas fa-users fa-lg text-primary" aria-hidden="true"></i>
@@ -40,12 +48,14 @@
                 </div>
             </div>
         </div>
+        </a>
     </div>
     {% endif %}
 
     {# Project stats — everyone #}
     <div class="col-sm-6 col-xl-3">
-        <div class="card border-0 shadow-sm h-100">
+        <a href="{% url 'projects:project_list' %}" class="text-decoration-none d-block h-100">
+        <div class="card border-0 shadow-sm h-100 kpi-clickable">
             <div class="card-body d-flex align-items-center gap-3">
                 <div class="rounded-circle bg-success bg-opacity-10 p-3">
                     <i class="fas fa-project-diagram fa-lg text-success" aria-hidden="true"></i>
@@ -61,11 +71,13 @@
                 </div>
             </div>
         </div>
+        </a>
     </div>
 
     {# Inventory stats — everyone #}
     <div class="col-sm-6 col-xl-3">
-        <div class="card border-0 shadow-sm h-100">
+        <a href="{% url 'inventory:stock_list' %}" class="text-decoration-none d-block h-100">
+        <div class="card border-0 shadow-sm h-100 kpi-clickable">
             <div class="card-body d-flex align-items-center gap-3">
                 <div class="rounded-circle bg-info bg-opacity-10 p-3">
                     <i class="fas fa-boxes fa-lg text-info" aria-hidden="true"></i>
@@ -81,12 +93,14 @@
                 </div>
             </div>
         </div>
+        </a>
     </div>
 
     {# Finance stats — admin / accountant / manager #}
     {% if show_finance_stats %}
     <div class="col-sm-6 col-xl-3">
-        <div class="card border-0 shadow-sm h-100">
+        <a href="{% url 'finance:index' %}" class="text-decoration-none d-block h-100">
+        <div class="card border-0 shadow-sm h-100 kpi-clickable">
             <div class="card-body d-flex align-items-center gap-3">
                 <div class="rounded-circle bg-warning bg-opacity-10 p-3">
                     <i class="fas fa-wallet fa-lg text-warning" aria-hidden="true"></i>
@@ -98,6 +112,7 @@
                 </div>
             </div>
         </div>
+        </a>
     </div>
     {% endif %}
 
@@ -124,7 +139,7 @@
     {# Recent Projects (everyone) #}
     <div class="{% if show_employee_stats %}col-md-6{% else %}col-12{% endif %}">
         <div class="card shadow-sm h-100">
-            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <div class="card-header d-flex justify-content-between align-items-center">
                 <h6 class="mb-0">
                     <i class="fas fa-project-diagram text-success me-2" aria-hidden="true"></i>
                     {% trans "Recent Projects" %}
@@ -134,7 +149,7 @@
             <div class="card-body p-0">
                 <div class="table-responsive">
                     <table class="table table-hover mb-0">
-                        <thead class="table-light">
+                        <thead>
                             <tr>
                                 <th>{% trans "Name" %}</th>
                                 <th>{% trans "Status" %}</th>
@@ -193,7 +208,7 @@
     {% if show_employee_stats %}
     <div class="col-md-6">
         <div class="card shadow-sm h-100">
-            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <div class="card-header d-flex justify-content-between align-items-center">
                 <h6 class="mb-0">
                     <i class="fas fa-users text-primary me-2" aria-hidden="true"></i>
                     {% trans "Recent Employees" %}
@@ -203,7 +218,7 @@
             <div class="card-body p-0">
                 <div class="table-responsive">
                     <table class="table table-hover mb-0">
-                        <thead class="table-light">
+                        <thead>
                             <tr>
                                 <th>{% trans "ID" %}</th>
                                 <th>{% trans "Name" %}</th>
@@ -247,7 +262,7 @@
     {# Online now — visible to all roles #}
     <div class="{% if show_finance_stats %}col-md-4{% else %}col-md-6{% endif %}">
         <div class="card shadow-sm h-100">
-            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <div class="card-header d-flex justify-content-between align-items-center">
                 <h6 class="mb-0">
                     <i class="fas fa-circle text-success me-2" style="font-size:.6rem;vertical-align:middle;" aria-hidden="true"></i>
                     {% trans "Online Now" %}
@@ -277,7 +292,7 @@
     {% if show_finance_stats %}
     <div class="col-md-4">
         <div class="card shadow-sm h-100">
-            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <div class="card-header d-flex justify-content-between align-items-center">
                 <h6 class="mb-0">
                     <i class="fas fa-wallet text-warning me-2" aria-hidden="true"></i>
                     {% trans "Finance (this month)" %}

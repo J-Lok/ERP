@@ -3,6 +3,13 @@
 
 {% block title %}Meeting Reports{% endblock %}
 
+{% block extra_css %}
+<style>
+.kpi-clickable { transition: transform .15s, box-shadow .15s; cursor: pointer; }
+.kpi-clickable:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(0,0,0,.18) !important; }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container-fluid mt-4">
     <div class="row mb-4">
@@ -19,53 +26,85 @@
     </div>
 
     <!-- Statistics Cards -->
-    <div class="row mb-4">
-        <div class="col-md-2">
-            <div class="card bg-primary text-white">
-                <div class="card-body">
-                    <h6 class="card-title">Total Meetings</h6>
-                    <h3>{{ total_meetings }}</h3>
+    <div class="row g-3 mb-4 row-cols-2 row-cols-md-3 row-cols-lg-6">
+        <div class="col">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body d-flex align-items-center gap-3">
+                    <div class="rounded-circle bg-primary bg-opacity-10 p-3 flex-shrink-0">
+                        <i class="fas fa-calendar-alt fa-lg text-primary"></i>
+                    </div>
+                    <div>
+                        <p class="text-muted small mb-0">Total</p>
+                        <h3 class="mb-0 fw-bold">{{ total_meetings }}</h3>
+                    </div>
                 </div>
             </div>
         </div>
-        <div class="col-md-2">
-            <div class="card bg-info text-white">
-                <div class="card-body">
-                    <h6 class="card-title">Upcoming</h6>
-                    <h3>{{ upcoming_count }}</h3>
+        <div class="col">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body d-flex align-items-center gap-3">
+                    <div class="rounded-circle bg-info bg-opacity-10 p-3 flex-shrink-0">
+                        <i class="fas fa-clock fa-lg text-info"></i>
+                    </div>
+                    <div>
+                        <p class="text-muted small mb-0">Upcoming</p>
+                        <h3 class="mb-0 fw-bold">{{ upcoming_count }}</h3>
+                    </div>
                 </div>
             </div>
         </div>
-        <div class="col-md-2">
-            <div class="card bg-success text-white">
-                <div class="card-body">
-                    <h6 class="card-title">Completed</h6>
-                    <h3>{{ completed_count }}</h3>
+        <div class="col">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body d-flex align-items-center gap-3">
+                    <div class="rounded-circle bg-success bg-opacity-10 p-3 flex-shrink-0">
+                        <i class="fas fa-check-circle fa-lg text-success"></i>
+                    </div>
+                    <div>
+                        <p class="text-muted small mb-0">Completed</p>
+                        <h3 class="mb-0 fw-bold">{{ completed_count }}</h3>
+                    </div>
                 </div>
             </div>
         </div>
-        <div class="col-md-2">
-            <div class="card bg-warning text-white">
-                <div class="card-body">
-                    <h6 class="card-title">Pending Actions</h6>
-                    <h3>{{ pending_actions }}</h3>
+        <div class="col">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body d-flex align-items-center gap-3">
+                    <div class="rounded-circle bg-warning bg-opacity-10 p-3 flex-shrink-0">
+                        <i class="fas fa-tasks fa-lg text-warning"></i>
+                    </div>
+                    <div>
+                        <p class="text-muted small mb-0">Pending</p>
+                        <h3 class="mb-0 fw-bold">{{ pending_actions }}</h3>
+                    </div>
                 </div>
             </div>
         </div>
-        <div class="col-md-2">
-            <div class="card bg-danger text-white">
-                <div class="card-body">
-                    <h6 class="card-title">Overdue</h6>
-                    <h3>{{ overdue_actions }}</h3>
+        <div class="col">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body d-flex align-items-center gap-3">
+                    <div class="rounded-circle bg-danger bg-opacity-10 p-3 flex-shrink-0">
+                        <i class="fas fa-exclamation-circle fa-lg text-danger"></i>
+                    </div>
+                    <div>
+                        <p class="text-muted small mb-0">Overdue</p>
+                        <h3 class="mb-0 fw-bold">{{ overdue_actions }}</h3>
+                    </div>
                 </div>
             </div>
         </div>
-        <div class="col-md-2">
-            <a href="{% url 'meetings:report' %}" class="card card-link text-decoration-none h-100">
-                <div class="card-body">
-                    <h6 class="card-title">Reports</h6>
-                    <i class="fas fa-chart-line fa-2x text-secondary"></i>
+        <div class="col">
+            <a href="{% url 'meetings:report' %}" class="text-decoration-none d-block h-100">
+            <div class="card border-0 shadow-sm h-100 kpi-clickable">
+                <div class="card-body d-flex align-items-center gap-3">
+                    <div class="rounded-circle bg-secondary bg-opacity-10 p-3 flex-shrink-0">
+                        <i class="fas fa-chart-line fa-lg text-secondary"></i>
+                    </div>
+                    <div>
+                        <p class="text-muted small mb-0">Reports</p>
+                        <h3 class="mb-0 fw-bold"><i class="fas fa-arrow-right small"></i></h3>
+                    </div>
                 </div>
+            </div>
             </a>
         </div>
     </div>
@@ -74,7 +113,7 @@
         <!-- Upcoming Meetings -->
         <div class="col-lg-6">
             <div class="card mb-4">
-                <div class="card-header bg-light">
+                <div class="card-header">
                     <h5 class="mb-0">
                         <i class="fas fa-calendar-check"></i> Upcoming Meetings
                     </h5>
@@ -113,7 +152,7 @@
         <!-- My Action Items -->
         <div class="col-lg-6">
             <div class="card mb-4">
-                <div class="card-header bg-light">
+                <div class="card-header">
                     <h5 class="mb-0">
                         <i class="fas fa-tasks"></i> My Action Items
                     </h5>
@@ -153,14 +192,14 @@
         <!-- Recent Meetings -->
         <div class="col-lg-12">
             <div class="card">
-                <div class="card-header bg-light">
+                <div class="card-header">
                     <h5 class="mb-0">
                         <i class="fas fa-history"></i> Recent Meetings
                     </h5>
                 </div>
                 <div class="table-responsive">
                     <table class="table table-hover mb-0">
-                        <thead class="table-light">
+                        <thead>
                             <tr>
                                 <th>Title</th>
                                 <th>Type</th>
@@ -196,7 +235,7 @@
                         </tbody>
                     </table>
                 </div>
-                <div class="card-footer bg-light text-end">
+                <div class="card-footer text-end">
                     <a href="{% url 'meetings:meeting_list' %}" class="btn btn-sm btn-outline-secondary">
                         View All Meetings
                     </a>

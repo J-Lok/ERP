@@ -10,6 +10,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <script>(function(){var t=localStorage.getItem('zentral-theme')||'dark';document.documentElement.setAttribute('data-bs-theme',t);})();</script>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
 
   <style>
@@ -144,21 +145,6 @@
       line-height: 1;
     }
     .topbar-toggle:hover { color: var(--text); }
-    .topbar-search {
-      flex: 1; max-width: 340px; display: flex; align-items: center; gap: 8px;
-      background: var(--surface2); border: 1px solid var(--border); border-radius: 8px;
-      padding: 7px 12px;
-    }
-    .topbar-search i { color: var(--muted-dim); font-size: 13px; }
-    .topbar-search input {
-      background: none; border: none; outline: none; color: var(--text);
-      font-family: 'Plus Jakarta Sans', sans-serif; font-size: 13px; width: 100%;
-    }
-    .topbar-search input::placeholder { color: var(--muted-dim); }
-    .topbar-kbd {
-      font-size: 10px; color: var(--muted-dim); border: 1px solid var(--border);
-      border-radius: 4px; padding: 1px 5px;
-    }
     .topbar-actions { margin-left: auto; display: flex; align-items: center; gap: 8px; }
     .topbar-btn {
       width: 36px; height: 36px; border-radius: 8px; background: var(--surface2);
@@ -251,6 +237,12 @@
     .btn-outline-success:hover { background: var(--accent-dim) !important; border-color: var(--accent) !important; }
     .btn-danger { background: var(--red) !important; border-color: var(--red) !important; color: #fff !important; font-weight: 600; }
     .btn-success { background: var(--accent) !important; border-color: var(--accent) !important; color: #0d1117 !important; font-weight: 600; }
+    .btn-secondary { background: var(--surface2) !important; border-color: var(--border) !important; color: var(--text) !important; font-weight: 600; }
+    .btn-secondary:hover { background: var(--border) !important; }
+    .btn-info { background: oklch(0.65 0.17 245 / 0.20) !important; border-color: oklch(0.65 0.17 245 / 0.4) !important; color: var(--blue) !important; font-weight: 600; }
+    .btn-info:hover { background: oklch(0.65 0.17 245 / 0.35) !important; }
+    .btn-warning { background: oklch(0.78 0.17 75 / 0.20) !important; border-color: oklch(0.78 0.17 75 / 0.4) !important; color: var(--amber) !important; font-weight: 600; }
+    .btn-warning:hover { background: oklch(0.78 0.17 75 / 0.35) !important; }
 
     /* Badges */
     .badge.bg-success   { background: oklch(0.70 0.17 162 / 0.15) !important; color: var(--accent) !important; border: 1px solid oklch(0.70 0.17 162 / 0.3) !important; }
@@ -503,12 +495,6 @@
         <i class="fas fa-bars"></i>
       </button>
 
-      <div class="topbar-search">
-        <i class="fas fa-search"></i>
-        <input type="text" placeholder="{% trans 'Search…' %}" id="topbar-search-input" />
-        <span class="topbar-kbd">⌘K</span>
-      </div>
-
       <div class="topbar-actions">
 
         <!-- Theme toggle -->
@@ -670,17 +656,7 @@
     });
   }
 
-  // ── Screen enter animation on nav ──
-  document.querySelectorAll('.nav-item-inner').forEach(link => {
-    link.addEventListener('click', () => {
-      const content = document.getElementById('screen-content');
-      if (content) {
-        content.classList.remove('screen-enter');
-        void content.offsetWidth;
-        content.classList.add('screen-enter');
-      }
-    });
-  });
+
 })();
 </script>
 {% block extra_js %}{% endblock %}

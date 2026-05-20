@@ -29,7 +29,7 @@
   <!-- Left: contact info + marketplace link -->
   <div class="col-md-4">
     <div class="card shadow-sm mb-3">
-      <div class="card-header bg-light fw-semibold">{% trans "Contact Info" %}</div>
+      <div class="card-header fw-semibold">{% trans "Contact Info" %}</div>
       <div class="card-body">
         {% if contact.email %}
         <p class="mb-2"><i class="fas fa-envelope text-muted me-2"></i>
@@ -62,7 +62,7 @@
 
     <!-- Add note form -->
     <div class="card shadow-sm">
-      <div class="card-header bg-light fw-semibold">{% trans "Add Activity" %}</div>
+      <div class="card-header fw-semibold">{% trans "Add Activity" %}</div>
       <div class="card-body">
         <form method="post" action="{% url 'crm:note_add' contact.pk %}">
           {% csrf_token %}
@@ -88,7 +88,7 @@
   <div class="col-md-8">
     <!-- Opportunities -->
     <div class="card shadow-sm mb-4">
-      <div class="card-header d-flex justify-content-between align-items-center bg-light">
+      <div class="card-header d-flex justify-content-between align-items-center">
         <span class="fw-semibold">{% trans "Opportunities" %}</span>
         <a href="{% url 'crm:opportunity_create' %}?contact={{ contact.pk }}" class="btn btn-sm btn-primary">
           <i class="fas fa-plus me-1"></i>{% trans "New" %}
@@ -98,7 +98,7 @@
         {% if opportunities %}
         <div class="table-responsive">
           <table class="table table-hover mb-0">
-            <thead class="table-light"><tr>
+            <thead><tr>
               <th>{% trans "Title" %}</th><th>{% trans "Stage" %}</th><th>{% trans "Value" %}</th><th>{% trans "Follow-up" %}</th><th></th>
             </tr></thead>
             <tbody>
@@ -140,7 +140,7 @@
 
     <!-- Activity log -->
     <div class="card shadow-sm">
-      <div class="card-header bg-light fw-semibold">{% trans "Activity Log" %}</div>
+      <div class="card-header fw-semibold">{% trans "Activity Log" %}</div>
       <div class="card-body p-0">
         {% if notes %}
         <ul class="list-group list-group-flush">
@@ -162,7 +162,7 @@
               <form method="post" action="{% url 'crm:note_delete' note.pk %}" class="d-inline"
                     onsubmit="return confirm('{% trans "Delete this note?" %}')">
                 {% csrf_token %}
-                <button type="submit" class="btn btn-sm btn-link text-danger p-0">
+                <button type="submit" class="btn btn-sm btn-outline-danger">
                   <i class="fas fa-times"></i>
                 </button>
               </form>

@@ -173,7 +173,8 @@
 
             <!-- Pagination (if implemented) -->
             {% if transactions.has_other_pages %}
-            <nav class="mt-4">
+            <p class="text-muted small text-center mb-1">Page {{ transactions.number }} of {{ transactions.paginator.num_pages }}</p>
+            <nav class="mt-2">
                 <ul class="pagination justify-content-center">
                     {% if transactions.has_previous %}
                     <li class="page-item">
