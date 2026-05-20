@@ -24,6 +24,7 @@ management_system/media/
 !.env.example
 
 # IDE
+.claude/
 .vscode/
 .idea/
 *.swp
