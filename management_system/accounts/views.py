@@ -143,10 +143,20 @@ def invite_user(request):
                 'accept_url': accept_url,
                 'expiry_days': 7,
             })
-            send_mail(subject, body, None, [email], fail_silently=False)
 
-            messages.success(request, f'Invitation sent to {email}.')
-            logger.info('Invitation sent to %s for company %s by %s', email, company.name, request.user.email)
+            try:
+                send_mail(subject, body, None, [email], fail_silently=False)
+                messages.success(request, f'Invitation sent to {email}.')
+                logger.info('Invitation sent to %s for company %s by %s', email, company.name, request.user.email)
+            except Exception as e:
+                logger.error('Failed to send invitation email to %s: %s', email, e)
+                # Invitation is saved — share the link manually as fallback
+                messages.warning(
+                    request,
+                    f'Invitation created but email could not be sent ({type(e).__name__}). '
+                    f'Share this link manually: {accept_url}'
+                )
+
             return redirect('accounts:invite_user')
     else:
         form = InvitationForm(company)
