@@ -1,15 +1,14 @@
 import uuid
+from datetime import timedelta
+
+from django.conf import settings
 from django.db import models
 from django.contrib.auth.models import AbstractUser, BaseUserManager
-from django.contrib.auth.hashers import make_password, check_password
 from django.core.validators import RegexValidator
+from django.utils import timezone
 
 
 class Company(models.Model):
-    """
-    Represents a tenant (company) in the system.
-    Each company has its own shared password for team member registration.
-    """
     PLAN_CHOICES = [
         ('free', 'Free'),
         ('basic', 'Basic'),
@@ -20,7 +19,6 @@ class Company(models.Model):
     company_id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     name = models.CharField(max_length=200)
     domain = models.CharField(max_length=200, unique=True, db_index=True)
-    company_password = models.CharField(max_length=256)  # increased from 128 → 256 for future hash algo headroom
     contact_email = models.EmailField()
     contact_phone = models.CharField(
         max_length=20,
@@ -48,23 +46,13 @@ class Company(models.Model):
     def __str__(self):
         return self.name
 
-    def set_company_password(self, raw_password: str) -> None:
-        """Hash and store the company shared password."""
-        self.company_password = make_password(raw_password)
-
-    def check_company_password(self, raw_password: str) -> bool:
-        """Verify a raw password against the stored hash."""
-        return check_password(raw_password, self.company_password)
-
-    @property
-    def masked_password(self) -> str:
-        """Return a masked placeholder — never expose the hash."""
-        return '•' * 8 if self.company_password else ''
-
     @property
     def active_user_count(self) -> int:
-        """Convenience accessor used in templates/admin."""
         return self.users.filter(is_active=True).count()
+
+    @property
+    def pending_invitations_count(self) -> int:
+        return self.invitations.filter(accepted_at__isnull=True, expires_at__gt=timezone.now()).count()
 
 
 class CustomUserManager(BaseUserManager):
@@ -93,10 +81,6 @@ class CustomUserManager(BaseUserManager):
 
 
 class User(AbstractUser):
-    """
-    Custom user model that uses email as the unique identifier.
-    Each user belongs to a company (tenant).
-    """
     ROLE_CHOICES = [
         ('admin', 'Admin'),
         ('hr_manager', 'HR Manager'),
@@ -140,7 +124,6 @@ class User(AbstractUser):
     ]
     language = models.CharField(max_length=10, choices=LANGUAGE_CHOICES, default='en')
 
-    # Audit / activity helpers
     last_login_ip = models.GenericIPAddressField(null=True, blank=True)
     last_seen = models.DateTimeField(null=True, blank=True, db_index=True)
 
@@ -164,14 +147,55 @@ class User(AbstractUser):
         return f'{self.first_name} {self.last_name}'.strip() or self.email
 
     def has_role(self, *roles: str) -> bool:
-        """Convenience helper: user.has_role('admin', 'manager')"""
         return self.is_superuser or self.role in roles
 
     @property
     def is_online(self) -> bool:
-        """True if the user was active in the last 5 minutes."""
         if not self.last_seen:
             return False
-        from django.utils import timezone
-        from datetime import timedelta
         return (timezone.now() - self.last_seen) < timedelta(minutes=5)
+
+
+class Invitation(models.Model):
+    token = models.UUIDField(default=uuid.uuid4, unique=True, db_index=True, editable=False)
+    company = models.ForeignKey(Company, on_delete=models.CASCADE, related_name='invitations')
+    email = models.EmailField()
+    invited_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='sent_invitations',
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()
+    accepted_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        unique_together = ('company', 'email')
+        indexes = [
+            models.Index(fields=['token']),
+            models.Index(fields=['company', 'email']),
+        ]
+
+    def __str__(self):
+        status = 'accepted' if self.accepted_at else ('expired' if self.is_expired else 'pending')
+        return f'Invite {self.email} → {self.company.name} [{status}]'
+
+    @property
+    def is_expired(self) -> bool:
+        return timezone.now() > self.expires_at
+
+    @property
+    def is_pending(self) -> bool:
+        return self.accepted_at is None and not self.is_expired
+
+    @classmethod
+    def create_for(cls, company, email: str, invited_by) -> 'Invitation':
+        """Create (or reset) an invitation for a given email+company."""
+        cls.objects.filter(company=company, email=email, accepted_at__isnull=True).delete()
+        return cls.objects.create(
+            company=company,
+            email=email,
+            invited_by=invited_by,
+            expires_at=timezone.now() + timedelta(days=7),
+        )

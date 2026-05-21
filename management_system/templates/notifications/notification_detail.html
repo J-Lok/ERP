@@ -80,7 +80,7 @@
 
         <div class="notification-content">
           <h6 class="fw-bold mb-3">Message</h6>
-          <div class="bg-light p-3 rounded">
+          <div class="p-3 rounded-3" style="background:var(--surface2)">
             {{ notification.message|linebreaks }}
           </div>
         </div>
@@ -89,7 +89,7 @@
         <hr>
         <div class="notification-data">
           <h6 class="fw-bold mb-3">Additional Details</h6>
-          <div class="bg-light p-3 rounded">
+          <div class="p-3 rounded-3" style="background:var(--surface2)">
             <pre class="mb-0">{{ notification.data|pprint }}</pre>
           </div>
         </div>

@@ -61,6 +61,7 @@ class RequireLoginMiddleware(MiddlewareMixin):
             '/password-reset/',
             '/reset/',
             '/register/',
+            '/invite/accept/',
         )
         public_exact_paths = (
             '/',

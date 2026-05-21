@@ -1,7 +1,7 @@
 from django.urls import path
 from django.contrib.auth import views as auth_views
 from . import views
-from django.urls import path, reverse_lazy
+from django.urls import reverse_lazy
 
 app_name = 'accounts'
 
@@ -10,23 +10,26 @@ urlpatterns = [
     path('', views.company_login, name='company_login'),
     path('login/', views.company_login, name='company_login'),
     path('logout/', views.custom_logout, name='logout'),
-    
-    # Registration
+
+    # Company registration
     path('register/company/', views.company_register, name='company_register'),
-    path('register/user/', views.user_register, name='user_register'),
-    
+
+    # Invitations
+    path('invite/', views.invite_user, name='invite_user'),
+    path('invite/accept/<uuid:token>/', views.accept_invitation, name='accept_invitation'),
+
     # Profile
     path('profile/company/', views.company_profile, name='company_profile'),
     path('profile/user/', views.user_profile, name='user_profile'),
     path('profile/edit/', views.edit_profile, name='edit_profile'),
-    
+
     # Password management
     path('password-change/', views.CustomPasswordChangeView.as_view(), name='password_change'),
     path('password-change/done/', auth_views.PasswordChangeDoneView.as_view(
         template_name='accounts/password_change_done.html'
     ), name='password_change_done'),
-    
-    # Password reset (if needed)
+
+    # Password reset
     path('password-reset/', auth_views.PasswordResetView.as_view(
         template_name='accounts/password_reset.html',
         email_template_name='accounts/password_reset_email.html',

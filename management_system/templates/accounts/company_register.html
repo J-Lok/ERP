@@ -33,8 +33,6 @@
                 <div class="col-md-6">{{ form.domain|as_crispy_field }}</div>
                 <div class="col-md-6">{{ form.contact_email|as_crispy_field }}</div>
                 <div class="col-md-6">{{ form.contact_phone|as_crispy_field }}</div>
-                <div class="col-md-6">{{ form.company_password|as_crispy_field }}</div>
-                <div class="col-md-6">{{ form.confirm_company_password|as_crispy_field }}</div>
                 <div class="col-12">{{ form.address|as_crispy_field }}</div>
             </div>
 
@@ -49,13 +47,6 @@
                 <div class="col-md-6">{{ form.admin_email|as_crispy_field }}</div>
                 <div class="col-md-6">{{ form.admin_password|as_crispy_field }}</div>
                 <div class="col-md-6">{{ form.confirm_admin_password|as_crispy_field }}</div>
-            </div>
-
-            <div class="alert alert-info d-flex align-items-start" role="note">
-                <i class="fas fa-info-circle me-2 mt-1 flex-shrink-0" aria-hidden="true"></i>
-                <div>
-                    <strong>{% trans "Company password:" %}</strong> {% trans "This will be shared with your team members so they can register and join your company." %}
-                </div>
             </div>
 
             <div class="alert alert-warning d-flex align-items-start" role="note">

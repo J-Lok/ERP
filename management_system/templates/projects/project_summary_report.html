@@ -103,25 +103,25 @@
         <h4 class="mb-3"><i class="fas fa-dollar-sign me-2"></i>Budget Overview</h4>
         <div class="row">
             <div class="col-md-3 mb-3">
-                <div class="text-center p-3 bg-light rounded">
+                <div class="text-center p-3 rounded-3" style="background:var(--surface2)">
                     <h5 class="text-primary">${{ budget_stats.total_budget|default:0|floatformat:2 }}</h5>
                     <small class="text-muted">Total Budget</small>
                 </div>
             </div>
             <div class="col-md-3 mb-3">
-                <div class="text-center p-3 bg-light rounded">
+                <div class="text-center p-3 rounded-3" style="background:var(--surface2)">
                     <h5 class="text-info">${{ budget_stats.avg_budget|default:0|floatformat:2 }}</h5>
                     <small class="text-muted">Average Budget</small>
                 </div>
             </div>
             <div class="col-md-3 mb-3">
-                <div class="text-center p-3 bg-light rounded">
+                <div class="text-center p-3 rounded-3" style="background:var(--surface2)">
                     <h5 class="text-success">${{ budget_stats.min_budget|default:0|floatformat:2 }}</h5>
                     <small class="text-muted">Minimum Budget</small>
                 </div>
             </div>
             <div class="col-md-3 mb-3">
-                <div class="text-center p-3 bg-light rounded">
+                <div class="text-center p-3 rounded-3" style="background:var(--surface2)">
                     <h5 class="text-danger">${{ budget_stats.max_budget|default:0|floatformat:2 }}</h5>
                     <small class="text-muted">Maximum Budget</small>
                 </div>
