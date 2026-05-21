@@ -584,12 +584,6 @@ msgstr "Congé annuel"
 msgid "Sick Leave"
 msgstr "Congé maladie"
 
-msgid "Start Date"
-msgstr "Date de début"
-
-msgid "End Date"
-msgstr "Date de fin"
-
 msgid "Reason"
 msgstr "Motif"
 
@@ -828,10 +822,6 @@ msgstr "Lu"
 msgid "All"
 msgstr "Tout"
 
-# Platform admin
-msgid "Platform Admin"
-msgstr "Admin plateforme"
-
 msgid "Global view — all companies"
 msgstr "Vue globale — toutes les entreprises"
 
@@ -840,9 +830,6 @@ msgstr "Entreprises"
 
 msgid "Total Users"
 msgstr "Total utilisateurs"
-
-msgid "Online Now"
-msgstr "En ligne"
 
 msgid "last 5 minutes"
 msgstr "5 dernières minutes"
@@ -920,9 +907,6 @@ msgstr "Sélectionner"
 
 msgid "None"
 msgstr "Aucun"
-
-msgid "All levels OK"
-msgstr "Tous niveaux OK"
 
 msgid "Switch to dark mode"
 msgstr "Passer en mode sombre"
