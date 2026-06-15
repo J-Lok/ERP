@@ -5,14 +5,13 @@
 {% block title %}{% trans "Register Company" %} — ERP System{% endblock %}
 
 {% block content %}
-<div class="auth-card">
-    <div class="auth-header">
+    <div class="auth-card-header text-center">
         <i class="fas fa-plus-circle fa-2x mb-2" aria-hidden="true"></i>
         <h1 class="h3 mb-1">{% trans "Register New Company" %}</h1>
         <p class="mb-0 opacity-75">{% trans "Set up your company management system" %}</p>
     </div>
 
-    <div class="auth-body">
+    <div class="auth-card-body">
         <form method="post" novalidate>
             {% csrf_token %}
 
@@ -28,7 +27,7 @@
                 <i class="fas fa-building me-1 text-primary" aria-hidden="true"></i>
                 {% trans "Company Information" %}
             </h5>
-            <div class="row g-3 mb-4">
+            <div class="row g-4 mb-4">
                 <div class="col-md-6">{{ form.name|as_crispy_field }}</div>
                 <div class="col-md-6">{{ form.domain|as_crispy_field }}</div>
                 <div class="col-md-6">{{ form.contact_email|as_crispy_field }}</div>
@@ -41,7 +40,7 @@
                 <i class="fas fa-user-shield me-1 text-primary" aria-hidden="true"></i>
                 {% trans "Admin Account" %}
             </h5>
-            <div class="row g-3 mb-4">
+            <div class="row g-4 mb-4">
                 <div class="col-md-6">{{ form.admin_first_name|as_crispy_field }}</div>
                 <div class="col-md-6">{{ form.admin_last_name|as_crispy_field }}</div>
                 <div class="col-md-6">{{ form.admin_email|as_crispy_field }}</div>
@@ -57,16 +56,15 @@
             </div>
 
             <div class="d-grid gap-2 mt-4">
-                <button type="submit" class="btn btn-primary btn-lg">
+                <button type="submit" class="btn btn-primary btn-lg py-3">
                     <i class="fas fa-check-circle me-2" aria-hidden="true"></i>{% trans "Register Company" %}
                 </button>
-                <a href="{% url 'accounts:company_login' %}" class="btn btn-outline-secondary">
+                <a href="{% url 'accounts:company_login' %}" class="btn btn-outline-secondary btn-lg">
                     <i class="fas fa-arrow-left me-2" aria-hidden="true"></i>{% trans "Back to Login" %}
                 </a>
             </div>
         </form>
     </div>
-</div>
 
 {% block extra_js %}
 <script>
@@ -94,5 +92,20 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 </script>
+<style>
+/* Page-specific spacing and input sizing improvements */
+.auth-card { max-width: 760px; }
+.auth-card-header { padding: 32px 32px 18px; }
+.auth-card-header i { font-size: 28px; }
+.auth-card-body { padding: 36px 36px 40px; }
+.auth-card-body .form-control, .auth-card-body .form-select { padding: 14px 16px; font-size: 14px; }
+.auth-card-body .row.g-4 > [class*='col-'] { margin-bottom: 10px; }
+.alert[role="note"] { font-size: 13px; padding: 16px; border-radius: 14px; }
+@media (max-width: 576px) {
+    .auth-wrap { padding: 16px; }
+    .auth-card { border-radius: 12px; }
+    .auth-card-body { padding: 26px 20px 30px; }
+}
+</style>
 {% endblock %}
 {% endblock %}
