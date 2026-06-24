@@ -43,9 +43,18 @@
             <h1 class="h3 mb-0"><i class="fas fa-boxes me-2"></i>Order Management</h1>
             <p class="text-muted mb-0">Manage customer orders from the marketplace</p>
         </div>
-        <a href="{% url 'marketplace:admin_order_list' %}" class="btn btn-primary">
-            <i class="fas fa-list me-2"></i>View All Orders
-        </a>
+        <div class="d-flex gap-2">
+            <a href="{% url 'marketplace:admin_order_quick_create' %}" class="btn btn-outline-success">
+                <i class="fas fa-cash-register me-2"></i>Quick In-Store Order
+            </a>
+            <button id="dashboard-share-link" type="button" class="btn btn-outline-primary" title="Copy marketplace link">
+                <i class="fas fa-share-square me-2"></i>Share Marketplace
+            </button>
+            <input id="dashboard-shop-link" type="text" value="{{ shop_link }}" readonly class="d-none" aria-hidden="true">
+            <a href="{% url 'marketplace:admin_order_list' %}" class="btn btn-primary">
+                <i class="fas fa-list me-2"></i>View All Orders
+            </a>
+        </div>
     </div>
 
     <!-- Statistics Cards -->
@@ -144,6 +153,9 @@
                                         <a href="{% url 'marketplace:admin_order_detail' order.pk %}" class="btn btn-sm btn-info mb-1">
                                             <i class="fas fa-eye"></i> View
                                         </a>
+                                        <button type="button" class="btn btn-sm btn-outline-primary mb-1 copy-shop-link" data-link="{{ order.shop_link }}" title="Copy marketplace link">
+                                            <i class="fas fa-share-square"></i> Share
+                                        </button>
                                         <form method="post" action="{% url 'marketplace:admin_order_confirm' order.pk %}" class="d-inline">
                                             {% csrf_token %}
                                             <button type="submit" class="btn btn-sm btn-success mb-1">
@@ -197,4 +209,46 @@
         </div>
     </div>
 </div>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Dashboard-level share button
+    var dashboardBtn = document.getElementById('dashboard-share-link');
+    var dashboardLink = document.getElementById('dashboard-shop-link');
+    if (dashboardBtn && dashboardLink) {
+        dashboardBtn.addEventListener('click', function() {
+            var link = dashboardLink.value;
+            if (!link) return;
+
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(link).then(function() {
+                    alert('Marketplace link copied to clipboard.');
+                }).catch(function() {
+                    window.prompt('Copy this link:', link);
+                });
+            } else {
+                window.prompt('Copy this link:', link);
+            }
+        });
+    }
+
+    // Order-level share buttons
+    var buttons = document.querySelectorAll('.copy-shop-link');
+    buttons.forEach(function(button) {
+        button.addEventListener('click', function() {
+            var link = this.getAttribute('data-link');
+            if (!link) return;
+
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(link).then(function() {
+                    alert('Marketplace link copied to clipboard.');
+                }).catch(function() {
+                    window.prompt('Copy this link:', link);
+                });
+            } else {
+                window.prompt('Copy this link:', link);
+            }
+        });
+    });
+});
+</script>
 {% endblock %}

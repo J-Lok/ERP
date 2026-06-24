@@ -32,10 +32,10 @@ function KpiCard({ label, value, sub, icon, color = 'emerald', accent }) {
         background: T.surface,
         border: `1px solid ${hov ? ac.main : T.border}`,
         borderRadius: 12,
-        padding: '20px 22px',
+        padding: '14px 18px',
         display: 'flex',
         alignItems: 'center',
-        gap: 16,
+        gap: 12,
         transition: 'border-color 0.2s, transform 0.2s, box-shadow 0.2s',
         transform: hov ? 'translateY(-2px)' : 'none',
         boxShadow: hov ? `0 8px 24px rgba(0,0,0,0.25)` : '0 1px 4px rgba(0,0,0,0.2)',
@@ -52,10 +52,62 @@ function KpiCard({ label, value, sub, icon, color = 'emerald', accent }) {
         <i className={`fas ${icon}`} style={{ color: ac.main, fontSize: 20 }}></i>
       </div>
       <div style={{ minWidth: 0 }}>
-        <div style={{ fontSize: 12, color: T.muted, marginBottom: 2, whiteSpace: 'nowrap' }}>{label}</div>
-        <div style={{ fontSize: 22, fontWeight: 700, color: T.text, letterSpacing: '-0.5px', whiteSpace: 'nowrap' }}>{value}</div>
+        <div style={{ fontSize: 11, color: T.muted, marginBottom: 2, whiteSpace: 'nowrap' }}>{label}</div>
+        <div style={{ fontSize: 24, fontWeight: 800, color: T.text, letterSpacing: '-0.6px', whiteSpace: 'nowrap' }}>{value}</div>
         {sub && <div style={{ fontSize: 11, color: T.muted, marginTop: 2 }}>{sub}</div>}
       </div>
+    </div>
+  );
+}
+
+// ── Priority Stack (action-oriented summary) ───────────────────────────────
+function PriorityStack({ items = [] }) {
+  if (!items || items.length === 0) return null;
+  return (
+    <div style={{ display: 'flex', gap: 10, marginBottom: 16, alignItems: 'stretch', flexWrap: 'wrap' }}>
+      {items.map((it, i) => (
+        <div key={i} style={{
+          flex: '0 1 260px', display: 'flex', alignItems: 'center', gap: 12,
+          background: T.surface, border: `1px solid ${T.border}`, borderRadius: 10, padding: '12px 14px'
+        }}>
+          <div style={{ width: 10, height: 40, borderRadius: 6, background: it.color || ACCENT_COLORS.amber.main, flexShrink: 0 }}></div>
+          <div style={{ minWidth: 0 }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: T.text, marginBottom: 4 }}>{it.title}</div>
+            <div style={{ fontSize: 12, color: T.muted, marginBottom: 8 }}>{it.description}</div>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <Btn variant="outline" small onClick={it.onView}>View</Btn>
+              <Btn variant="primary" small onClick={it.onAct} accent={it.color}>{it.action || 'Act'}</Btn>
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ── Roadmap / Recommendations (scaffold) ─────────────────────────────────────
+function Roadmap({ items = [] }) {
+  if (!items || items.length === 0) return (
+    <div style={{ padding: 24, color: T.muted }}>No roadmap items yet.</div>
+  );
+  return (
+    <div style={{ display: 'grid', gap: 12 }}>
+      {items.map((it, i) => (
+        <div key={i} style={{ display: 'flex', gap: 12, alignItems: 'center', background: T.surface, border: `1px solid ${T.border}`, borderRadius: 10, padding: 12 }}>
+          <div style={{ width: 8, height: 48, borderRadius: 6, background: it.status === 'In Progress' ? ACCENT_COLORS.blue.main : ACCENT_COLORS.emerald.main }}></div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
+              <div style={{ fontSize: 14, fontWeight: 700, color: T.text }}>{it.title}</div>
+              <div style={{ fontSize: 12, color: T.muted }}>{it.status} · {it.progress}%</div>
+            </div>
+            <div style={{ marginTop: 6, fontSize: 13, color: T.muted }}>{it.recommendation}</div>
+          </div>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <Btn variant="outline" small>Details</Btn>
+            <Btn variant="primary" small>Recommend</Btn>
+          </div>
+        </div>
+      ))}
     </div>
   );
 }
@@ -207,7 +259,10 @@ function Btn({ children, variant = 'primary', icon, onClick, small, accent }) {
     style = { ...base, background: hov ? acMain + 'cc' : acMain, color: '#0d1117', borderColor: acMain };
   } else if (variant === 'ghost') {
     style = { ...base, background: hov ? T.surface2 : 'transparent', color: T.muted, borderColor: hov ? T.border : 'transparent' };
+  } else if (variant === 'outline') {
+    style = { ...base, background: hov ? acDim : 'transparent', color: acMain, borderColor: hov ? acMain + '66' : T.border };
   } else {
+    // fallback to outline-like
     style = { ...base, background: hov ? acDim : 'transparent', color: acMain, borderColor: hov ? acMain + '66' : T.border };
   }
   return (
@@ -390,4 +445,6 @@ Object.assign(window, {
   KpiCard, Badge, Avatar, ProgressBar,
   Card, CardHeader, Table, Btn, PageHeader,
   Sidebar, TopBar,
+  PriorityStack,
+  Roadmap,
 });

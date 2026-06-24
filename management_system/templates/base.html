@@ -247,6 +247,21 @@
     .form-control::placeholder { color: var(--muted-dim); }
     .input-group-text { background: var(--surface2) !important; border-color: var(--border) !important; color: var(--muted) !important; }
     .form-label { color: var(--text); font-weight: 500; font-size: 13px; }
+    .form-label.required-label::after,
+    label.required-label::after { content: '*'; color: #ea5455; margin-left: 0.15rem; }
+    .required-field-note {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.65rem;
+      padding: 0.9rem 1rem;
+      margin-bottom: 1.25rem;
+      border-radius: 0.85rem;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.04);
+      color: var(--text);
+      font-size: 0.95rem;
+    }
+    .required-field-note i { margin-top: 0.1rem; color: var(--accent); }
     .form-text { color: var(--muted) !important; }
     select.form-select option { background: var(--surface2); color: var(--text); }
 
@@ -747,6 +762,26 @@
     });
   }
 
+  function enhanceRequiredFormFields() {
+    document.querySelectorAll('form').forEach(function(form) {
+      form.removeAttribute('novalidate');
+      let hasRequired = false;
+      form.querySelectorAll('label[for]').forEach(function(label) {
+        const target = document.getElementById(label.getAttribute('for'));
+        if (target && target.required) {
+          hasRequired = true;
+          label.classList.add('required-label');
+        }
+      });
+      if (hasRequired && !form.querySelector('.required-field-note')) {
+        const note = document.createElement('div');
+        note.className = 'required-field-note';
+        note.innerHTML = '<i class="fas fa-info-circle"></i><div>Fields marked with <span class="text-danger">*</span> are required. Please complete them before submitting.</div>';
+        form.insertAdjacentElement('afterbegin', note);
+      }
+    });
+  }
+  document.addEventListener('DOMContentLoaded', enhanceRequiredFormFields);
 
 })();
 </script>

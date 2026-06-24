@@ -2,6 +2,7 @@ from django import forms
 from django.core.exceptions import ValidationError
 from .models import Client, Order
 from accounts.models import Company
+from inventory.models import Stock
 
 class ClientRegistrationForm(forms.ModelForm):
     password = forms.CharField(widget=forms.PasswordInput)
@@ -89,3 +90,88 @@ class CheckoutForm(forms.ModelForm):
 
 class AddToCartForm(forms.Form):
     quantity = forms.IntegerField(min_value=1, initial=1)
+
+
+class QuickOrderForm(forms.Form):
+    PAYMENT_METHOD_CHOICES = [
+        ('cash', 'Cash'),
+        ('card', 'Card'),
+        ('mobile', 'Mobile Money'),
+        ('other', 'Other'),
+    ]
+
+    client = forms.ModelChoiceField(
+        queryset=Client.objects.filter(is_active=True).order_by('first_name', 'last_name'),
+        required=False,
+        empty_label='Walk-in customer',
+        label='Existing Client',
+    )
+    first_name = forms.CharField(required=False, max_length=100)
+    last_name = forms.CharField(required=False, max_length=100)
+    email = forms.EmailField(required=False)
+    phone = forms.CharField(required=False, max_length=20)
+    payment_method = forms.ChoiceField(choices=PAYMENT_METHOD_CHOICES, required=False)
+    payment_notes = forms.CharField(
+        required=False,
+        widget=forms.Textarea(attrs={'rows': 2, 'class': 'form-control'}),
+        label='Order Notes',
+    )
+
+    def __init__(self, company=None, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        stock_queryset = Stock.objects.none()
+        if company is not None:
+            stock_queryset = Stock.objects.filter(
+                company=company,
+                is_marketplace_visible=True,
+                quantity__gt=0,
+            ).order_by('name')
+
+        for i in range(1, 6):
+            self.fields[f'stock_{i}'] = forms.ModelChoiceField(
+                queryset=stock_queryset,
+                required=False,
+                label=f'Product {i}',
+            )
+            self.fields[f'quantity_{i}'] = forms.IntegerField(
+                min_value=1,
+                required=False,
+                initial=1,
+                label=f'Quantity {i}',
+            )
+
+    def clean(self):
+        cleaned_data = super().clean()
+        client = cleaned_data.get('client')
+        first_name = cleaned_data.get('first_name')
+        last_name = cleaned_data.get('last_name')
+        email = cleaned_data.get('email')
+
+        item_rows = []
+        for i in range(1, 6):
+            stock = cleaned_data.get(f'stock_{i}')
+            quantity = cleaned_data.get(f'quantity_{i}')
+            if stock and quantity:
+                if stock.quantity < quantity:
+                    self.add_error(
+                        f'quantity_{i}',
+                        f'Only {stock.quantity} units available for {stock.name}.'
+                    )
+                item_rows.append({'stock': stock, 'quantity': quantity})
+            elif stock or quantity:
+                self.add_error(
+                    f'stock_{i}' if not stock else f'quantity_{i}',
+                    'Both product and quantity are required for each row.'
+                )
+
+        if not item_rows:
+            raise ValidationError('Please add at least one product to the order.')
+
+        if not client:
+            if not first_name or not last_name or not email:
+                raise ValidationError(
+                    'Select an existing client or provide first name, last name, and email for a walk-in customer.'
+                )
+
+        cleaned_data['items'] = item_rows
+        return cleaned_data

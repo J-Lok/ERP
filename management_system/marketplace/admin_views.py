@@ -1,9 +1,14 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from django.db.models import Q, Count, Sum
+from django.db import transaction as db_transaction
+from django.db.models import Q, Count, Sum, F
+from django.urls import reverse
 from django.utils import timezone
-from .models import Order, Client
+from urllib.parse import quote
+from .models import Order, Client, OrderItem
+from .forms import QuickOrderForm
+from inventory.models import StockTransaction
 from .services import (
     MarketplaceFinancePostingError,
     mark_order_finance_sync_failed,
@@ -63,6 +68,17 @@ def admin_order_dashboard(request):
     # Pending orders (need attention)
     pending_order_list = orders.filter(status='pending').order_by('-created_at')
     
+    # Generate shop links for pending orders
+    for order in pending_order_list:
+        order.shop_link = request.build_absolute_uri(
+            f"{reverse('marketplace:shop')}?company={quote(order.company.domain)}"
+        )
+    
+    # Generate shop link for company
+    shop_link = request.build_absolute_uri(
+        f"{reverse('marketplace:shop')}?company={quote(company.domain)}"
+    )
+    
     context = {
         'total_orders': total_orders,
         'pending_orders': pending_orders,
@@ -73,9 +89,101 @@ def admin_order_dashboard(request):
         'pending_revenue': pending_revenue,
         'recent_orders': recent_orders,
         'pending_order_list': pending_order_list,
+        'shop_link': shop_link,
     }
     
     return render(request, 'marketplace/admin/order_dashboard.html', context)
+
+
+@login_required
+@company_admin_required
+def admin_order_quick_create(request):
+    company = request.user.company
+
+    if request.method == 'POST':
+        form = QuickOrderForm(company=company, data=request.POST)
+        if form.is_valid():
+            data = form.cleaned_data
+            client = data['client']
+            if not client:
+                client = Client.objects.create(
+                    email=data['email'],
+                    password='',
+                    first_name=data['first_name'],
+                    last_name=data['last_name'],
+                    phone=data['phone'] or '',
+                    address='',
+                    city='',
+                    country='',
+                    postal_code='',
+                    is_active=True,
+                )
+                client.set_password('')
+                client.save(update_fields=['password'])
+
+            try:
+                with db_transaction.atomic():
+                    subtotal = sum(
+                        item['stock'].selling_price * item['quantity']
+                        for item in data['items']
+                    )
+                    order = Order(
+                        client=client,
+                        company=company,
+                        status='confirmed',
+                        payment_status='paid',
+                        finance_sync_status='pending',
+                        subtotal=subtotal,
+                        tax=0,
+                        shipping=0,
+                        total=subtotal,
+                        shipping_address='In-store purchase',
+                        shipping_city='In-store',
+                        shipping_country='In-store',
+                        shipping_phone=data['phone'] or company.contact_phone or 'N/A',
+                        notes=data['payment_notes'] or 'In-store quick order',
+                        order_number=f"ORD-{timezone.now().strftime('%Y%m%d%H%M%S')}-{client.id}",
+                    )
+                    order.save()
+
+                    for item in data['items']:
+                        stock = item['stock']
+                        quantity = item['quantity']
+                        if stock.quantity < quantity:
+                            raise Exception(f'Insufficient stock for {stock.name}')
+
+                        OrderItem.objects.create(
+                            order=order,
+                            stock=stock,
+                            item_name=stock.name,
+                            item_code=stock.item_code,
+                            quantity=quantity,
+                            unit_price=stock.selling_price,
+                            subtotal=stock.selling_price * quantity,
+                        )
+
+                        stock.quantity = F('quantity') - quantity
+                        stock.save()
+
+                        StockTransaction.objects.create(
+                            company=stock.company,
+                            stock=stock,
+                            transaction_type='out',
+                            quantity=quantity,
+                            remarks=f'In-store quick order #{order.order_number} created by {request.user.get_full_name()}',
+                            user=request.user,
+                        )
+
+                    messages.success(request, f'Quick order created successfully! Order number: {order.order_number}')
+                    return redirect('marketplace:admin_order_detail', pk=order.pk)
+            except Exception as exc:
+                messages.error(request, f'Error creating quick order: {exc}')
+    else:
+        form = QuickOrderForm(company=company)
+
+    return render(request, 'marketplace/admin/order_quick_create.html', {
+        'form': form,
+    })
 
 
 @login_required
@@ -126,9 +234,13 @@ def admin_order_detail(request, pk):
     """View and manage single order"""
     company = request.user.company
     order = get_object_or_404(Order, pk=pk, company=company)
+    shop_link = request.build_absolute_uri(
+        f"{reverse('marketplace:shop')}?company={quote(order.company.domain)}"
+    )
     
     context = {
         'order': order,
+        'shop_link': shop_link,
     }
     
     return render(request, 'marketplace/admin/order_detail.html', context)

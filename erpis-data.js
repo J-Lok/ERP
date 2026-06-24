@@ -23,6 +23,17 @@ const ErpisData = {
       { id: "EMP-003", name: "Yann Traoré", dept: "HR", status: "on_leave", initials: "YT" },
       { id: "EMP-004", name: "Aisha Bamba", dept: "Sales", status: "active", initials: "AB" },
     ],
+    // Action-oriented priority stack (used by PriorityStack)
+    priority: [
+      { title: 'Approve Payroll', description: 'Payroll for Apr 2026 pending approval — 2 flagged items', color: '#16a34a', action: 'Approve', onView: null, onAct: null },
+      { title: 'Resolve Overdue Projects', description: '3 projects overdue — assign owners and schedule remediation', color: '#d97706', action: 'Assign', onView: null, onAct: null },
+      { title: 'Low Stock Alerts', description: '12 items below reorder threshold — prioritize replenishment', color: '#d97706', action: 'Restock', onView: null, onAct: null },
+    ],
+    // Roadmap / recommendations scaffold
+    roadmap: [
+      { title: 'Payroll Modernization', status: 'In Progress', progress: 45, recommendation: 'Prioritize migration of tax calculation engine.' },
+      { title: 'Mobile UX Improvements', status: 'Planned', progress: 10, recommendation: 'Implement responsive grid and touch targets.' },
+    ],
   },
 
   finance: {

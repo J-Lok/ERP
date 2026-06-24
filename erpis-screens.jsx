@@ -11,6 +11,9 @@ function ScreenDashboard() {
         <Btn variant="primary" icon="fa-plus" small>Quick Add</Btn>
       </PageHeader>
 
+      {/* Priority / Action stack (high-level) */}
+      <PriorityStack items={d.priority} />
+
       {/* KPI Row */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 24 }}>
         {d.stats.map((s, i) => <KpiCard key={i} {...s} />)}
@@ -73,6 +76,14 @@ function ScreenDashboard() {
           </div>
         </Card>
       </div>
+
+      {/* Roadmap / Recommendations */}
+      <Card style={{ marginTop: 20 }}>
+        <CardHeader icon="fa-flag" iconColor={ACCENT_COLORS.blue.main} title="Roadmap & Recommendations" actionLabel="View roadmap" action={() => {}} />
+        <div style={{ padding: 18 }}>
+          <Roadmap items={d.roadmap} />
+        </div>
+      </Card>
     </div>
   );
 }
