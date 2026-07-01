@@ -40,6 +40,7 @@ urlpatterns = [
     
     # ========== COMPANY ADMIN ORDER MANAGEMENT ==========
     path('admin/orders/', admin_views.admin_order_dashboard, name='admin_order_dashboard'),
+    path('admin/orders/quick-create/', admin_views.admin_order_quick_create, name='admin_order_quick_create'),
     path('admin/orders/list/', admin_views.admin_order_list, name='admin_order_list'),
     path('admin/orders/<int:pk>/', admin_views.admin_order_detail, name='admin_order_detail'),
     path('admin/orders/<int:pk>/confirm/', admin_views.admin_order_confirm, name='admin_order_confirm'),

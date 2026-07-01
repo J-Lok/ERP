@@ -36,6 +36,98 @@ def company_admin_required(view_func):
         return view_func(request, *args, **kwargs)
     return wrapper
 
+@login_required
+@company_admin_required
+def admin_order_quick_create(request):
+    """
+    Create an in-store order on behalf of a walk-in or existing client,
+    bypassing the public cart/checkout flow.
+    """
+    company = request.user.company
+    form = QuickOrderForm(company=company, data=request.POST or None)
+
+    if request.method == 'POST' and form.is_valid():
+        cd = form.cleaned_data
+        selected_stocks = [
+            cd.get(f'stock_{i}') for i in range(1, 6) if cd.get(f'stock_{i}')
+        ]
+
+        if not selected_stocks:
+            messages.error(request, 'Select at least one product for the order.')
+            return render(request, 'marketplace/admin/order_quick_create.html', {'form': form})
+
+        try:
+            with db_transaction.atomic():
+                client = cd.get('client')
+                if client is None:
+                    if not (cd.get('first_name') and cd.get('phone')):
+                        messages.error(request, 'First name and phone are required for a walk-in customer.')
+                        return render(request, 'marketplace/admin/order_quick_create.html', {'form': form})
+                    client, _ = Client.objects.get_or_create(
+                        company=company,
+                        phone=cd['phone'],
+                        defaults={
+                            'first_name': cd.get('first_name', ''),
+                            'last_name': cd.get('last_name', ''),
+                            'email': cd.get('email', ''),
+                        },
+                    )
+
+                subtotal = sum(
+                    (stock.selling_price or 0) * 1 for stock in selected_stocks
+                )
+
+                order = Order.objects.create(
+                    order_number=f"ORD-{timezone.now().strftime('%Y%m%d%H%M%S')}-{client.id}",
+                    client=client,
+                    company=company,
+                    status='confirmed',
+                    payment_status='paid',
+                    subtotal=subtotal,
+                    tax=0,
+                    shipping=0,
+                    total=subtotal,
+                    shipping_address='In-store pickup',
+                    shipping_city='',
+                    shipping_country='',
+                    shipping_phone=cd.get('phone', getattr(client, 'phone', '')),
+                )
+
+                for stock in selected_stocks:
+                    if stock.quantity < 1:
+                        raise ValueError(f'"{stock.name}" is out of stock.')
+                    OrderItem.objects.create(
+                        order=order,
+                        stock=stock,
+                        item_name=stock.name,
+                        item_code=getattr(stock, 'sku', '') or '',
+                        quantity=1,
+                        unit_price=stock.selling_price or 0,
+                    )
+                    stock.quantity = F('quantity') - 1
+                    stock.save(update_fields=['quantity'])
+                    StockTransaction.objects.create(
+                        company=company,
+                        stock=stock,
+                        transaction_type='sale',
+                        quantity=-1,
+                        remarks=f'In-store order #{order.order_number}',
+                    )
+
+                try:
+                    post_order_payment_to_finance(order)
+                except MarketplaceFinancePostingError as exc:
+                    set_order_finance_sync_error(order, str(exc))
+
+            messages.success(request, f'Order {order.order_number} created.')
+            return redirect('marketplace:admin_order_detail', pk=order.pk)
+
+        except ValueError as exc:
+            messages.error(request, str(exc))
+        except Exception as exc:
+            messages.error(request, f'Could not create order: {exc}')
+
+    return render(request, 'marketplace/admin/order_quick_create.html', {'form': form})
 
 @login_required
 @company_admin_required
