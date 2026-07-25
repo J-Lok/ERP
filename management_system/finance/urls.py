@@ -39,6 +39,7 @@ urlpatterns = [
     path('client-invoices/<int:pk>/', views.client_invoice_detail, name='client_invoice_detail'),
     path('client-invoices/<int:pk>/edit/', views.client_invoice_edit, name='client_invoice_edit'),
     path('client-invoices/<int:pk>/delete/', views.client_invoice_delete, name='client_invoice_delete'),
+    path('client-invoices/<int:pk>/print/', views.client_invoice_print, name='client_invoice_print'),
 
     # Supplier invoices
     path('supplier-invoices/', views.supplier_invoice_list, name='supplier_invoice_list'),

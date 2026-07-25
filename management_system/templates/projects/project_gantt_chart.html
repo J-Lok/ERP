@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load i18n %}
 {% load static %}
 
 {% block title %}Gantt Chart - {{ block.super }}{% endblock %}
@@ -48,18 +49,18 @@
     <!-- Page Header -->
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h1 class="h3 mb-0"><i class="fas fa-chart-gantt me-2"></i>Gantt Chart</h1>
-            <p class="text-muted mb-0">Visual timeline of all projects and tasks</p>
+            <h1 class="h3 mb-0"><i class="fas fa-chart-gantt me-2"></i>{% trans "Gantt Chart" %}</h1>
+            <p class="text-muted mb-0">{% trans "Visual timeline of all projects and tasks" %}</p>
         </div>
         <div>
             <a href="{% url 'projects:project_list' %}" class="btn btn-outline-secondary me-2">
-                <i class="fas fa-list me-2"></i>List View
+                <i class="fas fa-list me-2"></i>{% trans "List View" %}
             </a>
             <a href="{% url 'projects:project_kanban' %}" class="btn btn-outline-info me-2">
-                <i class="fas fa-columns me-2"></i>Kanban
+                <i class="fas fa-columns me-2"></i>{% trans "Kanban" %}
             </a>
             <a href="{% url 'projects:project_create' %}" class="btn btn-primary">
-                <i class="fas fa-plus me-2"></i>New Project
+                <i class="fas fa-plus me-2"></i>{% trans "New Project" %}
             </a>
         </div>
     </div>
@@ -70,22 +71,22 @@
             <div class="col-md-6">
                 <div class="btn-group" role="group">
                     <button type="button" class="btn btn-sm btn-outline-primary" onclick="window.projectGanttZoom('day')">
-                        <i class="fas fa-calendar-day me-1"></i>Day
+                        <i class="fas fa-calendar-day me-1"></i>{% trans "Day" %}
                     </button>
                     <button type="button" class="btn btn-sm btn-outline-primary active" onclick="window.projectGanttZoom('week')">
-                        <i class="fas fa-calendar-week me-1"></i>Week
+                        <i class="fas fa-calendar-week me-1"></i>{% trans "Week" %}
                     </button>
                     <button type="button" class="btn btn-sm btn-outline-primary" onclick="window.projectGanttZoom('month')">
-                        <i class="fas fa-calendar-alt me-1"></i>Month
+                        <i class="fas fa-calendar-alt me-1"></i>{% trans "Month" %}
                     </button>
                 </div>
             </div>
             <div class="col-md-6 text-end">
                 <button type="button" class="btn btn-sm btn-outline-secondary" onclick="window.projectGanttExport('pdf')">
-                    <i class="fas fa-file-pdf me-1"></i>Export PDF
+                    <i class="fas fa-file-pdf me-1"></i>{% trans "Export PDF" %}
                 </button>
                 <button type="button" class="btn btn-sm btn-outline-secondary" onclick="window.projectGanttExport('png')">
-                    <i class="fas fa-image me-1"></i>Export PNG
+                    <i class="fas fa-image me-1"></i>{% trans "Export PNG" %}
                 </button>
             </div>
         </div>
@@ -97,30 +98,30 @@
     <!-- Legend -->
     <div class="card mt-4">
         <div class="card-body">
-            <h5 class="card-title mb-3">Legend</h5>
+            <h5 class="card-title mb-3">{% trans "Legend" %}</h5>
             <div class="row">
                 <div class="col-md-3">
                     <div class="d-flex align-items-center mb-2">
                         <div style="width: 30px; height: 20px; background: #3db9d3; margin-right: 10px;"></div>
-                        <span>Projects</span>
+                        <span>{% trans "Projects" %}</span>
                     </div>
                 </div>
                 <div class="col-md-3">
                     <div class="d-flex align-items-center mb-2">
                         <div style="width: 30px; height: 20px; background: #65c16f; margin-right: 10px;"></div>
-                        <span>Completed Tasks</span>
+                        <span>{% trans "Completed Tasks" %}</span>
                     </div>
                 </div>
                 <div class="col-md-3">
                     <div class="d-flex align-items-center mb-2">
                         <div style="width: 30px; height: 20px; background: #ffa940; margin-right: 10px;"></div>
-                        <span>In Progress</span>
+                        <span>{% trans "In Progress" %}</span>
                     </div>
                 </div>
                 <div class="col-md-3">
                     <div class="d-flex align-items-center mb-2">
                         <div style="width: 30px; height: 20px; background: #999; margin-right: 10px;"></div>
-                        <span>To Do</span>
+                        <span>{% trans "To Do" %}</span>
                     </div>
                 </div>
             </div>

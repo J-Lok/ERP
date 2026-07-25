@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load i18n %}
 {% load crispy_forms_tags %}
 
 {% block title %}Meetings{% endblock %}
@@ -8,12 +9,12 @@
     <div class="row mb-4">
         <div class="col-md-8">
             <h1 class="h3 mb-0">
-                <i class="fas fa-calendar-alt"></i> Meetings
+                <i class="fas fa-calendar-alt"></i> {% trans "Meetings" %}
             </h1>
         </div>
         <div class="col-md-4 text-end">
             <a href="{% url 'meetings:meeting_create' %}" class="btn btn-primary">
-                <i class="fas fa-plus"></i> New Meeting
+                <i class="fas fa-plus"></i> {% trans "New Meeting" %}
             </a>
         </div>
     </div>
@@ -33,9 +34,9 @@
                 </div>
                 <div class="col-md-3 d-flex gap-2">
                     <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-filter"></i> Filter
+                        <i class="fas fa-filter"></i> {% trans "Filter" %}
                     </button>
-                    <a href="{% url 'meetings:meeting_list' %}" class="btn btn-outline-secondary">Reset</a>
+                    <a href="{% url 'meetings:meeting_list' %}" class="btn btn-outline-secondary">{% trans "Reset" %}</a>
                 </div>
             </form>
         </div>
@@ -47,14 +48,14 @@
             <table class="table table-hover mb-0">
                 <thead class="table-light">
                     <tr>
-                        <th>Title</th>
-                        <th>Type</th>
-                        <th>Date</th>
-                        <th>Status</th>
-                        <th>Priority</th>
-                        <th>Organizer</th>
-                        <th>Attendees</th>
-                        <th>Actions</th>
+                        <th>{% trans "Title" %}</th>
+                        <th>{% trans "Type" %}</th>
+                        <th>{% trans "Date" %}</th>
+                        <th>{% trans "Status" %}</th>
+                        <th>{% trans "Priority" %}</th>
+                        <th>{% trans "Organizer" %}</th>
+                        <th>{% trans "Attendees" %}</th>
+                        <th>{% trans "Actions" %}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -99,7 +100,7 @@
                     {% empty %}
                         <tr>
                             <td colspan="8" class="text-center p-4">
-                                <p class="text-muted">No meetings found</p>
+                                <p class="text-muted">{% trans "No meetings found" %}</p>
                             </td>
                         </tr>
                     {% endfor %}
@@ -114,10 +115,10 @@
             <ul class="pagination justify-content-center">
                 {% if meetings.has_previous %}
                     <li class="page-item">
-                        <a class="page-link" href="?page=1">First</a>
+                        <a class="page-link" href="?page=1">{% trans "First" %}</a>
                     </li>
                     <li class="page-item">
-                        <a class="page-link" href="?page={{ meetings.previous_page_number }}">Previous</a>
+                        <a class="page-link" href="?page={{ meetings.previous_page_number }}">{% trans "Previous" %}</a>
                     </li>
                 {% endif %}
 
@@ -135,10 +136,10 @@
 
                 {% if meetings.has_next %}
                     <li class="page-item">
-                        <a class="page-link" href="?page={{ meetings.next_page_number }}">Next</a>
+                        <a class="page-link" href="?page={{ meetings.next_page_number }}">{% trans "Next" %}</a>
                     </li>
                     <li class="page-item">
-                        <a class="page-link" href="?page={{ meetings.paginator.num_pages }}">Last</a>
+                        <a class="page-link" href="?page={{ meetings.paginator.num_pages }}">{% trans "Last" %}</a>
                     </li>
                 {% endif %}
             </ul>

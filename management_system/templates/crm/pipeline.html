@@ -1,15 +1,16 @@
 {% extends 'base.html' %}
+{% load i18n %}
 {% block title %}Pipeline — CRM{% endblock %}
 
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
-  <h2 class="mb-0"><i class="fas fa-stream text-primary me-2"></i>Sales Pipeline</h2>
+  <h2 class="mb-0"><i class="fas fa-stream text-primary me-2"></i>{% trans "Sales Pipeline" %}</h2>
   <div class="d-flex gap-2">
     <a href="{% url 'crm:opportunity_list' %}" class="btn btn-outline-secondary btn-sm">
-      <i class="fas fa-list me-1"></i>List View
+      <i class="fas fa-list me-1"></i>{% trans "List View" %}
     </a>
     <a href="{% url 'crm:opportunity_create' %}" class="btn btn-primary btn-sm">
-      <i class="fas fa-plus me-1"></i>New Opportunity
+      <i class="fas fa-plus me-1"></i>{% trans "New Opportunity" %}
     </a>
   </div>
 </div>
@@ -19,7 +20,7 @@
   <div class="row g-2 align-items-end">
     <div class="col-md-3">
       <select name="assigned_to" class="form-select form-select-sm" onchange="this.form.submit()">
-        <option value="">All assignees</option>
+        <option value="">{% trans "All assignees" %}</option>
         {% for emp in employees %}
         <option value="{{ emp.pk }}" {% if assigned_filter == emp.pk|stringformat:'s' %}selected{% endif %}>
           {{ emp.full_name }}
@@ -29,7 +30,7 @@
     </div>
     {% if assigned_filter %}
     <div class="col-auto">
-      <a href="{% url 'crm:pipeline' %}" class="btn btn-outline-secondary btn-sm">Clear</a>
+      <a href="{% url 'crm:pipeline' %}" class="btn btn-outline-secondary btn-sm">{% trans "Clear" %}</a>
     </div>
     {% endif %}
   </div>
@@ -117,7 +118,7 @@
       </div>
     </div>
     {% empty %}
-    <div class="text-center text-muted small py-3">No opportunities</div>
+    <div class="text-center text-muted small py-3">{% trans "No opportunities" %}</div>
     {% endfor %}
   </div>
   {% endfor %}

@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load i18n %}
 {% load crispy_forms_tags %}
 
 {% block title %}Quick In-Store Order{% endblock %}
@@ -7,8 +8,8 @@
 <div class="container-fluid py-4">
   <nav aria-label="breadcrumb" class="mb-4">
     <ol class="breadcrumb">
-      <li class="breadcrumb-item"><a href="{% url 'marketplace:admin_order_dashboard' %}">Dashboard</a></li>
-      <li class="breadcrumb-item active">Quick In-Store Order</li>
+      <li class="breadcrumb-item"><a href="{% url 'marketplace:admin_order_dashboard' %}">{% trans "Dashboard" %}</a></li>
+      <li class="breadcrumb-item active">{% trans "Quick In-Store Order" %}</li>
     </ol>
   </nav>
 
@@ -16,14 +17,14 @@
     <div class="col-md-8">
       <div class="card border-0 shadow-sm">
         <div class="card-header bg-light">
-          <h5 class="card-title mb-0"><i class="fas fa-cash-register me-2"></i>Quick In-Store Order</h5>
-          <p class="text-muted small mb-0">Record a sale made in person — stock is decremented immediately.</p>
+          <h5 class="card-title mb-0"><i class="fas fa-cash-register me-2"></i>{% trans "Quick In-Store Order" %}</h5>
+          <p class="text-muted small mb-0">{% trans "Record a sale made in person — stock is decremented immediately." %}</p>
         </div>
         <div class="card-body">
           <form method="post">
             {% csrf_token %}
 
-            <h6 class="text-muted mb-2">Customer</h6>
+            <h6 class="text-muted mb-2">{% trans "Customer" %}</h6>
             {{ form.client|as_crispy_field }}
             <div class="row g-2">
               <div class="col-md-6">{{ form.first_name|as_crispy_field }}</div>
@@ -31,10 +32,10 @@
               <div class="col-md-6">{{ form.phone|as_crispy_field }}</div>
               <div class="col-md-6">{{ form.email|as_crispy_field }}</div>
             </div>
-            <p class="text-muted small">Leave "Existing Client" empty and fill name + phone for a walk-in customer.</p>
+            <p class="text-muted small">{% trans "Leave \"Existing Client\" empty and fill name + phone for a walk-in customer." %}</p>
 
             <hr>
-            <h6 class="text-muted mb-2">Products (up to 5)</h6>
+            <h6 class="text-muted mb-2">{% trans "Products (up to 5)" %}</h6>
             <div class="row g-2">
               {{ form.stock_1|as_crispy_field }}
               {{ form.stock_2|as_crispy_field }}
@@ -44,7 +45,7 @@
             </div>
 
             <hr>
-            <h6 class="text-muted mb-2">Payment</h6>
+            <h6 class="text-muted mb-2">{% trans "Payment" %}</h6>
             <div class="row g-2">
               <div class="col-md-6">{{ form.payment_method|as_crispy_field }}</div>
             </div>
@@ -52,9 +53,9 @@
 
             <div class="d-flex gap-2 mt-3">
               <button type="submit" class="btn btn-success">
-                <i class="fas fa-check me-1"></i>Create Order
+                <i class="fas fa-check me-1"></i>{% trans "Create Order" %}
               </button>
-              <a href="{% url 'marketplace:admin_order_dashboard' %}" class="btn btn-outline-secondary">Cancel</a>
+              <a href="{% url 'marketplace:admin_order_dashboard' %}" class="btn btn-outline-secondary">{% trans "Cancel" %}</a>
             </div>
           </form>
         </div>

@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 
+{% load i18n %}
 {% block title %}Payslips{% endblock %}
 
 {% block content %}
@@ -8,7 +9,7 @@
         <div class="col-12">
             <div class="card">
                 <div class="card-header">
-                    <h3 class="card-title mb-0">Payslips</h3>
+                    <h3 class="card-title mb-0">{% trans "Payslips" %}</h3>
                 </div>
                 <div class="card-body">
                     {% if payslips %}
@@ -16,15 +17,15 @@
                             <table class="table table-striped">
                                 <thead>
                                     <tr>
-                                        <th>Payslip Number</th>
-                                        <th>Employee</th>
-                                        <th>Period</th>
-                                        <th>Gross Pay</th>
-                                        <th>Deductions</th>
-                                        <th>Net Pay</th>
-                                        <th>Issued Date</th>
-                                        <th>Email Sent</th>
-                                        <th>Actions</th>
+                                        <th>{% trans "Payslip Number" %}</th>
+                                        <th>{% trans "Employee" %}</th>
+                                        <th>{% trans "Period" %}</th>
+                                        <th>{% trans "Gross Pay" %}</th>
+                                        <th>{% trans "Deductions" %}</th>
+                                        <th>{% trans "Net Pay" %}</th>
+                                        <th>{% trans "Issued Date" %}</th>
+                                        <th>{% trans "Email Sent" %}</th>
+                                        <th>{% trans "Actions" %}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -43,12 +44,12 @@
                                                     <i class="fas fa-check"></i> Sent {{ payslip.email_sent_at|date:"M d" }}
                                                 </span>
                                             {% else %}
-                                                <span class="badge bg-secondary">Not Sent</span>
+                                                <span class="badge bg-secondary">{% trans "Not Sent" %}</span>
                                             {% endif %}
                                         </td>
                                         <td>
                                             <a href="{% url 'hr:payslip_detail' payslip.pk %}" class="btn btn-sm btn-outline-primary">
-                                                <i class="fas fa-eye"></i> View
+                                                <i class="fas fa-eye"></i> {% trans "View" %}
                                             </a>
                                         </td>
                                     </tr>
@@ -63,10 +64,10 @@
                             <ul class="pagination justify-content-center">
                                 {% if payslips.has_previous %}
                                     <li class="page-item">
-                                        <a class="page-link" href="?page=1">First</a>
+                                        <a class="page-link" href="?page=1">{% trans "First" %}</a>
                                     </li>
                                     <li class="page-item">
-                                        <a class="page-link" href="?page={{ payslips.previous_page_number }}">Previous</a>
+                                        <a class="page-link" href="?page={{ payslips.previous_page_number }}">{% trans "Previous" %}</a>
                                     </li>
                                 {% endif %}
 
@@ -76,10 +77,10 @@
 
                                 {% if payslips.has_next %}
                                     <li class="page-item">
-                                        <a class="page-link" href="?page={{ payslips.next_page_number }}">Next</a>
+                                        <a class="page-link" href="?page={{ payslips.next_page_number }}">{% trans "Next" %}</a>
                                     </li>
                                     <li class="page-item">
-                                        <a class="page-link" href="?page={{ payslips.paginator.num_pages }}">Last</a>
+                                        <a class="page-link" href="?page={{ payslips.paginator.num_pages }}">{% trans "Last" %}</a>
                                     </li>
                                 {% endif %}
                             </ul>
@@ -88,8 +89,8 @@
                     {% else %}
                         <div class="text-center py-5">
                             <i class="fas fa-receipt fa-3x text-muted mb-3"></i>
-                            <h4>No Payslips</h4>
-                            <p class="text-muted">Payslips will be generated when payroll is processed.</p>
+                            <h4>{% trans "No Payslips" %}</h4>
+                            <p class="text-muted">{% trans "Payslips will be generated when payroll is processed." %}</p>
                         </div>
                     {% endif %}
                 </div>

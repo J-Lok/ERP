@@ -8,7 +8,7 @@ from django.test import TestCase
 from django.utils import timezone
 from accounts.models import Company
 from employees.models import Employee, Department
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from .models import Meeting, ActionItem, MeetingNote, MeetingAttachment
 
 
@@ -16,16 +16,19 @@ class MeetingModelTestCase(TestCase):
     """Test cases for Meeting model."""
     
     def setUp(self):
-        self.company = Company.objects.create(name='Test Company', tax_id='12345')
-        self.user = User.objects.create_user(username='testuser', password='testpass')
-        self.department = Department.objects.create(name='Test Dept', company=self.company)
-        self.employee = Employee.objects.create(
-            user=self.user,
+        self.company = Company.objects.create(name='Test Company', domain='test-company')
+        User = get_user_model()
+        self.user = User.objects.create_user(
+            email='testuser@example.com',
+            password='testpass',
             company=self.company,
-            department=self.department,
-            phone='1234567890',
-            hire_date=timezone.now()
+            first_name='Test',
+            last_name='User'
         )
+        self.department = Department.objects.create(name='Test Dept', company=self.company)
+        self.employee = self.user.employee_profile
+        self.employee.department = self.department
+        self.employee.save()
         
         self.meeting = Meeting.objects.create(
             company=self.company,
@@ -57,16 +60,19 @@ class ActionItemModelTestCase(TestCase):
     """Test cases for ActionItem model."""
     
     def setUp(self):
-        self.company = Company.objects.create(name='Test Company', tax_id='12345')
-        self.user = User.objects.create_user(username='testuser', password='testpass')
-        self.department = Department.objects.create(name='Test Dept', company=self.company)
-        self.employee = Employee.objects.create(
-            user=self.user,
+        self.company = Company.objects.create(name='Test Company', domain='test-company')
+        User = get_user_model()
+        self.user = User.objects.create_user(
+            email='testuser@example.com',
+            password='testpass',
             company=self.company,
-            department=self.department,
-            phone='1234567890',
-            hire_date=timezone.now()
+            first_name='Test',
+            last_name='User'
         )
+        self.department = Department.objects.create(name='Test Dept', company=self.company)
+        self.employee = self.user.employee_profile
+        self.employee.department = self.department
+        self.employee.save()
         
         self.meeting = Meeting.objects.create(
             company=self.company,
@@ -103,7 +109,7 @@ class ActionItemModelTestCase(TestCase):
         """Test marking an action item as completed."""
         self.action_item.mark_completed()
         self.assertEqual(self.action_item.status, 'completed')
-        self.assertEqual(self.action_item.completion_percentage, 100)
+        self.assertTrue(self.action_item.is_completed)
         self.assertIsNotNone(self.action_item.actual_completion_date)
 
 
@@ -111,16 +117,19 @@ class MeetingNoteModelTestCase(TestCase):
     """Test cases for MeetingNote model."""
     
     def setUp(self):
-        self.company = Company.objects.create(name='Test Company', tax_id='12345')
-        self.user = User.objects.create_user(username='testuser', password='testpass')
-        self.department = Department.objects.create(name='Test Dept', company=self.company)
-        self.employee = Employee.objects.create(
-            user=self.user,
+        self.company = Company.objects.create(name='Test Company', domain='test-company')
+        User = get_user_model()
+        self.user = User.objects.create_user(
+            email='testuser@example.com',
+            password='testpass',
             company=self.company,
-            department=self.department,
-            phone='1234567890',
-            hire_date=timezone.now()
+            first_name='Test',
+            last_name='User'
         )
+        self.department = Department.objects.create(name='Test Dept', company=self.company)
+        self.employee = self.user.employee_profile
+        self.employee.department = self.department
+        self.employee.save()
         
         self.meeting = Meeting.objects.create(
             company=self.company,

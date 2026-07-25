@@ -1,4 +1,5 @@
 {% extends 'marketplace/marketplace_base.html' %}
+{% load i18n %}
 {% block title %}Register - {{ block.super }}{% endblock %}
 
 {% block content %}
@@ -8,25 +9,30 @@
         display: flex;
         align-items: center;
         padding: 2rem 0;
-        background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+        background-color: var(--app-bg) !important;
     }
 
     .register-card {
-        border: none;
+        background-color: var(--surface-bg) !important;
+        border: 1px solid rgba(0, 0, 0, 0.08) !important;
         border-radius: 1rem;
         overflow: hidden;
-        box-shadow: 0 10px 40px rgba(99, 102, 241, 0.15);
+        box-shadow: var(--card-shadow);
         transition: transform 0.3s, box-shadow 0.3s;
     }
 
+    [data-bs-theme="dark"] .register-card {
+        border-color: rgba(255, 255, 255, 0.08) !important;
+    }
+
     .register-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 20px 50px rgba(99, 102, 241, 0.25);
+        transform: translateY(-4px);
+        box-shadow: var(--card-shadow-hover);
     }
 
     .register-header {
-        background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-        color: white;
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%) !important;
+        color: white !important;
         padding: 2rem;
         text-align: center;
     }
@@ -43,7 +49,7 @@
 
     .register-header .company-info {
         font-size: 0.95rem;
-        opacity: 0.95;
+        opacity: 0.9;
         margin-top: 0.5rem;
     }
 
@@ -54,7 +60,7 @@
 
     .form-label {
         font-weight: 600;
-        color: #1f2937;
+        color: var(--app-text) !important;
         margin-bottom: 0.5rem;
         font-size: 0.95rem;
         display: flex;
@@ -63,28 +69,34 @@
     }
 
     .form-label-icon {
-        color: #6366f1;
+        color: var(--primary-color) !important;
         width: 18px;
         text-align: center;
     }
 
     .form-control {
-        border: 1.5px solid #e5e7eb;
-        border-radius: 0.5rem;
+        border: 1.5px solid rgba(0, 0, 0, 0.15) !important;
+        border-radius: 0.75rem !important;
         padding: 0.75rem 1rem;
         font-size: 0.95rem;
         transition: all 0.3s;
-        background-color: #ffffff;
+        background-color: var(--surface-bg) !important;
+        color: var(--app-text) !important;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03) !important;
+    }
+
+    [data-bs-theme="dark"] .form-control {
+        border-color: rgba(255, 255, 255, 0.15) !important;
     }
 
     .form-control:focus {
-        border-color: #6366f1;
-        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
-        background-color: #ffffff;
+        border-color: var(--primary-color) !important;
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25) !important;
+        background-color: var(--surface-bg) !important;
     }
 
     .form-control::placeholder {
-        color: #9ca3af;
+        color: #9ca3af !important;
     }
 
     textarea.form-control {
@@ -99,12 +111,16 @@
     .form-section-title {
         font-size: 0.85rem;
         font-weight: 700;
-        color: #6366f1;
+        color: var(--primary-color) !important;
         text-transform: uppercase;
         letter-spacing: 0.5px;
         margin-bottom: 1.25rem;
         padding-bottom: 0.75rem;
-        border-bottom: 2px solid #e5e7eb;
+        border-bottom: 2px solid rgba(0, 0, 0, 0.08) !important;
+    }
+
+    [data-bs-theme="dark"] .form-section-title {
+        border-bottom-color: rgba(255, 255, 255, 0.08) !important;
     }
 
     .form-row-two .col-md-6 {
@@ -126,22 +142,21 @@
     }
 
     .btn-register {
-        background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-        border: none;
-        border-radius: 0.5rem;
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%) !important;
+        border: none !important;
+        border-radius: 0.75rem !important;
         padding: 0.75rem 2rem;
         font-weight: 600;
         font-size: 1rem;
         transition: all 0.3s;
-        color: white;
+        color: white !important;
         margin-top: 1rem;
     }
 
     .btn-register:hover {
         transform: translateY(-2px);
-        box-shadow: 0 8px 20px rgba(99, 102, 241, 0.3);
-        background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
-        color: white;
+        box-shadow: 0 8px 20px rgba(99, 102, 241, 0.3) !important;
+        filter: brightness(1.1);
     }
 
     .btn-register:active {
@@ -151,25 +166,29 @@
     .register-footer {
         text-align: center;
         padding-top: 1.5rem;
-        border-top: 1px solid #e5e7eb;
+        border-top: 1px solid rgba(0, 0, 0, 0.08) !important;
         margin-top: 1.5rem;
+    }
+
+    [data-bs-theme="dark"] .register-footer {
+        border-top-color: rgba(255, 255, 255, 0.08) !important;
     }
 
     .register-footer p {
         margin: 0;
-        color: #6b7280;
+        color: #6b7280 !important;
         font-size: 0.95rem;
     }
 
     .register-footer a {
-        color: #6366f1;
+        color: var(--primary-color) !important;
         font-weight: 600;
         text-decoration: none;
         transition: all 0.3s;
     }
 
     .register-footer a:hover {
-        color: #4f46e5;
+        color: var(--secondary-color) !important;
         text-decoration: underline;
     }
 
@@ -222,11 +241,11 @@
                 <div class="card register-card">
                     <div class="register-header">
                         <h2>
-                            <i class="fas fa-clipboard-user"></i>Create Account
+                            <i class="fas fa-clipboard-user"></i>{% trans "Create Account" %}
                         </h2>
                         {% if company %}
                         <div class="company-info">
-                            Registering for <strong>{{ company.name }}</strong>
+                            {% trans "Registering for" %} <strong>{{ company.name }}</strong>
                         </div>
                         {% endif %}
                     </div>
@@ -238,7 +257,7 @@
                             {% if form.non_field_errors %}
                             <div class="error-messages">
                                 <i class="fas fa-exclamation-circle"></i>
-                                <strong>Registration Error:</strong>
+                                <strong>{% trans "Registration Error:" %}</strong>
                                 <div>{{ form.non_field_errors }}</div>
                             </div>
                             {% endif %}
@@ -246,14 +265,14 @@
                             <!-- Personal Information Section -->
                             <div class="form-section">
                                 <div class="form-section-title">
-                                    <i class="fas fa-user me-2" style="color: #6366f1;"></i>Personal Information
+                                    <i class="fas fa-user me-2" style="color: #6366f1;"></i>{% trans "Personal Information" %}
                                 </div>
                                 <div class="row form-row-two">
                                     <div class="col-md-6">
                                         <div class="form-group-wrapper">
                                             <label class="form-label">
                                                 <span class="form-label-icon"><i class="fas fa-user-circle"></i></span>
-                                                First Name <span style="color: #ef4444;">*</span>
+                                                {% trans "First Name" %} <span style="color: #ef4444;">*</span>
                                             </label>
                                             {{ form.first_name }}
                                             {% if form.first_name.errors %}
@@ -265,7 +284,7 @@
                                         <div class="form-group-wrapper">
                                             <label class="form-label">
                                                 <span class="form-label-icon"><i class="fas fa-user-circle"></i></span>
-                                                Last Name <span style="color: #ef4444;">*</span>
+                                                {% trans "Last Name" %} <span style="color: #ef4444;">*</span>
                                             </label>
                                             {{ form.last_name }}
                                             {% if form.last_name.errors %}
@@ -280,7 +299,7 @@
                                         <div class="form-group-wrapper">
                                             <label class="form-label">
                                                 <span class="form-label-icon"><i class="fas fa-envelope"></i></span>
-                                                Email <span style="color: #ef4444;">*</span>
+                                                {% trans "Email" %} <span style="color: #ef4444;">*</span>
                                             </label>
                                             {{ form.email }}
                                             {% if form.email.errors %}
@@ -292,7 +311,7 @@
                                         <div class="form-group-wrapper">
                                             <label class="form-label">
                                                 <span class="form-label-icon"><i class="fas fa-phone"></i></span>
-                                                Phone
+                                                {% trans "Phone" %}
                                             </label>
                                             {{ form.phone }}
                                             {% if form.phone.errors %}
@@ -306,12 +325,12 @@
                             <!-- Address Section -->
                             <div class="form-section">
                                 <div class="form-section-title">
-                                    <i class="fas fa-map-marker-alt me-2"></i>Address Information
+                                    <i class="fas fa-map-marker-alt me-2"></i>{% trans "Address Information" %}
                                 </div>
                                 <div class="form-group-wrapper">
                                     <label class="form-label">
                                         <span class="form-label-icon"><i class="fas fa-home"></i></span>
-                                        Address
+                                        {% trans "Address" %}
                                     </label>
                                     {{ form.address }}
                                     {% if form.address.errors %}
@@ -324,7 +343,7 @@
                                         <div class="form-group-wrapper">
                                             <label class="form-label">
                                                 <span class="form-label-icon"><i class="fas fa-city"></i></span>
-                                                City
+                                                {% trans "City" %}
                                             </label>
                                             {{ form.city }}
                                             {% if form.city.errors %}
@@ -336,7 +355,7 @@
                                         <div class="form-group-wrapper">
                                             <label class="form-label">
                                                 <span class="form-label-icon"><i class="fas fa-globe"></i></span>
-                                                Country
+                                                {% trans "Country" %}
                                             </label>
                                             {{ form.country }}
                                             {% if form.country.errors %}
@@ -348,7 +367,7 @@
                                         <div class="form-group-wrapper">
                                             <label class="form-label">
                                                 <span class="form-label-icon"><i class="fas fa-mailbox"></i></span>
-                                                Postal Code
+                                                {% trans "Postal Code" %}
                                             </label>
                                             {{ form.postal_code }}
                                             {% if form.postal_code.errors %}
@@ -362,14 +381,14 @@
                             <!-- Security Section -->
                             <div class="form-section">
                                 <div class="form-section-title">
-                                    <i class="fas fa-lock me-2"></i>Security
+                                    <i class="fas fa-lock me-2"></i>{% trans "Security" %}
                                 </div>
                                 <div class="row form-row-two">
                                     <div class="col-md-6">
                                         <div class="form-group-wrapper">
                                             <label class="form-label">
                                                 <span class="form-label-icon"><i class="fas fa-key"></i></span>
-                                                Password <span style="color: #ef4444;">*</span>
+                                                {% trans "Password" %} <span style="color: #ef4444;">*</span>
                                             </label>
                                             {{ form.password }}
                                             {% if form.password.errors %}
@@ -386,7 +405,7 @@
                                         <div class="form-group-wrapper">
                                             <label class="form-label">
                                                 <span class="form-label-icon"><i class="fas fa-key"></i></span>
-                                                Confirm Password <span style="color: #ef4444;">*</span>
+                                                {% trans "Confirm Password" %} <span style="color: #ef4444;">*</span>
                                             </label>
                                             {{ form.confirm_password }}
                                             {% if form.confirm_password.errors %}
@@ -399,14 +418,14 @@
 
                             <!-- Submit Button -->
                             <button type="submit" class="btn btn-register w-100">
-                                <i class="fas fa-user-check me-2"></i>Create Account
+                                <i class="fas fa-user-check me-2"></i>{% trans "Create Account" %}
                             </button>
                         </form>
 
                         <div class="register-footer">
-                            <p>Already have an account? 
+                            <p>{% trans "Already have an account?" %} 
                                 <a href="{% url 'marketplace:client_login' %}">
-                                    <i class="fas fa-sign-in-alt me-1"></i>Login here
+                                    <i class="fas fa-sign-in-alt me-1"></i>{% trans "Login here" %}
                                 </a>
                             </p>
                         </div>

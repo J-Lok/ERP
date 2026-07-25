@@ -1,18 +1,19 @@
 {% extends 'base.html' %}
 
+{% load i18n %}
 {% block title %}Department Report — ERP System{% endblock %}
 
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h2 class="mb-0">
-        <i class="fas fa-chart-pie text-primary me-2" aria-hidden="true"></i>Department Report
+        <i class="fas fa-chart-pie text-primary me-2" aria-hidden="true"></i>{% trans "Department Report" %}
     </h2>
     <div class="d-flex gap-2">
         <button onclick="window.print()" class="btn btn-outline-primary btn-sm">
-            <i class="fas fa-print me-1" aria-hidden="true"></i>Print
+            <i class="fas fa-print me-1" aria-hidden="true"></i>{% trans "Print" %}
         </button>
         <a href="{% url 'employees:department_list' %}" class="btn btn-outline-secondary btn-sm">
-            <i class="fas fa-arrow-left me-1" aria-hidden="true"></i>Back
+            <i class="fas fa-arrow-left me-1" aria-hidden="true"></i>{% trans "Back" %}
         </a>
     </div>
 </div>
@@ -20,20 +21,20 @@
 {% if departments %}
 <div class="card shadow-sm mb-4">
     <div class="card-header bg-white">
-        <h5 class="mb-0">Department Statistics</h5>
+        <h5 class="mb-0">{% trans "Department Statistics" %}</h5>
     </div>
     <div class="card-body p-0">
         <div class="table-responsive">
             <table class="table table-hover mb-0">
                 <thead class="table-light">
                     <tr>
-                        <th>Department</th>
-                        <th class="text-center">Total</th>
-                        <th class="text-center">Active</th>
-                        <th class="text-center">On Leave</th>
-                        <th class="text-end">Avg Salary</th>
-                        <th class="text-end">Total Salary</th>
-                        <th style="min-width:140px;">% of Company</th>
+                        <th>{% trans "Department" %}</th>
+                        <th class="text-center">{% trans "Total" %}</th>
+                        <th class="text-center">{% trans "Active" %}</th>
+                        <th class="text-center">{% trans "On Leave" %}</th>
+                        <th class="text-end">{% trans "Avg Salary" %}</th>
+                        <th class="text-end">{% trans "Total Salary" %}</th>
+                        <th style="min-width:140px;">{% trans "% of Company" %}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -92,9 +93,9 @@
 <div class="card shadow-sm">
     <div class="card-body text-center py-5">
         <i class="fas fa-sitemap fa-3x text-muted mb-3 d-block" aria-hidden="true"></i>
-        <p class="text-muted mb-3">No departments found.</p>
+        <p class="text-muted mb-3">{% trans "No departments found." %}</p>
         <a href="{% url 'employees:department_create' %}" class="btn btn-primary btn-sm">
-            Create First Department
+            {% trans "Create First Department" %}
         </a>
     </div>
 </div>

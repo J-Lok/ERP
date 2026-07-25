@@ -259,9 +259,17 @@ RESEND_API_KEY = os.getenv('RESEND_API_KEY', '')
 if DEBUG:
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 else:
-    EMAIL_BACKEND = 'management_system.email_backends.ResendEmailBackend'
-    if not RESEND_API_KEY:
-        raise ImproperlyConfigured('RESEND_API_KEY environment variable is required when DEBUG=False.')
+    if os.getenv('EMAIL_HOST'):
+        EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+        EMAIL_HOST = os.getenv('EMAIL_HOST')
+        EMAIL_PORT = int(os.getenv('EMAIL_PORT', '587'))
+        EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'True') == 'True'
+        EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
+        EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
+    else:
+        EMAIL_BACKEND = 'management_system.email_backends.ResendEmailBackend'
+        if not RESEND_API_KEY:
+            raise ImproperlyConfigured('RESEND_API_KEY environment variable is required when DEBUG=False and EMAIL_HOST is not set.')
 
 if not DEBUG:
     SECURE_SSL_REDIRECT = env_bool('SECURE_SSL_REDIRECT', True)

@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 
+{% load i18n %}
 {% block title %}Bank Reconciliations{% endblock %}
 
 {% block content %}
@@ -8,13 +9,13 @@
         <div class="col-12">
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
-                    <h3 class="card-title mb-0">Bank Reconciliations</h3>
+                    <h3 class="card-title mb-0">{% trans "Bank Reconciliations" %}</h3>
                     <div>
                         <a href="{% url 'finance:bank_statement_upload' %}" class="btn btn-success me-2">
-                            <i class="fas fa-upload"></i> Upload Statement
+                            <i class="fas fa-upload"></i> {% trans "Upload Statement" %}
                         </a>
                         <a href="{% url 'finance:bank_reconciliation_create' %}" class="btn btn-primary">
-                            <i class="fas fa-plus"></i> New Reconciliation
+                            <i class="fas fa-plus"></i> {% trans "New Reconciliation" %}
                         </a>
                     </div>
                 </div>
@@ -24,14 +25,14 @@
                             <table class="table table-striped">
                                 <thead>
                                     <tr>
-                                        <th>Bank Account</th>
-                                        <th>Statement Date</th>
-                                        <th>Reconciled Date</th>
-                                        <th>Bank Balance</th>
-                                        <th>Book Balance</th>
-                                        <th>Difference</th>
-                                        <th>Status</th>
-                                        <th>Actions</th>
+                                        <th>{% trans "Bank Account" %}</th>
+                                        <th>{% trans "Statement Date" %}</th>
+                                        <th>{% trans "Reconciled Date" %}</th>
+                                        <th>{% trans "Bank Balance" %}</th>
+                                        <th>{% trans "Book Balance" %}</th>
+                                        <th>{% trans "Difference" %}</th>
+                                        <th>{% trans "Status" %}</th>
+                                        <th>{% trans "Actions" %}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -49,14 +50,14 @@
                                         </td>
                                         <td>
                                             {% if reconciliation.difference == 0 %}
-                                                <span class="badge bg-success">Reconciled</span>
+                                                <span class="badge bg-success">{% trans "Reconciled" %}</span>
                                             {% else %}
-                                                <span class="badge bg-warning">Pending</span>
+                                                <span class="badge bg-warning">{% trans "Pending" %}</span>
                                             {% endif %}
                                         </td>
                                         <td>
                                             <a href="{% url 'finance:bank_reconciliation_detail' reconciliation.pk %}" class="btn btn-sm btn-outline-primary">
-                                                <i class="fas fa-eye"></i> View
+                                                <i class="fas fa-eye"></i> {% trans "View" %}
                                             </a>
                                         </td>
                                     </tr>
@@ -67,10 +68,10 @@
                     {% else %}
                         <div class="text-center py-5">
                             <i class="fas fa-balance-scale fa-3x text-muted mb-3"></i>
-                            <h4>No Bank Reconciliations</h4>
-                            <p class="text-muted">Upload a bank statement to get started with reconciliation.</p>
+                            <h4>{% trans "No Bank Reconciliations" %}</h4>
+                            <p class="text-muted">{% trans "Upload a bank statement to get started with reconciliation." %}</p>
                             <a href="{% url 'finance:bank_statement_upload' %}" class="btn btn-success">
-                                <i class="fas fa-upload"></i> Upload Statement
+                                <i class="fas fa-upload"></i> {% trans "Upload Statement" %}
                             </a>
                         </div>
                     {% endif %}

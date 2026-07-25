@@ -533,6 +533,23 @@ def client_invoice_detail(request, pk):
 
 
 @role_required(*FINANCE_ROLES)
+def client_invoice_print(request, pk):
+    company = request.user.company
+    invoice = get_object_or_404(ClientInvoice, pk=pk, company=company)
+    lines = invoice.lines.all().select_related('account')
+    
+    print_type = request.GET.get('type')
+    if not print_type:
+        print_type = 'proforma' if invoice.status == 'draft' else 'invoice'
+        
+    return render(request, 'finance/client_invoice_print.html', {
+        'invoice': invoice,
+        'lines': lines,
+        'print_type': print_type,
+    })
+
+
+@role_required(*FINANCE_ROLES)
 def client_invoice_edit(request, pk):
     company = request.user.company
     invoice = get_object_or_404(ClientInvoice, pk=pk, company=company)

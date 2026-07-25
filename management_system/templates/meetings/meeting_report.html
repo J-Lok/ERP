@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 
+{% load i18n %}
 {% block title %}Meeting Reports & Analytics{% endblock %}
 
 {% block content %}
@@ -7,7 +8,7 @@
     <div class="row mb-4">
         <div class="col-md-12">
             <h1 class="h3">
-                <i class="fas fa-chart-pie"></i> Meeting Reports & Analytics
+                <i class="fas fa-chart-pie"></i> {% trans "Meeting Reports & Analytics" %}
             </h1>
         </div>
     </div>
@@ -17,7 +18,7 @@
         <div class="col-md-3">
             <div class="card bg-primary text-white">
                 <div class="card-body">
-                    <h6 class="card-title">Total Meetings</h6>
+                    <h6 class="card-title">{% trans "Total Meetings" %}</h6>
                     <h3>{{ total_meetings }}</h3>
                 </div>
             </div>
@@ -25,7 +26,7 @@
         <div class="col-md-3">
             <div class="card bg-success text-white">
                 <div class="card-body">
-                    <h6 class="card-title">Total Action Items</h6>
+                    <h6 class="card-title">{% trans "Total Action Items" %}</h6>
                     <h3>{{ total_actions }}</h3>
                 </div>
             </div>
@@ -33,7 +34,7 @@
         <div class="col-md-3">
             <div class="card bg-info text-white">
                 <div class="card-body">
-                    <h6 class="card-title">Completed Actions</h6>
+                    <h6 class="card-title">{% trans "Completed Actions" %}</h6>
                     <h3>{{ completed_actions }}</h3>
                     <small>{{ completion_rate|floatformat:1 }}% completion rate</small>
                 </div>
@@ -42,7 +43,7 @@
         <div class="col-md-3">
             <div class="card bg-warning text-dark">
                 <div class="card-body">
-                    <h6 class="card-title">Overdue Items</h6>
+                    <h6 class="card-title">{% trans "Overdue Items" %}</h6>
                     <h3>{{ overdue_actions }}</h3>
                 </div>
             </div>
@@ -54,7 +55,7 @@
         <div class="col-lg-6">
             <div class="card mb-4">
                 <div class="card-header bg-light">
-                    <h5 class="mb-0">Meetings by Type</h5>
+                    <h5 class="mb-0">{% trans "Meetings by Type" %}</h5>
                 </div>
                 <div class="card-body">
                     <canvas id="meetingTypeChart"></canvas>
@@ -64,7 +65,7 @@
         <div class="col-lg-6">
             <div class="card mb-4">
                 <div class="card-header bg-light">
-                    <h5 class="mb-0">Meetings by Status</h5>
+                    <h5 class="mb-0">{% trans "Meetings by Status" %}</h5>
                 </div>
                 <div class="card-body">
                     <canvas id="meetingStatusChart"></canvas>
@@ -78,36 +79,36 @@
         <div class="col-lg-12">
             <div class="card">
                 <div class="card-header bg-light">
-                    <h5 class="mb-0">Meeting Statistics Breakdown</h5>
+                    <h5 class="mb-0">{% trans "Meeting Statistics Breakdown" %}</h5>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
                         <table class="table table-striped">
                             <thead class="table-light">
                                 <tr>
-                                    <th>Metric</th>
-                                    <th>Count</th>
-                                    <th>Percentage</th>
+                                    <th>{% trans "Metric" %}</th>
+                                    <th>{% trans "Count" %}</th>
+                                    <th>{% trans "Percentage" %}</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <tr>
-                                    <td><strong>Total Meetings</strong></td>
+                                    <td><strong>{% trans "Total Meetings" %}</strong></td>
                                     <td>{{ total_meetings }}</td>
                                     <td>100%</td>
                                 </tr>
                                 <tr>
-                                    <td><strong>Total Action Items</strong></td>
+                                    <td><strong>{% trans "Total Action Items" %}</strong></td>
                                     <td>{{ total_actions }}</td>
                                     <td>-</td>
                                 </tr>
                                 <tr>
-                                    <td><strong>Completed Actions</strong></td>
+                                    <td><strong>{% trans "Completed Actions" %}</strong></td>
                                     <td>{{ completed_actions }}</td>
                                     <td>{{ completion_rate|floatformat:1 }}%</td>
                                 </tr>
                                 <tr>
-                                    <td><strong>Overdue Actions</strong></td>
+                                    <td><strong>{% trans "Overdue Actions" %}</strong></td>
                                     <td>{{ overdue_actions }}</td>
                                     <td>{{ overdue_rate|floatformat:1 }}%</td>
                                 </tr>

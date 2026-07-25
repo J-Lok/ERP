@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 
+{% load i18n %}
 {% block title %}{{ employee.user.get_full_name }} — Employee{% endblock %}
 
 {% block content %}
@@ -8,14 +9,14 @@
         <div class="card shadow-sm">
             <div class="card-header bg-white d-flex justify-content-between align-items-center">
                 <h4 class="mb-0">
-                    <i class="fas fa-id-card me-2 text-primary" aria-hidden="true"></i>Employee Details
+                    <i class="fas fa-id-card me-2 text-primary" aria-hidden="true"></i>{% trans "Employee Details" %}
                 </h4>
                 <div class="d-flex gap-2">
                     <a href="{% url 'employees:employee_edit' employee.pk %}" class="btn btn-warning btn-sm">
-                        <i class="fas fa-edit me-1" aria-hidden="true"></i>Edit
+                        <i class="fas fa-edit me-1" aria-hidden="true"></i>{% trans "Edit" %}
                     </a>
                     <a href="{% url 'employees:employee_list' %}" class="btn btn-outline-secondary btn-sm">
-                        <i class="fas fa-arrow-left me-1" aria-hidden="true"></i>Back
+                        <i class="fas fa-arrow-left me-1" aria-hidden="true"></i>{% trans "Back" %}
                     </a>
                 </div>
             </div>
@@ -54,16 +55,16 @@
 
                         <ul class="list-group list-group-flush text-start small">
                             <li class="list-group-item px-0">
-                                <span class="text-muted">Role</span><br>
+                                <span class="text-muted">{% trans "Role" %}</span><br>
                                 <strong>{{ employee.get_role_display }}</strong>
                             </li>
                             <li class="list-group-item px-0">
-                                <span class="text-muted">Date Joined</span><br>
+                                <span class="text-muted">{% trans "Date Joined" %}</span><br>
                                 <strong>{{ employee.date_joined|date:"N j, Y" }}</strong>
                             </li>
                             {% if can_see_salary %}
                             <li class="list-group-item px-0">
-                                <span class="text-muted">Salary</span><br>
+                                <span class="text-muted">{% trans "Salary" %}</span><br>
                                 <strong>${{ employee.salary|floatformat:2 }}</strong>
                             </li>
                             {% endif %}
@@ -75,43 +76,43 @@
                         <div class="row g-4">
 
                             <div class="col-md-6">
-                                <h6 class="border-bottom pb-2 text-uppercase text-muted small">Personal</h6>
+                                <h6 class="border-bottom pb-2 text-uppercase text-muted small">{% trans "Personal" %}</h6>
                                 <dl class="row small mb-0">
-                                    <dt class="col-5 text-muted fw-normal">Full Name</dt>
+                                    <dt class="col-5 text-muted fw-normal">{% trans "Full Name" %}</dt>
                                     <dd class="col-7">{{ employee.user.get_full_name }}</dd>
 
-                                    <dt class="col-5 text-muted fw-normal">Email</dt>
+                                    <dt class="col-5 text-muted fw-normal">{% trans "Email" %}</dt>
                                     <dd class="col-7">
                                         <a href="mailto:{{ employee.user.email }}" class="text-decoration-none">
                                             {{ employee.user.email }}
                                         </a>
                                     </dd>
 
-                                    <dt class="col-5 text-muted fw-normal">Phone</dt>
+                                    <dt class="col-5 text-muted fw-normal">{% trans "Phone" %}</dt>
                                     <dd class="col-7">{{ employee.user.phone|default:"—" }}</dd>
 
-                                    <dt class="col-5 text-muted fw-normal">Date of Birth</dt>
+                                    <dt class="col-5 text-muted fw-normal">{% trans "Date of Birth" %}</dt>
                                     <dd class="col-7">{{ employee.date_of_birth|date:"N j, Y"|default:"—" }}</dd>
                                 </dl>
                             </div>
 
                             <div class="col-md-6">
-                                <h6 class="border-bottom pb-2 text-uppercase text-muted small">Company</h6>
+                                <h6 class="border-bottom pb-2 text-uppercase text-muted small">{% trans "Company" %}</h6>
                                 <dl class="row small mb-0">
-                                    <dt class="col-5 text-muted fw-normal">Employee ID</dt>
+                                    <dt class="col-5 text-muted fw-normal">{% trans "Employee ID" %}</dt>
                                     <dd class="col-7">{{ employee.employee_id }}</dd>
 
-                                    <dt class="col-5 text-muted fw-normal">Department</dt>
+                                    <dt class="col-5 text-muted fw-normal">{% trans "Department" %}</dt>
                                     <dd class="col-7">
                                         {% if employee.department %}
                                             <span class="badge bg-info text-dark">{{ employee.department.name }}</span>
                                         {% else %}—{% endif %}
                                     </dd>
 
-                                    <dt class="col-5 text-muted fw-normal">Role</dt>
+                                    <dt class="col-5 text-muted fw-normal">{% trans "Role" %}</dt>
                                     <dd class="col-7">{{ employee.get_role_display }}</dd>
 
-                                    <dt class="col-5 text-muted fw-normal">Status</dt>
+                                    <dt class="col-5 text-muted fw-normal">{% trans "Status" %}</dt>
                                     <dd class="col-7">
                                         <span class="badge
                                             {% if employee.status == 'active' %}bg-success
@@ -125,50 +126,50 @@
                             </div>
 
                             <div class="col-md-6">
-                                <h6 class="border-bottom pb-2 text-uppercase text-muted small">Employment</h6>
+                                <h6 class="border-bottom pb-2 text-uppercase text-muted small">{% trans "Employment" %}</h6>
                                 <dl class="row small mb-0">
-                                    <dt class="col-5 text-muted fw-normal">Date Joined</dt>
+                                    <dt class="col-5 text-muted fw-normal">{% trans "Date Joined" %}</dt>
                                     <dd class="col-7">{{ employee.date_joined|date:"N j, Y" }}</dd>
 
                                     {% if can_see_salary %}
-                                    <dt class="col-5 text-muted fw-normal">Salary</dt>
+                                    <dt class="col-5 text-muted fw-normal">{% trans "Salary" %}</dt>
                                     <dd class="col-7">${{ employee.salary|floatformat:2 }}</dd>
                                     {% endif %}
 
-                                    <dt class="col-5 text-muted fw-normal">Record Created</dt>
+                                    <dt class="col-5 text-muted fw-normal">{% trans "Record Created" %}</dt>
                                     <dd class="col-7">{{ employee.created_at|date:"M j, Y H:i" }}</dd>
 
-                                    <dt class="col-5 text-muted fw-normal">Last Updated</dt>
+                                    <dt class="col-5 text-muted fw-normal">{% trans "Last Updated" %}</dt>
                                     <dd class="col-7">{{ employee.updated_at|date:"M j, Y H:i" }}</dd>
                                 </dl>
                             </div>
 
                             <div class="col-md-6">
-                                <h6 class="border-bottom pb-2 text-uppercase text-muted small">User Account</h6>
+                                <h6 class="border-bottom pb-2 text-uppercase text-muted small">{% trans "User Account" %}</h6>
                                 <dl class="row small mb-0">
-                                    <dt class="col-5 text-muted fw-normal">Username</dt>
+                                    <dt class="col-5 text-muted fw-normal">{% trans "Username" %}</dt>
                                     <dd class="col-7">{{ employee.user.email }}</dd>
 
-                                    <dt class="col-5 text-muted fw-normal">Account</dt>
+                                    <dt class="col-5 text-muted fw-normal">{% trans "Account" %}</dt>
                                     <dd class="col-7">
                                         {% if employee.user.is_active %}
-                                            <span class="badge bg-success">Active</span>
+                                            <span class="badge bg-success">{% trans "Active" %}</span>
                                         {% else %}
-                                            <span class="badge bg-danger">Inactive</span>
+                                            <span class="badge bg-danger">{% trans "Inactive" %}</span>
                                         {% endif %}
                                     </dd>
 
-                                    <dt class="col-5 text-muted fw-normal">Last Login</dt>
+                                    <dt class="col-5 text-muted fw-normal">{% trans "Last Login" %}</dt>
                                     <dd class="col-7">
                                         {{ employee.user.last_login|date:"M j, Y H:i"|default:"Never" }}
                                     </dd>
 
-                                    <dt class="col-5 text-muted fw-normal">Admin</dt>
+                                    <dt class="col-5 text-muted fw-normal">{% trans "Admin" %}</dt>
                                     <dd class="col-7">
                                         {% if employee.user.is_company_admin %}
-                                            <span class="badge bg-warning text-dark">Company Admin</span>
+                                            <span class="badge bg-warning text-dark">{% trans "Company Admin" %}</span>
                                         {% else %}
-                                            <span class="badge bg-secondary">Team Member</span>
+                                            <span class="badge bg-secondary">{% trans "Team Member" %}</span>
                                         {% endif %}
                                     </dd>
                                 </dl>
@@ -176,7 +177,7 @@
 
                             {% if employee.department and employee.department.description %}
                             <div class="col-12">
-                                <h6 class="border-bottom pb-2 text-uppercase text-muted small">Department Note</h6>
+                                <h6 class="border-bottom pb-2 text-uppercase text-muted small">{% trans "Department Note" %}</h6>
                                 <p class="text-muted small mb-0">{{ employee.department.description }}</p>
                             </div>
                             {% endif %}
@@ -188,19 +189,19 @@
                 <div class="border-top mt-4 pt-3 d-flex justify-content-between flex-wrap gap-2">
                     <div class="d-flex gap-2">
                         <a href="{% url 'employees:employee_edit' employee.pk %}" class="btn btn-primary btn-sm">
-                            <i class="fas fa-edit me-1" aria-hidden="true"></i>Edit
+                            <i class="fas fa-edit me-1" aria-hidden="true"></i>{% trans "Edit" %}
                         </a>
                         <a href="mailto:{{ employee.user.email }}" class="btn btn-outline-info btn-sm">
-                            <i class="fas fa-envelope me-1" aria-hidden="true"></i>Send Email
+                            <i class="fas fa-envelope me-1" aria-hidden="true"></i>{% trans "Send Email" %}
                         </a>
                     </div>
                     <div class="d-flex gap-2">
                         <a href="{% url 'employees:employee_delete' employee.pk %}"
                            class="btn btn-outline-danger btn-sm">
-                            <i class="fas fa-trash me-1" aria-hidden="true"></i>Delete
+                            <i class="fas fa-trash me-1" aria-hidden="true"></i>{% trans "Delete" %}
                         </a>
                         <a href="{% url 'employees:employee_list' %}" class="btn btn-outline-secondary btn-sm">
-                            <i class="fas fa-arrow-left me-1" aria-hidden="true"></i>Back to List
+                            <i class="fas fa-arrow-left me-1" aria-hidden="true"></i>{% trans "Back to List" %}
                         </a>
                     </div>
                 </div>

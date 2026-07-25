@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load i18n %}
 {% load crispy_forms_tags %}
 
 {% block content %}
@@ -16,7 +17,7 @@
                     
                     <div class="row">
                         <div class="col-12">
-                            <h5 class="mb-3 border-bottom pb-2">Basic Information</h5>
+                            <h5 class="mb-3 border-bottom pb-2">{% trans "Basic Information" %}</h5>
                         </div>
                         
                         <div class="col-md-6">
@@ -40,7 +41,7 @@
                         <!-- ✅ IMAGE FIELD ADDED -->
                         <div class="col-12 mt-3">
                             <div class="mb-3">
-                                <label class="form-label">Product Image</label>
+                                <label class="form-label">{% trans "Product Image" %}</label>
                                 {{ form.image }}
                                 
                                 {% if stock and stock.image %}
@@ -49,14 +50,14 @@
                                          alt="{{ stock.name }}" 
                                          class="img-thumbnail" 
                                          style="max-width: 200px;">
-                                    <p class="small text-muted">Current image</p>
+                                    <p class="small text-muted">{% trans "Current image" %}</p>
                                 </div>
                                 {% endif %}
                             </div>
                         </div>
                         
                         <div class="col-12 mt-4">
-                            <h5 class="mb-3 border-bottom pb-2">Pricing & Quantity</h5>
+                            <h5 class="mb-3 border-bottom pb-2">{% trans "Pricing & Quantity" %}</h5>
                         </div>
                         
                         <div class="col-md-4">
@@ -77,7 +78,7 @@
                         </div>
                         
                         <div class="col-12 mt-4">
-                            <h5 class="mb-3 border-bottom pb-2">Supplier Information</h5>
+                            <h5 class="mb-3 border-bottom pb-2">{% trans "Supplier Information" %}</h5>
                         </div>
                         
                         <div class="col-md-6">
@@ -88,7 +89,7 @@
                         </div>
                         
                         <div class="col-12 mt-4">
-                            <h5 class="mb-3 border-bottom pb-2">Storage Information</h5>
+                            <h5 class="mb-3 border-bottom pb-2">{% trans "Storage Information" %}</h5>
                         </div>
                         
                         <div class="col-md-6">
@@ -101,25 +102,25 @@
                     
                     <div class="alert alert-info mt-4">
                         <i class="fas fa-info-circle me-2"></i>
-                        <strong>Note:</strong> 
+                        <strong>{% trans "Note:" %}</strong> 
                         <ul class="mb-0 mt-2">
-                            <li>Item code must be unique within your company</li>
-                            <li>Setting quantity will create an initial stock-in transaction</li>
-                            <li>Reorder level triggers low stock alerts when quantity falls below this level</li>
+                            <li>{% trans "Item code must be unique within your company" %}</li>
+                            <li>{% trans "Setting quantity will create an initial stock-in transaction" %}</li>
+                            <li>{% trans "Reorder level triggers low stock alerts when quantity falls below this level" %}</li>
                         </ul>
                     </div>
                     
                     <div class="d-flex justify-content-between mt-4">
                         <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-save me-1"></i>Save Item
+                            <i class="fas fa-save me-1"></i>{% trans "Save Item" %}
                         </button>
                         <div>
                             <a href="{% url 'inventory:stock_list' %}" class="btn btn-secondary me-2">
-                                <i class="fas fa-times me-1"></i>Cancel
+                                <i class="fas fa-times me-1"></i>{% trans "Cancel" %}
                             </a>
                             {% if stock %}
                             <a href="{% url 'inventory:stock_detail' stock.pk %}" class="btn btn-info">
-                                <i class="fas fa-eye me-1"></i>View Details
+                                <i class="fas fa-eye me-1"></i>{% trans "View Details" %}
                             </a>
                             {% endif %}
                         </div>

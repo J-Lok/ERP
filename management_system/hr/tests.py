@@ -1,3 +1,4 @@
+from datetime import date
 from django.test import TestCase
 from accounts.models import Company
 from employees.models import Employee
@@ -26,10 +27,10 @@ class HRModelTests(TestCase):
             company=self.company,
             employee=self.employee,
             leave_type='vacation',
-            start_date='2026-03-01',
-            end_date='2026-03-05',
+            start_date=date(2026, 3, 1),
+            end_date=date(2026, 3, 5),
         )
-        self.assertEqual(str(lr), f"{self.employee} vacation 2026-03-01")
+        self.assertEqual(str(lr), "Emp Loyee — Vacation (2026-03-01 → 2026-03-05)")
         # status transitions
         lr.approve()
         self.assertEqual(lr.status, 'approved')

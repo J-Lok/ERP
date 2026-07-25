@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load i18n %}
 {% block title %}Notification Preferences{% endblock %}
 
 {% block content %}
@@ -7,13 +8,13 @@
     <div class="card shadow-sm">
       <div class="card-header">
         <h5 class="mb-0">
-          <i class="fas fa-cog text-primary me-2"></i>Notification Preferences
+          <i class="fas fa-cog text-primary me-2"></i>{% trans "Notification Preferences" %}
         </h5>
       </div>
 
       <div class="card-body">
         <p class="text-muted mb-4">
-          Configure how you want to receive notifications. You can choose to receive notifications via email, in-app, or both.
+          {% trans "Configure how you want to receive notifications. You can choose to receive notifications via email, in-app, or both." %}
         </p>
 
         <form method="post">
@@ -22,17 +23,17 @@
           <!-- Email Notifications -->
           <div class="mb-4">
             <h6 class="fw-bold mb-3">
-              <i class="fas fa-envelope text-primary me-2"></i>Email Notifications
+              <i class="fas fa-envelope text-primary me-2"></i>{% trans "Email Notifications" %}
             </h6>
-            <p class="text-muted small mb-3">Receive notifications via email</p>
+            <p class="text-muted small mb-3">{% trans "Receive notifications via email" %}</p>
 
             <div class="row g-3">
               <div class="col-md-6">
                 <div class="form-check">
                   {{ form.email_leave_requests }}
                   <label for="{{ form.email_leave_requests.id_for_label }}" class="form-check-label">
-                    Leave Requests
-                    <small class="text-muted d-block">When leave requests are submitted, approved, or denied</small>
+                    {% trans "Leave Requests" %}
+                    <small class="text-muted d-block">{% trans "When leave requests are submitted, approved, or denied" %}</small>
                   </label>
                 </div>
               </div>
@@ -41,8 +42,8 @@
                 <div class="form-check">
                   {{ form.email_performance_reviews }}
                   <label for="{{ form.email_performance_reviews.id_for_label }}" class="form-check-label">
-                    Performance Reviews
-                    <small class="text-muted d-block">When performance reviews are assigned or completed</small>
+                    {% trans "Performance Reviews" %}
+                    <small class="text-muted d-block">{% trans "When performance reviews are assigned or completed" %}</small>
                   </label>
                 </div>
               </div>
@@ -51,8 +52,8 @@
                 <div class="form-check">
                   {{ form.email_training_updates }}
                   <label for="{{ form.email_training_updates.id_for_label }}" class="form-check-label">
-                    Training Updates
-                    <small class="text-muted d-block">When training enrollments or completions occur</small>
+                    {% trans "Training Updates" %}
+                    <small class="text-muted d-block">{% trans "When training enrollments or completions occur" %}</small>
                   </label>
                 </div>
               </div>
@@ -61,8 +62,8 @@
                 <div class="form-check">
                   {{ form.email_payroll_updates }}
                   <label for="{{ form.email_payroll_updates.id_for_label }}" class="form-check-label">
-                    Payroll Updates
-                    <small class="text-muted d-block">When payroll is processed</small>
+                    {% trans "Payroll Updates" %}
+                    <small class="text-muted d-block">{% trans "When payroll is processed" %}</small>
                   </label>
                 </div>
               </div>
@@ -71,8 +72,8 @@
                 <div class="form-check">
                   {{ form.email_meeting_invitations }}
                   <label for="{{ form.email_meeting_invitations.id_for_label }}" class="form-check-label">
-                    Meeting Invitations
-                    <small class="text-muted d-block">When invited to meetings</small>
+                    {% trans "Meeting Invitations" %}
+                    <small class="text-muted d-block">{% trans "When invited to meetings" %}</small>
                   </label>
                 </div>
               </div>
@@ -81,8 +82,8 @@
                 <div class="form-check">
                   {{ form.email_system_alerts }}
                   <label for="{{ form.email_system_alerts.id_for_label }}" class="form-check-label">
-                    System Alerts
-                    <small class="text-muted d-block">Important system notifications</small>
+                    {% trans "System Alerts" %}
+                    <small class="text-muted d-block">{% trans "Important system notifications" %}</small>
                   </label>
                 </div>
               </div>
@@ -94,17 +95,17 @@
           <!-- In-App Notifications -->
           <div class="mb-4">
             <h6 class="fw-bold mb-3">
-              <i class="fas fa-bell text-success me-2"></i>In-App Notifications
+              <i class="fas fa-bell text-success me-2"></i>{% trans "In-App Notifications" %}
             </h6>
-            <p class="text-muted small mb-3">Receive notifications within the application</p>
+            <p class="text-muted small mb-3">{% trans "Receive notifications within the application" %}</p>
 
             <div class="row g-3">
               <div class="col-md-6">
                 <div class="form-check">
                   {{ form.in_app_leave_requests }}
                   <label for="{{ form.in_app_leave_requests.id_for_label }}" class="form-check-label">
-                    Leave Requests
-                    <small class="text-muted d-block">When leave requests are submitted, approved, or denied</small>
+                    {% trans "Leave Requests" %}
+                    <small class="text-muted d-block">{% trans "When leave requests are submitted, approved, or denied" %}</small>
                   </label>
                 </div>
               </div>
@@ -113,8 +114,8 @@
                 <div class="form-check">
                   {{ form.in_app_performance_reviews }}
                   <label for="{{ form.in_app_performance_reviews.id_for_label }}" class="form-check-label">
-                    Performance Reviews
-                    <small class="text-muted d-block">When performance reviews are assigned or completed</small>
+                    {% trans "Performance Reviews" %}
+                    <small class="text-muted d-block">{% trans "When performance reviews are assigned or completed" %}</small>
                   </label>
                 </div>
               </div>
@@ -123,8 +124,8 @@
                 <div class="form-check">
                   {{ form.in_app_training_updates }}
                   <label for="{{ form.in_app_training_updates.id_for_label }}" class="form-check-label">
-                    Training Updates
-                    <small class="text-muted d-block">When training enrollments or completions occur</small>
+                    {% trans "Training Updates" %}
+                    <small class="text-muted d-block">{% trans "When training enrollments or completions occur" %}</small>
                   </label>
                 </div>
               </div>
@@ -133,8 +134,8 @@
                 <div class="form-check">
                   {{ form.in_app_payroll_updates }}
                   <label for="{{ form.in_app_payroll_updates.id_for_label }}" class="form-check-label">
-                    Payroll Updates
-                    <small class="text-muted d-block">When payroll is processed</small>
+                    {% trans "Payroll Updates" %}
+                    <small class="text-muted d-block">{% trans "When payroll is processed" %}</small>
                   </label>
                 </div>
               </div>
@@ -143,8 +144,8 @@
                 <div class="form-check">
                   {{ form.in_app_meeting_invitations }}
                   <label for="{{ form.in_app_meeting_invitations.id_for_label }}" class="form-check-label">
-                    Meeting Invitations
-                    <small class="text-muted d-block">When invited to meetings</small>
+                    {% trans "Meeting Invitations" %}
+                    <small class="text-muted d-block">{% trans "When invited to meetings" %}</small>
                   </label>
                 </div>
               </div>
@@ -153,8 +154,8 @@
                 <div class="form-check">
                   {{ form.in_app_system_alerts }}
                   <label for="{{ form.in_app_system_alerts.id_for_label }}" class="form-check-label">
-                    System Alerts
-                    <small class="text-muted d-block">Important system notifications</small>
+                    {% trans "System Alerts" %}
+                    <small class="text-muted d-block">{% trans "Important system notifications" %}</small>
                   </label>
                 </div>
               </div>
@@ -163,11 +164,11 @@
 
           <div class="d-flex justify-content-between align-items-center">
             <a href="{% url 'notifications:notification_list' %}" class="btn btn-secondary">
-              <i class="fas fa-arrow-left me-1"></i>Back to Notifications
+              <i class="fas fa-arrow-left me-1"></i>{% trans "Back to Notifications" %}
             </a>
 
             <button type="submit" class="btn btn-primary">
-              <i class="fas fa-save me-1"></i>Save Preferences
+              <i class="fas fa-save me-1"></i>{% trans "Save Preferences" %}
             </button>
           </div>
         </form>

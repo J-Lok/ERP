@@ -15,6 +15,11 @@ class ClientRegistrationForm(forms.ModelForm):
             'address': forms.Textarea(attrs={'rows': 3}),
         }
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field_name, field in self.fields.items():
+            field.widget.attrs['class'] = 'form-control'
+
     def clean(self):
         cleaned_data = super().clean()
         password = cleaned_data.get('password')
@@ -49,6 +54,11 @@ class ClientLoginForm(forms.Form):
     email = forms.EmailField()
     password = forms.CharField(widget=forms.PasswordInput)
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field_name, field in self.fields.items():
+            field.widget.attrs['class'] = 'form-control'
+
     def clean(self):
         cleaned_data = super().clean()
         email = cleaned_data.get('email')
@@ -73,6 +83,11 @@ class ClientProfileForm(forms.ModelForm):
         widgets = {
             'address': forms.Textarea(attrs={'rows': 3}),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field_name, field in self.fields.items():
+            field.widget.attrs['class'] = 'form-control'
 
 
 class CheckoutForm(forms.ModelForm):

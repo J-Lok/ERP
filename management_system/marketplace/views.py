@@ -544,7 +544,7 @@ def cancel_order(request, pk):
     client = request.client
     order = get_object_or_404(Order, pk=pk, client=client)
     
-    if order.status not in ['pending', 'confirmed']:
+    if order.status != 'pending':
         messages.error(request, 'This order cannot be cancelled')
         return redirect('marketplace:order_detail', pk=pk)
     

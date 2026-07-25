@@ -4,7 +4,7 @@ from django.urls import reverse
 from decimal import Decimal
 from django.core.exceptions import ValidationError
 from accounts.models import Company
-from .models import Account, Transaction, Journal, MarketplaceFinanceSettings
+from .models import Account, Transaction, Journal, MarketplaceFinanceSettings, ClientInvoice, InvoiceLine
 from .forms import MarketplaceFinanceSettingsForm
 
 User = get_user_model()
@@ -174,3 +174,51 @@ class MarketplaceFinanceSettingsViewTests(TestCase):
         settings_obj = MarketplaceFinanceSettings.objects.get(company=self.company)
         self.assertEqual(settings_obj.sales_journal, self.sales_journal)
         self.assertTrue(settings_obj.is_enabled)
+
+
+class ClientInvoicePrintViewTests(TestCase):
+    def setUp(self):
+        self.company = Company.objects.create(name='PrintCo', domain='printco')
+        self.user = User.objects.create_user(
+            email='finance_user@example.com',
+            password='password',
+            company=self.company,
+            first_name='Finance',
+            last_name='User',
+            role='accountant',
+        )
+        self.account = Account.objects.create(
+            company=self.company,
+            name='Sales Revenue',
+            account_type='revenue',
+        )
+        self.invoice = ClientInvoice.objects.create(
+            company=self.company,
+            invoice_number='2026-0001',
+            client_name='Test Client',
+            date='2026-07-24',
+            due_date='2026-08-24',
+            status='draft',
+        )
+        self.line = InvoiceLine.objects.create(
+            client_invoice=self.invoice,
+            description='Test item',
+            quantity=2,
+            unit_price=Decimal('100.00'),
+            line_total=Decimal('200.00'),
+            account=self.account,
+        )
+
+    def test_print_view_status_code(self):
+        self.client.force_login(self.user)
+        response = self.client.get(reverse('finance:client_invoice_print', kwargs={'pk': self.invoice.pk}))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'PROFORMA INVOICE')
+
+    def test_print_view_invoice_type(self):
+        self.client.force_login(self.user)
+        response = self.client.get(
+            reverse('finance:client_invoice_print', kwargs={'pk': self.invoice.pk}) + '?type=invoice'
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'INVOICE')

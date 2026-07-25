@@ -1,32 +1,33 @@
 {% extends 'base.html' %}
 
+{% load i18n %}
 {% block content %}
 <div class="row">
     <div class="col-md-8 offset-md-2">
         <div class="card">
             <div class="card-header bg-white">
-                <h4 class="mb-0"><i class="fas fa-file-import me-2"></i>Import Stock Items</h4>
+                <h4 class="mb-0"><i class="fas fa-file-import me-2"></i>{% trans "Import Stock Items" %}</h4>
             </div>
             
             <div class="card-body">
                 <div class="alert alert-info mb-4">
-                    <h5><i class="fas fa-info-circle me-2"></i>Instructions:</h5>
+                    <h5><i class="fas fa-info-circle me-2"></i>{% trans "Instructions:" %}</h5>
                     <ul class="mb-0">
-                        <li>Download the template first to ensure correct format</li>
-                        <li>Required columns: <code>item_code</code>, <code>name</code></li>
-                        <li>Existing items with the same item code will be updated</li>
-                        <li>New items will be created</li>
-                        <li>Categories will be created automatically if they don't exist</li>
+                        <li>{% trans "Download the template first to ensure correct format" %}</li>
+                        <li>{% trans "Required columns:" %} <code>{% trans "item_code" %}</code>, <code>{% trans "name" %}</code></li>
+                        <li>{% trans "Existing items with the same item code will be updated" %}</li>
+                        <li>{% trans "New items will be created" %}</li>
+                        <li>{% trans "Categories will be created automatically if they don't exist" %}</li>
                     </ul>
                 </div>
                 
                 <div class="alert alert-warning mb-4">
-                    <h6><i class="fas fa-exclamation-triangle me-2"></i>Important Notes:</h6>
+                    <h6><i class="fas fa-exclamation-triangle me-2"></i>{% trans "Important Notes:" %}</h6>
                     <ul class="mb-0">
-                        <li>Item codes must be unique within your company</li>
-                        <li>For new items with quantity > 0, an initial stock-in transaction will be created</li>
-                        <li>For existing items, only the quantity field will update the stock level</li>
-                        <li>Supported units: pcs, kg, ltr, box, set</li>
+                        <li>{% trans "Item codes must be unique within your company" %}</li>
+                        <li>{% trans "For new items with quantity > 0, an initial stock-in transaction will be created" %}</li>
+                        <li>{% trans "For existing items, only the quantity field will update the stock level" %}</li>
+                        <li>{% trans "Supported units: pcs, kg, ltr, box, set" %}</li>
                     </ul>
                 </div>
                 
@@ -34,90 +35,90 @@
                     <table class="table table-bordered table-sm">
                         <thead class="table-light">
                             <tr>
-                                <th>Column</th>
-                                <th>Required</th>
-                                <th>Description</th>
-                                <th>Example</th>
+                                <th>{% trans "Column" %}</th>
+                                <th>{% trans "Required" %}</th>
+                                <th>{% trans "Description" %}</th>
+                                <th>{% trans "Example" %}</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr>
-                                <td><code>item_code</code></td>
-                                <td><span class="badge bg-danger">Yes</span></td>
-                                <td>Unique item identifier</td>
-                                <td>ITEM-001</td>
+                                <td><code>{% trans "item_code" %}</code></td>
+                                <td><span class="badge bg-danger">{% trans "Yes" %}</span></td>
+                                <td>{% trans "Unique item identifier" %}</td>
+                                <td>{% trans "ITEM-001" %}</td>
                             </tr>
                             <tr>
-                                <td><code>name</code></td>
-                                <td><span class="badge bg-danger">Yes</span></td>
-                                <td>Item name</td>
-                                <td>Laptop</td>
+                                <td><code>{% trans "name" %}</code></td>
+                                <td><span class="badge bg-danger">{% trans "Yes" %}</span></td>
+                                <td>{% trans "Item name" %}</td>
+                                <td>{% trans "Laptop" %}</td>
                             </tr>
                             <tr>
-                                <td><code>category</code></td>
-                                <td><span class="badge bg-secondary">No</span></td>
-                                <td>Category name</td>
-                                <td>Electronics</td>
+                                <td><code>{% trans "category" %}</code></td>
+                                <td><span class="badge bg-secondary">{% trans "No" %}</span></td>
+                                <td>{% trans "Category name" %}</td>
+                                <td>{% trans "Electronics" %}</td>
                             </tr>
                             <tr>
-                                <td><code>description</code></td>
-                                <td><span class="badge bg-secondary">No</span></td>
-                                <td>Item description</td>
-                                <td>15-inch Laptop</td>
+                                <td><code>{% trans "description" %}</code></td>
+                                <td><span class="badge bg-secondary">{% trans "No" %}</span></td>
+                                <td>{% trans "Item description" %}</td>
+                                <td>{% trans "15-inch Laptop" %}</td>
                             </tr>
                             <tr>
-                                <td><code>quantity</code></td>
-                                <td><span class="badge bg-secondary">No</span></td>
-                                <td>Initial quantity</td>
+                                <td><code>{% trans "quantity" %}</code></td>
+                                <td><span class="badge bg-secondary">{% trans "No" %}</span></td>
+                                <td>{% trans "Initial quantity" %}</td>
                                 <td>10</td>
                             </tr>
                             <tr>
-                                <td><code>unit</code></td>
-                                <td><span class="badge bg-secondary">No</span></td>
-                                <td>Unit of measurement</td>
-                                <td>pcs</td>
+                                <td><code>{% trans "unit" %}</code></td>
+                                <td><span class="badge bg-secondary">{% trans "No" %}</span></td>
+                                <td>{% trans "Unit of measurement" %}</td>
+                                <td>{% trans "pcs" %}</td>
                             </tr>
                             <tr>
-                                <td><code>cost_price</code></td>
-                                <td><span class="badge bg-secondary">No</span></td>
-                                <td>Cost price for inventory valuation</td>
+                                <td><code>{% trans "cost_price" %}</code></td>
+                                <td><span class="badge bg-secondary">{% trans "No" %}</span></td>
+                                <td>{% trans "Cost price for inventory valuation" %}</td>
                                 <td>999.99</td>
                             </tr>
                             <tr>
-                                <td><code>selling_price</code></td>
-                                <td><span class="badge bg-secondary">No</span></td>
-                                <td>Selling price for marketplace</td>
+                                <td><code>{% trans "selling_price" %}</code></td>
+                                <td><span class="badge bg-secondary">{% trans "No" %}</span></td>
+                                <td>{% trans "Selling price for marketplace" %}</td>
                                 <td>1299.99</td>
                             </tr>
                             <tr>
-                                <td><code>is_marketplace_visible</code></td>
-                                <td><span class="badge bg-secondary">No</span></td>
-                                <td>Make visible on marketplace (true/false/yes/no)</td>
-                                <td>true</td>
+                                <td><code>{% trans "is_marketplace_visible" %}</code></td>
+                                <td><span class="badge bg-secondary">{% trans "No" %}</span></td>
+                                <td>{% trans "Make visible on marketplace (true/false/yes/no)" %}</td>
+                                <td>{% trans "true" %}</td>
                             </tr>
                             <tr>
-                                <td><code>reorder_level</code></td>
-                                <td><span class="badge bg-secondary">No</span></td>
-                                <td>Reorder level</td>
+                                <td><code>{% trans "reorder_level" %}</code></td>
+                                <td><span class="badge bg-secondary">{% trans "No" %}</span></td>
+                                <td>{% trans "Reorder level" %}</td>
                                 <td>5</td>
                             </tr>
                             <tr>
-                                <td><code>supplier_name</code></td>
-                                <td><span class="badge bg-secondary">No</span></td>
-                                <td>Supplier name</td>
-                                <td>Tech Supplier Inc.</td>
+                                <td><code>{% trans "supplier_name" %}</code></td>
+                                <td><span class="badge bg-secondary">{% trans "No" %}</span></td>
+                                <td>{% trans "Supplier name" %}</td>
+                                <td>{% trans "Tech Supplier Inc." %}</td>
                             </tr>
                             <tr>
-                                <td><code>supplier_contact</code></td>
-                                <td><span class="badge bg-secondary">No</span></td>
-                                <td>Supplier contact</td>
-                                <td>contact@supplier.com</td>
+                                <td><code>{% trans "supplier_contact" %}</code></td>
+                                <td><span class="badge bg-secondary">{% trans "No" %}</span></td>
+                                <td>{% trans "Supplier contact" %}</td>
+                                <td>{% trans "contact@supplier.com" %}</td>
                             </tr>
                             <tr>
-                                <td><code>location</code></td>
-                                <td><span class="badge bg-secondary">No</span></td>
-                                <td>Storage location</td>
-                                <td>Warehouse A, Shelf 5</td>
+                                <td><code>{% trans "location" %}</code></td>
+                                <td><span class="badge bg-secondary">{% trans "No" %}</span></td>
+                                <td>{% trans "Storage location" %}</td>
+                                <td>{% trans "Warehouse A, Shelf 5" %}</td>
                             </tr>
                         </tbody>
                     </table>
@@ -128,23 +129,23 @@
                     
                     <div class="mb-4">
                         <label for="excel_file" class="form-label">
-                            <strong>Select Excel File:</strong>
+                            <strong>{% trans "Select Excel File:" %}</strong>
                         </label>
                         <input type="file" class="form-control" id="excel_file" name="excel_file" 
                                accept=".xlsx, .xls" required>
-                        <div class="form-text">Only .xlsx and .xls files are supported</div>
+                        <div class="form-text">{% trans "Only .xlsx and .xls files are supported" %}</div>
                     </div>
                     
                     <div class="d-grid gap-2">
                         <button type="submit" class="btn btn-primary" 
                                 onclick="return confirm('Are you ready to import stock items? This may update existing items.')">
-                            <i class="fas fa-upload me-2"></i>Import Stock Items
+                            <i class="fas fa-upload me-2"></i>{% trans "Import Stock Items" %}
                         </button>
                         <a href="{% url 'inventory:stock_download_template' %}" class="btn btn-info">
-                            <i class="fas fa-download me-2"></i>Download Template
+                            <i class="fas fa-download me-2"></i>{% trans "Download Template" %}
                         </a>
                         <a href="{% url 'inventory:stock_list' %}" class="btn btn-secondary">
-                            <i class="fas fa-arrow-left me-2"></i>Back to Inventory
+                            <i class="fas fa-arrow-left me-2"></i>{% trans "Back to Inventory" %}
                         </a>
                     </div>
                 </form>

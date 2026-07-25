@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load i18n %}
 {% load static %}
 
 {% block title %}{{ tache.titre }} - {{ block.super }}{% endblock %}
@@ -42,7 +43,7 @@
     <div class="task-header">
         <nav aria-label="breadcrumb" class="mb-3">
             <ol class="breadcrumb mb-0">
-                <li class="breadcrumb-item"><a href="{% url 'projects:project_list' %}" class="text-white">Projects</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'projects:project_list' %}" class="text-white">{% trans "Projects" %}</a></li>
                 <li class="breadcrumb-item"><a href="{% url 'projects:project_detail' tache.projet.pk %}" class="text-white">{{ tache.projet.name }}</a></li>
                 <li class="breadcrumb-item active text-white">{{ tache.titre }}</li>
             </ol>
@@ -73,13 +74,13 @@
             </div>
             <div class="d-flex gap-2">
                 <a href="{% url 'projects:sous_tache_edit' tache.pk %}" class="btn btn-light">
-                    <i class="fas fa-edit me-1"></i>Edit
+                    <i class="fas fa-edit me-1"></i>{% trans "Edit" %}
                 </a>
                 <form method="post" action="{% url 'projects:sous_tache_delete' tache.pk %}" class="d-inline"
                       onsubmit="return confirm('Delete this task permanently?');">
                     {% csrf_token %}
                     <button type="submit" class="btn btn-outline-light">
-                        <i class="fas fa-trash me-1"></i>Delete
+                        <i class="fas fa-trash me-1"></i>{% trans "Delete" %}
                     </button>
                 </form>
             </div>
@@ -92,13 +93,13 @@
             <!-- Description -->
             <div class="card mb-4">
                 <div class="card-header">
-                    <h5 class="mb-0"><i class="fas fa-align-left me-2"></i>Description</h5>
+                    <h5 class="mb-0"><i class="fas fa-align-left me-2"></i>{% trans "Description" %}</h5>
                 </div>
                 <div class="card-body">
                     {% if tache.description %}
                         <p class="mb-0">{{ tache.description|linebreaks }}</p>
                     {% else %}
-                        <p class="text-muted fst-italic mb-0">No description provided.</p>
+                        <p class="text-muted fst-italic mb-0">{% trans "No description provided." %}</p>
                     {% endif %}
                 </div>
             </div>
@@ -113,11 +114,11 @@
                     <form method="post" action="{% url 'projects:add_comment' tache.id %}" class="mb-4">
                         {% csrf_token %}
                         <div class="mb-3">
-                            <label class="form-label">Add a comment</label>
+                            <label class="form-label">{% trans "Add a comment" %}</label>
                             {{ comment_form.contenu }}
                         </div>
                         <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-paper-plane me-2"></i>Post Comment
+                            <i class="fas fa-paper-plane me-2"></i>{% trans "Post Comment" %}
                         </button>
                     </form>
 
@@ -148,7 +149,7 @@
                     {% else %}
                         <div class="text-center py-4 text-muted">
                             <i class="fas fa-comment-slash fa-3x mb-3"></i>
-                            <p class="mb-0">No comments yet. Be the first to comment!</p>
+                            <p class="mb-0">{% trans "No comments yet. Be the first to comment!" %}</p>
                         </div>
                     {% endif %}
                 </div>
@@ -160,60 +161,60 @@
             <!-- Task Information -->
             <div class="card mb-4">
                 <div class="card-header">
-                    <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Task Information</h5>
+                    <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>{% trans "Task Information" %}</h5>
                 </div>
                 <div class="card-body">
                     <div class="info-item">
-                        <small class="text-muted d-block mb-1">Project</small>
+                        <small class="text-muted d-block mb-1">{% trans "Project" %}</small>
                         <a href="{% url 'projects:project_detail' tache.projet.pk %}">
                             {{ tache.projet.name }}
                         </a>
                     </div>
 
                     <div class="info-item">
-                        <small class="text-muted d-block mb-1">Assigned To</small>
+                        <small class="text-muted d-block mb-1">{% trans "Assigned To" %}</small>
                         {% if tache.assigne_a %}
                             <strong>{{ tache.assigne_a.user.get_full_name }}</strong>
                         {% else %}
-                            <em class="text-muted">Unassigned</em>
+                            <em class="text-muted">{% trans "Unassigned" %}</em>
                         {% endif %}
                     </div>
 
                     {% if tache.date_debut %}
                     <div class="info-item">
-                        <small class="text-muted d-block mb-1">Start Date</small>
+                        <small class="text-muted d-block mb-1">{% trans "Start Date" %}</small>
                         <strong>{{ tache.date_debut|date:"F d, Y" }}</strong>
                     </div>
                     {% endif %}
 
                     {% if tache.date_echeance %}
                     <div class="info-item">
-                        <small class="text-muted d-block mb-1">Due Date</small>
+                        <small class="text-muted d-block mb-1">{% trans "Due Date" %}</small>
                         <strong>{{ tache.date_echeance|date:"F d, Y" }}</strong>
                         {% now "Y-m-d" as today %}
                         {% if tache.date_echeance|date:"Y-m-d" < today and tache.status != 'termine' %}
-                            <span class="badge bg-danger ms-2">Overdue</span>
+                            <span class="badge bg-danger ms-2">{% trans "Overdue" %}</span>
                         {% endif %}
                     </div>
                     {% endif %}
 
                     {% if tache.date_achevement %}
                     <div class="info-item">
-                        <small class="text-muted d-block mb-1">Completion Date</small>
+                        <small class="text-muted d-block mb-1">{% trans "Completion Date" %}</small>
                         <strong>{{ tache.date_achevement|date:"F d, Y" }}</strong>
                     </div>
                     {% endif %}
 
                     {% if tache.duree_estimee %}
                     <div class="info-item">
-                        <small class="text-muted d-block mb-1">Estimated Duration</small>
+                        <small class="text-muted d-block mb-1">{% trans "Estimated Duration" %}</small>
                         <strong>{{ tache.duree_estimee }} hours</strong>
                     </div>
                     {% endif %}
 
                     {% if tache.depend_de %}
                     <div class="info-item">
-                        <small class="text-muted d-block mb-1">Depends On</small>
+                        <small class="text-muted d-block mb-1">{% trans "Depends On" %}</small>
                         <a href="{% url 'projects:sous_tache_detail' tache.depend_de.pk %}">
                             {{ tache.depend_de.titre }}
                         </a>
@@ -221,7 +222,7 @@
                     {% endif %}
 
                     <div class="info-item">
-                        <small class="text-muted d-block mb-1">Completion Progress</small>
+                        <small class="text-muted d-block mb-1">{% trans "Completion Progress" %}</small>
                         <div class="progress" style="height: 25px;">
                             <div class="progress-bar 
                                 {% if tache.completion_percentage < 30 %}bg-danger
@@ -239,7 +240,7 @@
             <!-- Quick Actions -->
             <div class="card">
                 <div class="card-header">
-                    <h5 class="mb-0"><i class="fas fa-bolt me-2"></i>Quick Actions</h5>
+                    <h5 class="mb-0"><i class="fas fa-bolt me-2"></i>{% trans "Quick Actions" %}</h5>
                 </div>
                 <div class="card-body">
                     <div class="d-grid gap-2">
@@ -248,7 +249,7 @@
                             {% csrf_token %}
                             <input type="hidden" name="status" value="termine">
                             <button type="submit" class="btn btn-success w-100">
-                                <i class="fas fa-check me-2"></i>Mark as Complete
+                                <i class="fas fa-check me-2"></i>{% trans "Mark as Complete" %}
                             </button>
                         </form>
                         {% endif %}
@@ -258,13 +259,13 @@
                             {% csrf_token %}
                             <input type="hidden" name="status" value="en_cours">
                             <button type="submit" class="btn btn-primary w-100">
-                                <i class="fas fa-play me-2"></i>Start Task
+                                <i class="fas fa-play me-2"></i>{% trans "Start Task" %}
                             </button>
                         </form>
                         {% endif %}
 
                         <a href="{% url 'projects:project_detail' tache.projet.pk %}" class="btn btn-outline-secondary w-100">
-                            <i class="fas fa-arrow-left me-2"></i>Back to Project
+                            <i class="fas fa-arrow-left me-2"></i>{% trans "Back to Project" %}
                         </a>
                     </div>
                 </div>

@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load i18n %}
 {% load static %}
 
 {% block title %}Project Summary Report - {{ block.super }}{% endblock %}
@@ -52,15 +53,15 @@
     <div class="report-header">
         <div class="d-flex justify-content-between align-items-center">
             <div>
-                <h1 class="h2 mb-2"><i class="fas fa-chart-bar me-3"></i>Project Summary Report</h1>
+                <h1 class="h2 mb-2"><i class="fas fa-chart-bar me-3"></i>{% trans "Project Summary Report" %}</h1>
                 <p class="mb-0">Generated on {{ report_date|date:"F d, Y" }}</p>
             </div>
             <div class="no-print">
                 <button onclick="window.print()" class="btn btn-light me-2">
-                    <i class="fas fa-print me-2"></i>Print Report
+                    <i class="fas fa-print me-2"></i>{% trans "Print Report" %}
                 </button>
                 <a href="{% url 'projects:project_export' %}" class="btn btn-light">
-                    <i class="fas fa-download me-2"></i>Export Excel
+                    <i class="fas fa-download me-2"></i>{% trans "Export Excel" %}
                 </a>
             </div>
         </div>
@@ -72,58 +73,58 @@
             <div class="stat-card text-center">
                 <i class="fas fa-folder fa-2x text-primary mb-2"></i>
                 <div class="stat-number text-primary">{{ total_projects }}</div>
-                <div class="text-muted">Total Projects</div>
+                <div class="text-muted">{% trans "Total Projects" %}</div>
             </div>
         </div>
         <div class="col-md-3 mb-3">
             <div class="stat-card text-center">
                 <i class="fas fa-spinner fa-2x text-info mb-2"></i>
                 <div class="stat-number text-info">{{ active_projects }}</div>
-                <div class="text-muted">Active Projects</div>
+                <div class="text-muted">{% trans "Active Projects" %}</div>
             </div>
         </div>
         <div class="col-md-3 mb-3">
             <div class="stat-card text-center">
                 <i class="fas fa-check-circle fa-2x text-success mb-2"></i>
                 <div class="stat-number text-success">{{ completed_projects }}</div>
-                <div class="text-muted">Completed</div>
+                <div class="text-muted">{% trans "Completed" %}</div>
             </div>
         </div>
         <div class="col-md-3 mb-3">
             <div class="stat-card text-center">
                 <i class="fas fa-pause-circle fa-2x text-warning mb-2"></i>
                 <div class="stat-number text-warning">{{ on_hold_projects }}</div>
-                <div class="text-muted">On Hold</div>
+                <div class="text-muted">{% trans "On Hold" %}</div>
             </div>
         </div>
     </div>
 
     <!-- Budget Statistics -->
     <div class="chart-container mb-4">
-        <h4 class="mb-3"><i class="fas fa-dollar-sign me-2"></i>Budget Overview</h4>
+        <h4 class="mb-3"><i class="fas fa-dollar-sign me-2"></i>{% trans "Budget Overview" %}</h4>
         <div class="row">
             <div class="col-md-3 mb-3">
                 <div class="text-center p-3 rounded-3" style="background:var(--surface2)">
                     <h5 class="text-primary">${{ budget_stats.total_budget|default:0|floatformat:2 }}</h5>
-                    <small class="text-muted">Total Budget</small>
+                    <small class="text-muted">{% trans "Total Budget" %}</small>
                 </div>
             </div>
             <div class="col-md-3 mb-3">
                 <div class="text-center p-3 rounded-3" style="background:var(--surface2)">
                     <h5 class="text-info">${{ budget_stats.avg_budget|default:0|floatformat:2 }}</h5>
-                    <small class="text-muted">Average Budget</small>
+                    <small class="text-muted">{% trans "Average Budget" %}</small>
                 </div>
             </div>
             <div class="col-md-3 mb-3">
                 <div class="text-center p-3 rounded-3" style="background:var(--surface2)">
                     <h5 class="text-success">${{ budget_stats.min_budget|default:0|floatformat:2 }}</h5>
-                    <small class="text-muted">Minimum Budget</small>
+                    <small class="text-muted">{% trans "Minimum Budget" %}</small>
                 </div>
             </div>
             <div class="col-md-3 mb-3">
                 <div class="text-center p-3 rounded-3" style="background:var(--surface2)">
                     <h5 class="text-danger">${{ budget_stats.max_budget|default:0|floatformat:2 }}</h5>
-                    <small class="text-muted">Maximum Budget</small>
+                    <small class="text-muted">{% trans "Maximum Budget" %}</small>
                 </div>
             </div>
         </div>
@@ -133,15 +134,15 @@
         <!-- Status Distribution -->
         <div class="col-md-6 mb-4">
             <div class="chart-container">
-                <h4 class="mb-3"><i class="fas fa-chart-pie me-2"></i>Status Distribution</h4>
+                <h4 class="mb-3"><i class="fas fa-chart-pie me-2"></i>{% trans "Status Distribution" %}</h4>
                 <canvas id="statusChart"></canvas>
                 <div class="mt-3">
                     <table class="table table-sm">
                         <thead>
                             <tr>
-                                <th>Status</th>
-                                <th class="text-end">Count</th>
-                                <th class="text-end">Percentage</th>
+                                <th>{% trans "Status" %}</th>
+                                <th class="text-end">{% trans "Count" %}</th>
+                                <th class="text-end">{% trans "Percentage" %}</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -161,15 +162,15 @@
         <!-- Priority Distribution -->
         <div class="col-md-6 mb-4">
             <div class="chart-container">
-                <h4 class="mb-3"><i class="fas fa-chart-bar me-2"></i>Priority Distribution</h4>
+                <h4 class="mb-3"><i class="fas fa-chart-bar me-2"></i>{% trans "Priority Distribution" %}</h4>
                 <canvas id="priorityChart"></canvas>
                 <div class="mt-3">
                     <table class="table table-sm">
                         <thead>
                             <tr>
-                                <th>Priority</th>
-                                <th class="text-end">Count</th>
-                                <th class="text-end">Percentage</th>
+                                <th>{% trans "Priority" %}</th>
+                                <th class="text-end">{% trans "Count" %}</th>
+                                <th class="text-end">{% trans "Percentage" %}</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -190,16 +191,16 @@
     <!-- Overdue Projects -->
     {% if overdue_projects %}
     <div class="chart-container mb-4">
-        <h4 class="mb-3"><i class="fas fa-exclamation-triangle text-danger me-2"></i>Overdue Projects</h4>
+        <h4 class="mb-3"><i class="fas fa-exclamation-triangle text-danger me-2"></i>{% trans "Overdue Projects" %}</h4>
         <div class="table-responsive">
             <table class="table table-hover">
                 <thead>
                     <tr>
-                        <th>Project Name</th>
-                        <th>Priority</th>
-                        <th>End Date</th>
-                        <th>Days Overdue</th>
-                        <th>Manager</th>
+                        <th>{% trans "Project Name" %}</th>
+                        <th>{% trans "Priority" %}</th>
+                        <th>{% trans "End Date" %}</th>
+                        <th>{% trans "Days Overdue" %}</th>
+                        <th>{% trans "Manager" %}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -226,7 +227,7 @@
                             {% if project.manager %}
                                 {{ project.manager.user.get_full_name }}
                             {% else %}
-                                <em>Unassigned</em>
+                                <em>{% trans "Unassigned" %}</em>
                             {% endif %}
                         </td>
                     </tr>
@@ -239,16 +240,16 @@
 
     <!-- Recent Projects -->
     <div class="chart-container">
-        <h4 class="mb-3"><i class="fas fa-clock me-2"></i>Recent Projects</h4>
+        <h4 class="mb-3"><i class="fas fa-clock me-2"></i>{% trans "Recent Projects" %}</h4>
         <div class="table-responsive">
             <table class="table table-hover">
                 <thead>
                     <tr>
-                        <th>Project Name</th>
-                        <th>Status</th>
-                        <th>Priority</th>
-                        <th>Progress</th>
-                        <th>Created</th>
+                        <th>{% trans "Project Name" %}</th>
+                        <th>{% trans "Status" %}</th>
+                        <th>{% trans "Priority" %}</th>
+                        <th>{% trans "Progress" %}</th>
+                        <th>{% trans "Created" %}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -298,7 +299,7 @@
     <!-- Back Button -->
     <div class="text-center mt-4 mb-4 no-print">
         <a href="{% url 'projects:project_list' %}" class="btn btn-primary">
-            <i class="fas fa-arrow-left me-2"></i>Back to Projects
+            <i class="fas fa-arrow-left me-2"></i>{% trans "Back to Projects" %}
         </a>
     </div>
 </div>

@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 
+{% load i18n %}
 {% block title %}Payroll Periods{% endblock %}
 
 {% block content %}
@@ -8,9 +9,9 @@
         <div class="col-12">
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
-                    <h3 class="card-title mb-0">Payroll Periods</h3>
+                    <h3 class="card-title mb-0">{% trans "Payroll Periods" %}</h3>
                     <a href="{% url 'hr:payroll_period_create' %}" class="btn btn-primary">
-                        <i class="fas fa-plus"></i> New Period
+                        <i class="fas fa-plus"></i> {% trans "New Period" %}
                     </a>
                 </div>
                 <div class="card-body">
@@ -19,12 +20,12 @@
                             <table class="table table-striped">
                                 <thead>
                                     <tr>
-                                        <th>Period</th>
-                                        <th>Start Date</th>
-                                        <th>End Date</th>
-                                        <th>Status</th>
-                                        <th>Total Net Pay</th>
-                                        <th>Actions</th>
+                                        <th>{% trans "Period" %}</th>
+                                        <th>{% trans "Start Date" %}</th>
+                                        <th>{% trans "End Date" %}</th>
+                                        <th>{% trans "Status" %}</th>
+                                        <th>{% trans "Total Net Pay" %}</th>
+                                        <th>{% trans "Actions" %}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -41,7 +42,7 @@
                                         <td class="text-end">₱{{ period.total_net_pay|floatformat:2 }}</td>
                                         <td>
                                             <a href="{% url 'hr:payroll_period_detail' period.pk %}" class="btn btn-sm btn-outline-primary">
-                                                <i class="fas fa-eye"></i> View
+                                                <i class="fas fa-eye"></i> {% trans "View" %}
                                             </a>
                                         </td>
                                     </tr>
@@ -52,10 +53,10 @@
                     {% else %}
                         <div class="text-center py-5">
                             <i class="fas fa-calendar-check fa-3x text-muted mb-3"></i>
-                            <h4>No Payroll Periods</h4>
-                            <p class="text-muted">Create a payroll period to start processing employee salaries.</p>
+                            <h4>{% trans "No Payroll Periods" %}</h4>
+                            <p class="text-muted">{% trans "Create a payroll period to start processing employee salaries." %}</p>
                             <a href="{% url 'hr:payroll_period_create' %}" class="btn btn-primary">
-                                <i class="fas fa-plus"></i> Create Period
+                                <i class="fas fa-plus"></i> {% trans "Create Period" %}
                             </a>
                         </div>
                     {% endif %}

@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load i18n %}
 {% load static %}
 
 {% block title %}Transaction Journal - {{ block.super }}{% endblock %}
@@ -16,15 +17,15 @@
     <!-- Page Header -->
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h1 class="h3 mb-0"><i class="fas fa-book me-2"></i>Stock Transaction Journal</h1>
-            <p class="text-muted mb-0">Complete history of all stock movements</p>
+            <h1 class="h3 mb-0"><i class="fas fa-book me-2"></i>{% trans "Stock Transaction Journal" %}</h1>
+            <p class="text-muted mb-0">{% trans "Complete history of all stock movements" %}</p>
         </div>
         <div>
             <a href="{% url 'inventory:stock_transaction_export' %}" class="btn btn-success">
-                <i class="fas fa-file-excel me-2"></i>Export to Excel
+                <i class="fas fa-file-excel me-2"></i>{% trans "Export to Excel" %}
             </a>
             <a href="{% url 'inventory:stock_list' %}" class="btn btn-outline-secondary">
-                <i class="fas fa-arrow-left me-2"></i>Back to Inventory
+                <i class="fas fa-arrow-left me-2"></i>{% trans "Back to Inventory" %}
             </a>
         </div>
     </div>
@@ -34,30 +35,30 @@
         <div class="card-body">
             <form method="get" class="row g-3">
                 <div class="col-md-3">
-                    <label class="form-label">Search Item</label>
+                    <label class="form-label">{% trans "Search Item" %}</label>
                     <input type="text" name="q" class="form-control" placeholder="Search by item name or code..." value="{{ query }}">
                 </div>
                 <div class="col-md-2">
-                    <label class="form-label">Transaction Type</label>
+                    <label class="form-label">{% trans "Transaction Type" %}</label>
                     <select name="type" class="form-select">
-                        <option value="">All Types</option>
-                        <option value="in" {% if selected_type == 'in' %}selected{% endif %}>Stock In</option>
-                        <option value="out" {% if selected_type == 'out' %}selected{% endif %}>Stock Out</option>
-                        <option value="adjustment" {% if selected_type == 'adjustment' %}selected{% endif %}>Adjustment</option>
+                        <option value="">{% trans "All Types" %}</option>
+                        <option value="in" {% if selected_type == 'in' %}selected{% endif %}>{% trans "Stock In" %}</option>
+                        <option value="out" {% if selected_type == 'out' %}selected{% endif %}>{% trans "Stock Out" %}</option>
+                        <option value="adjustment" {% if selected_type == 'adjustment' %}selected{% endif %}>{% trans "Adjustment" %}</option>
                     </select>
                 </div>
                 <div class="col-md-2">
-                    <label class="form-label">Start Date</label>
+                    <label class="form-label">{% trans "Start Date" %}</label>
                     <input type="date" name="start_date" class="form-control" value="{{ start_date|date:'Y-m-d' }}">
                 </div>
                 <div class="col-md-2">
-                    <label class="form-label">End Date</label>
+                    <label class="form-label">{% trans "End Date" %}</label>
                     <input type="date" name="end_date" class="form-control" value="{{ end_date|date:'Y-m-d' }}">
                 </div>
                 <div class="col-md-2">
-                    <label class="form-label">Category</label>
+                    <label class="form-label">{% trans "Category" %}</label>
                     <select name="category" class="form-select">
-                        <option value="">All Categories</option>
+                        <option value="">{% trans "All Categories" %}</option>
                         {% for cat in categories %}
                         <option value="{{ cat.id }}" {% if selected_category == cat.id|stringformat:"s" %}selected{% endif %}>
                             {{ cat.name }}
@@ -80,7 +81,7 @@
             <div class="card bg-primary text-white">
                 <div class="card-body text-center">
                     <h3 class="mb-0">{{ total_transactions }}</h3>
-                    <small>Total Transactions</small>
+                    <small>{% trans "Total Transactions" %}</small>
                 </div>
             </div>
         </div>
@@ -88,7 +89,7 @@
             <div class="card bg-info text-white">
                 <div class="card-body text-center">
                     <h3 class="mb-0">{{ total_in }}</h3>
-                    <small>Units In</small>
+                    <small>{% trans "Units In" %}</small>
                 </div>
             </div>
         </div>
@@ -96,7 +97,7 @@
             <div class="card bg-danger text-white">
                 <div class="card-body text-center">
                     <h3 class="mb-0">{{ total_out }}</h3>
-                    <small>Units Out</small>
+                    <small>{% trans "Units Out" %}</small>
                 </div>
             </div>
         </div>
@@ -104,7 +105,7 @@
             <div class="card bg-success text-white">
                 <div class="card-body text-center">
                     <h3 class="mb-0">{{ net_movement }}</h3>
-                    <small>Net Movement</small>
+                    <small>{% trans "Net Movement" %}</small>
                 </div>
             </div>
         </div>
@@ -113,21 +114,21 @@
     <!-- Transactions Table -->
     <div class="card">
         <div class="card-header">
-            <h5 class="mb-0">Transaction History</h5>
+            <h5 class="mb-0">{% trans "Transaction History" %}</h5>
         </div>
         <div class="card-body">
             <div class="table-responsive">
                 <table class="table table-hover">
                     <thead>
                         <tr>
-                            <th>Date & Time</th>
-                            <th>Item Code</th>
-                            <th>Item Name</th>
-                            <th>Category</th>
-                            <th>Type</th>
-                            <th>Quantity</th>
-                            <th>User</th>
-                            <th>Remarks</th>
+                            <th>{% trans "Date & Time" %}</th>
+                            <th>{% trans "Item Code" %}</th>
+                            <th>{% trans "Item Name" %}</th>
+                            <th>{% trans "Category" %}</th>
+                            <th>{% trans "Type" %}</th>
+                            <th>{% trans "Quantity" %}</th>
+                            <th>{% trans "User" %}</th>
+                            <th>{% trans "Remarks" %}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -163,7 +164,7 @@
                         <tr>
                             <td colspan="8" class="text-center text-muted py-5">
                                 <i class="fas fa-inbox fa-3x mb-3 d-block"></i>
-                                No transactions found
+                                {% trans "No transactions found" %}
                             </td>
                         </tr>
                         {% endfor %}
@@ -178,7 +179,7 @@
                 <ul class="pagination justify-content-center">
                     {% if transactions.has_previous %}
                     <li class="page-item">
-                        <a class="page-link" href="?page={{ transactions.previous_page_number }}">Previous</a>
+                        <a class="page-link" href="?page={{ transactions.previous_page_number }}">{% trans "Previous" %}</a>
                     </li>
                     {% endif %}
                     
@@ -190,7 +191,7 @@
                     
                     {% if transactions.has_next %}
                     <li class="page-item">
-                        <a class="page-link" href="?page={{ transactions.next_page_number }}">Next</a>
+                        <a class="page-link" href="?page={{ transactions.next_page_number }}">{% trans "Next" %}</a>
                     </li>
                     {% endif %}
                 </ul>

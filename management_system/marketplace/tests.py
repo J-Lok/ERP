@@ -20,13 +20,11 @@ class MarketplaceSingleCompanyOrderTests(TestCase):
         self.company_a = Company.objects.create(
             name='Alpha Stores',
             domain='alpha',
-            company_password='secret',
             contact_email='alpha@example.com',
         )
         self.company_b = Company.objects.create(
             name='Beta Stores',
             domain='beta',
-            company_password='secret',
             contact_email='beta@example.com',
         )
         self.client_user = Client.objects.create(
@@ -124,13 +122,11 @@ class MarketplaceAdminCompanyScopeTests(TestCase):
         self.company_a = Company.objects.create(
             name='Alpha Stores',
             domain='alpha-admin',
-            company_password='secret',
             contact_email='alpha-admin@example.com',
         )
         self.company_b = Company.objects.create(
             name='Beta Stores',
             domain='beta-admin',
-            company_password='secret',
             contact_email='beta-admin@example.com',
         )
         self.admin_user = user_model.objects.create_user(
@@ -202,7 +198,6 @@ class MarketplaceFinancePostingTests(TestCase):
         self.company = Company.objects.create(
             name='Posting Co',
             domain='posting-co',
-            company_password='secret',
             contact_email='posting@example.com',
         )
         self.admin_user = user_model.objects.create_user(

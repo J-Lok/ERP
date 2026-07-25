@@ -1,23 +1,24 @@
 {% extends 'base.html' %}
 
+{% load i18n %}
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2><i class="fas fa-boxes me-2"></i>Inventory</h2>
+    <h2><i class="fas fa-boxes me-2"></i>{% trans "Inventory" %}</h2>
     <div>
         <a href="{% url 'inventory:stock_transaction_journal' %}" class="btn btn-info btn-sm me-2">
-            <i class="fas fa-book me-1"></i>Transactions
+            <i class="fas fa-book me-1"></i>{% trans "Transactions" %}
         </a>
         <a href="{% url 'inventory:stock_export' %}" class="btn btn-success btn-sm me-2">
-            <i class="fas fa-file-export me-1"></i>Export
+            <i class="fas fa-file-export me-1"></i>{% trans "Export" %}
         </a>
         <a href="{% url 'inventory:stock_import' %}" class="btn btn-warning btn-sm me-2">
-            <i class="fas fa-file-import me-1"></i>Import
+            <i class="fas fa-file-import me-1"></i>{% trans "Import" %}
         </a>
         <a href="{% url 'inventory:stock_bulk_remove' %}" class="btn btn-danger btn-sm me-2">
-            <i class="fas fa-file-export me-1"></i>Bulk Remove
+            <i class="fas fa-file-export me-1"></i>{% trans "Bulk Remove" %}
         </a>
         <a href="{% url 'inventory:stock_create' %}" class="btn btn-primary">
-            <i class="fas fa-plus me-1"></i>Add Item
+            <i class="fas fa-plus me-1"></i>{% trans "Add Item" %}
         </a>
     </div>
 </div>
@@ -29,7 +30,7 @@
             <div class="card-body text-center">
                 <i class="fas fa-boxes fa-2x mb-2"></i>
                 <h3>{{ total_items }}</h3>
-                <p>Total Items</p>
+                <p>{% trans "Total Items" %}</p>
             </div>
         </div>
     </div>
@@ -38,7 +39,7 @@
             <div class="card-body text-center">
                 <i class="fas fa-dollar-sign fa-2x mb-2"></i>
                 <h3>FCFA {{ total_value|floatformat:0 }}</h3>
-                <p>Total Value</p>
+                <p>{% trans "Total Value" %}</p>
             </div>
         </div>
     </div>
@@ -47,7 +48,7 @@
             <div class="card-body text-center">
                 <i class="fas fa-exclamation-triangle fa-2x mb-2"></i>
                 <h3>{{ low_stock_items }}</h3>
-                <p>Low Stock</p>
+                <p>{% trans "Low Stock" %}</p>
             </div>
         </div>
     </div>
@@ -56,7 +57,7 @@
             <div class="card-body text-center">
                 <i class="fas fa-times-circle fa-2x mb-2"></i>
                 <h3>{{ out_of_stock_items }}</h3>
-                <p>Out of Stock</p>
+                <p>{% trans "Out of Stock" %}</p>
             </div>
         </div>
     </div>
@@ -65,7 +66,7 @@
 <!-- Filters -->
 <div class="card mb-4">
     <div class="card-header bg-white">
-        <h5 class="mb-0"><i class="fas fa-filter me-2"></i>Filters</h5>
+        <h5 class="mb-0"><i class="fas fa-filter me-2"></i>{% trans "Filters" %}</h5>
     </div>
     <div class="card-body">
         <form method="get" class="row g-3">
@@ -75,7 +76,7 @@
             </div>
             <div class="col-md-3">
                 <select name="category" class="form-select" onchange="this.form.submit()">
-                    <option value="">All Categories</option>
+                    <option value="">{% trans "All Categories" %}</option>
                     {% for category in categories %}
                     <option value="{{ category.id }}" {% if selected_category == category.id|stringformat:"s" %}selected{% endif %}>
                         {{ category.name }}
@@ -85,18 +86,18 @@
             </div>
             <div class="col-md-3">
                 <select name="status" class="form-select" onchange="this.form.submit()">
-                    <option value="">All Status</option>
-                    <option value="low" {% if selected_status == 'low' %}selected{% endif %}>Low Stock</option>
-                    <option value="out" {% if selected_status == 'out' %}selected{% endif %}>Out of Stock</option>
-                    <option value="in_stock" {% if selected_status == 'in_stock' %}selected{% endif %}>In Stock</option>
+                    <option value="">{% trans "All Status" %}</option>
+                    <option value="low" {% if selected_status == 'low' %}selected{% endif %}>{% trans "Low Stock" %}</option>
+                    <option value="out" {% if selected_status == 'out' %}selected{% endif %}>{% trans "Out of Stock" %}</option>
+                    <option value="in_stock" {% if selected_status == 'in_stock' %}selected{% endif %}>{% trans "In Stock" %}</option>
                 </select>
             </div>
             <div class="col-md-2">
                 <button type="submit" class="btn btn-primary me-2">
-                    <i class="fas fa-search me-1"></i>Search
+                    <i class="fas fa-search me-1"></i>{% trans "Search" %}
                 </button>
                 <a href="{% url 'inventory:stock_list' %}" class="btn btn-secondary">
-                    <i class="fas fa-times me-1"></i>Clear
+                    <i class="fas fa-times me-1"></i>{% trans "Clear" %}
                 </a>
             </div>
         </form>
@@ -110,16 +111,16 @@
             <table class="table table-hover">
                 <thead class="table-light">
                     <tr>
-                        <th>Item Code</th>
-                        <th>Name</th>
-                        <th>Category</th>
-                        <th>Quantity</th>
-                        <th>Unit Price</th>
-                        <th>Total Value</th>
-                        <th>Status</th>
-                        <th>Reorder Level</th>
-                        <th>Location</th>
-                        <th>Actions</th>
+                        <th>{% trans "Item Code" %}</th>
+                        <th>{% trans "Name" %}</th>
+                        <th>{% trans "Category" %}</th>
+                        <th>{% trans "Quantity" %}</th>
+                        <th>{% trans "Unit Price" %}</th>
+                        <th>{% trans "Total Value" %}</th>
+                        <th>{% trans "Status" %}</th>
+                        <th>{% trans "Reorder Level" %}</th>
+                        <th>{% trans "Location" %}</th>
+                        <th>{% trans "Actions" %}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -128,7 +129,7 @@
                         <td>
                             <strong>{{ stock.item_code }}</strong>
                             {% if stock.needs_reorder %}
-                            <span class="badge bg-danger ms-1">Low</span>
+                            <span class="badge bg-danger ms-1">{% trans "Low" %}</span>
                             {% endif %}
                         </td>
                         <td>
@@ -154,11 +155,11 @@
                         </td>
                         <td>
                             {% if stock.needs_reorder %}
-                            <span class="badge bg-danger">Low Stock</span>
+                            <span class="badge bg-danger">{% trans "Low Stock" %}</span>
                             {% elif stock.quantity == 0 %}
-                            <span class="badge bg-secondary">Out of Stock</span>
+                            <span class="badge bg-secondary">{% trans "Out of Stock" %}</span>
                             {% else %}
-                            <span class="badge bg-success">In Stock</span>
+                            <span class="badge bg-success">{% trans "In Stock" %}</span>
                             {% endif %}
                         </td>
                         <td>{{ stock.reorder_level }}</td>
@@ -188,12 +189,12 @@
                     <tr>
                         <td colspan="10" class="text-center py-4">
                             <i class="fas fa-box-open fa-3x text-muted mb-3"></i>
-                            <h5>No stock items found</h5>
+                            <h5>{% trans "No stock items found" %}</h5>
                             <p class="text-muted">
                                 {% if query or selected_category or selected_status %}
                                 Try adjusting your filters or 
                                 {% endif %}
-                                <a href="{% url 'inventory:stock_create' %}">add your first stock item</a>.
+                                <a href="{% url 'inventory:stock_create' %}">{% trans "add your first stock item" %}</a>.
                             </p>
                         </td>
                     </tr>
@@ -206,13 +207,13 @@
         <div class="mt-4 d-flex justify-content-between align-items-center">
             <div>
                 <a href="{% url 'inventory:category_list' %}" class="btn btn-outline-primary btn-sm me-2">
-                    <i class="fas fa-tags me-1"></i>Manage Categories
+                    <i class="fas fa-tags me-1"></i>{% trans "Manage Categories" %}
                 </a>
                 <a href="{% url 'inventory:stock_download_template' %}" class="btn btn-outline-info btn-sm me-2">
-    <i class="fas fa-download me-1"></i>Download Template
+    <i class="fas fa-download me-1"></i>{% trans "Download Template" %}
 </a>
                 <a href="{% url 'inventory:inventory_dashboard' %}" class="btn btn-outline-success btn-sm">
-                    <i class="fas fa-tachometer-alt me-1"></i>Dashboard
+                    <i class="fas fa-tachometer-alt me-1"></i>{% trans "Dashboard" %}
                 </a>
             </div>
             <small class="text-muted">
@@ -227,21 +228,21 @@
     <div class="col-md-4">
         <div class="card">
             <div class="card-header bg-white">
-                <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Reports</h5>
+                <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>{% trans "Reports" %}</h5>
             </div>
             <div class="card-body">
                 <div class="list-group list-group-flush">
                     <a href="{% url 'inventory:low_stock_report' %}" class="list-group-item list-group-item-action">
                         <i class="fas fa-exclamation-triangle text-warning me-2"></i>
-                        Low Stock Report
+                        {% trans "Low Stock Report" %}
                     </a>
                     <a href="{% url 'inventory:stock_valuation_report' %}" class="list-group-item list-group-item-action">
                         <i class="fas fa-dollar-sign text-success me-2"></i>
-                        Stock Valuation Report
+                        {% trans "Stock Valuation Report" %}
                     </a>
                     <a href="{% url 'inventory:stock_movement_report' %}" class="list-group-item list-group-item-action">
                         <i class="fas fa-chart-line text-primary me-2"></i>
-                        Stock Movement Report
+                        {% trans "Stock Movement Report" %}
                     </a>
                 </div>
             </div>

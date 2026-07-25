@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 
+{% load i18n %}
 {% block title %}View Report - {{ meeting.title }}{% endblock %}
 
 {% block content %}
@@ -11,15 +12,15 @@
                 <i class="fas fa-file-alt"></i> {{ document_name }}
             </h1>
             <small class="text-muted">
-                Meeting: <a href="{% url 'meetings:meeting_detail' meeting.id %}">{{ meeting.title }}</a>
+                {% trans "Meeting:" %} <a href="{% url 'meetings:meeting_detail' meeting.id %}">{{ meeting.title }}</a>
             </small>
         </div>
         <div class="col-md-4 text-end">
             <a href="{{ note.report_document.url }}" download class="btn btn-primary">
-                <i class="fas fa-download"></i> Download
+                <i class="fas fa-download"></i> {% trans "Download" %}
             </a>
             <a href="{% url 'meetings:meeting_detail' meeting.id %}" class="btn btn-outline-secondary">
-                Back
+                {% trans "Back" %}
             </a>
         </div>
     </div>
@@ -31,15 +32,15 @@
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-4">
-                            <strong>Meeting:</strong>
+                            <strong>{% trans "Meeting:" %}</strong>
                             <p>{{ meeting.title }}</p>
                         </div>
                         <div class="col-md-4">
-                            <strong>Meeting Date:</strong>
+                            <strong>{% trans "Meeting Date:" %}</strong>
                             <p>{{ meeting.scheduled_date|date:"M d, Y H:i" }}</p>
                         </div>
                         <div class="col-md-4">
-                            <strong>Last Updated:</strong>
+                            <strong>{% trans "Last Updated:" %}</strong>
                             <p>{{ note.updated_at|date:"M d, Y H:i" }}</p>
                         </div>
                     </div>
@@ -54,7 +55,7 @@
             <div class="col-md-12">
                 <div class="card">
                     <div class="card-header bg-light">
-                        <h5 class="mb-0">Document Content</h5>
+                        <h5 class="mb-0">{% trans "Document Content" %}</h5>
                     </div>
                     <div class="card-body" style="max-height: 600px; overflow-y: auto;">
                         <!-- Paragraphs -->
@@ -103,9 +104,9 @@
             <div class="col-md-12">
                 <div class="alert alert-warning" role="alert">
                     <i class="fas fa-exclamation-circle"></i>
-                    <strong>Cannot Display Content</strong>
-                    <p>Unable to read the document content. This might be due to a corrupted file or missing dependencies.</p>
-                    <p class="mb-0">Please <a href="{{ note.report_document.url }}" download class="alert-link">download the file</a> to view it directly.</p>
+                    <strong>{% trans "Cannot Display Content" %}</strong>
+                    <p>{% trans "Unable to read the document content. This might be due to a corrupted file or missing dependencies." %}</p>
+                    <p class="mb-0">{% trans "Please" %} <a href="{{ note.report_document.url }}" download class="alert-link">{% trans "download the file" %}</a> {% trans "to view it directly." %}</p>
                 </div>
             </div>
         </div>
@@ -114,8 +115,8 @@
             <div class="col-md-12">
                 <div class="alert alert-info" role="alert">
                     <i class="fas fa-info-circle"></i>
-                    <strong>Preview Not Available</strong>
-                    <p class="mb-0">This file type cannot be previewed in the browser. Please <a href="{{ note.report_document.url }}" download class="alert-link">download the file</a> to view it.</p>
+                    <strong>{% trans "Preview Not Available" %}</strong>
+                    <p class="mb-0">{% trans "This file type cannot be previewed in the browser. Please" %} <a href="{{ note.report_document.url }}" download class="alert-link">{% trans "download the file" %}</a> {% trans "to view it." %}</p>
                 </div>
             </div>
         </div>

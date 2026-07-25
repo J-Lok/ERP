@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load i18n %}
 {% load crispy_forms_tags %}
 {% load meeting_filters %}
 
@@ -17,10 +18,10 @@
         </div>
         <div class="col-md-4 text-end">
             <a href="{% url 'meetings:meeting_edit' meeting.id %}" class="btn btn-warning">
-                <i class="fas fa-edit"></i> Edit
+                <i class="fas fa-edit"></i> {% trans "Edit" %}
             </a>
             <a href="{% url 'meetings:meeting_delete' meeting.id %}" class="btn btn-danger">
-                <i class="fas fa-trash"></i> Delete
+                <i class="fas fa-trash"></i> {% trans "Delete" %}
             </a>
         </div>
     </div>
@@ -31,32 +32,32 @@
             <!-- Meeting Details Card -->
             <div class="card mb-4">
                 <div class="card-header bg-light">
-                    <h5 class="mb-0">Meeting Information</h5>
+                    <h5 class="mb-0">{% trans "Meeting Information" %}</h5>
                 </div>
                 <div class="card-body">
                     <div class="row mb-3">
                         <div class="col-md-6">
-                            <strong>Type:</strong>
+                            <strong>{% trans "Type:" %}</strong>
                             <p>{{ meeting.get_meeting_type_display }}</p>
                         </div>
                         <div class="col-md-6">
-                            <strong>Scheduled Date:</strong>
+                            <strong>{% trans "Scheduled Date:" %}</strong>
                             <p>{{ meeting.scheduled_date|date:"M d, Y H:i" }}</p>
                         </div>
                     </div>
                     <div class="row mb-3">
                         <div class="col-md-6">
-                            <strong>Organizer:</strong>
+                            <strong>{% trans "Organizer:" %}</strong>
                             <p>{{ meeting.organizer.user.get_full_name|default:"N/A" }}</p>
                         </div>
                         <div class="col-md-6">
-                            <strong>Location:</strong>
+                            <strong>{% trans "Location:" %}</strong>
                             <p>{{ meeting.location|default:"N/A" }}</p>
                         </div>
                     </div>
                     {% if meeting.description %}
                         <div class="mb-3">
-                            <strong>Description:</strong>
+                            <strong>{% trans "Description:" %}</strong>
                             <p>{{ meeting.description }}</p>
                         </div>
                     {% endif %}
@@ -80,7 +81,7 @@
                             {% endfor %}
                         </div>
                     {% else %}
-                        <p class="text-muted">No attendees added</p>
+                        <p class="text-muted">{% trans "No attendees added" %}</p>
                     {% endif %}
                 </div>
             </div>
@@ -89,54 +90,54 @@
             {% if has_notes %}
                 <div class="card mb-4">
                     <div class="card-header bg-light d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0">Meeting Notes</h5>
+                        <h5 class="mb-0">{% trans "Meeting Notes" %}</h5>
                         <a href="{% url 'meetings:meeting_notes_edit' meeting.notes.id %}" class="btn btn-sm btn-outline-primary">
-                            <i class="fas fa-edit"></i> Edit Notes
+                            <i class="fas fa-edit"></i> {% trans "Edit Notes" %}
                         </a>
                     </div>
                     <div class="card-body">
                         {% with note=meeting.notes %}
                             {% if note.agenda %}
                                 <div class="mb-3">
-                                    <strong>Agenda:</strong>
+                                    <strong>{% trans "Agenda:" %}</strong>
                                     <p>{{ note.agenda }}</p>
                                 </div>
                             {% endif %}
                             {% if note.discussion_summary %}
                                 <div class="mb-3">
-                                    <strong>Discussion Summary:</strong>
+                                    <strong>{% trans "Discussion Summary:" %}</strong>
                                     <p>{{ note.discussion_summary }}</p>
                                 </div>
                             {% endif %}
                             {% if note.decisions_made %}
                                 <div class="mb-3">
-                                    <strong>Decisions Made:</strong>
+                                    <strong>{% trans "Decisions Made:" %}</strong>
                                     <p>{{ note.decisions_made }}</p>
                                 </div>
                             {% endif %}
                             {% if note.risks_identified %}
                                 <div class="mb-3">
-                                    <strong>Risks Identified:</strong>
+                                    <strong>{% trans "Risks Identified:" %}</strong>
                                     <p>{{ note.risks_identified }}</p>
                                 </div>
                             {% endif %}
                             {% if note.next_steps %}
                                 <div class="mb-3">
-                                    <strong>Next Steps:</strong>
+                                    <strong>{% trans "Next Steps:" %}</strong>
                                     <p>{{ note.next_steps }}</p>
                                 </div>
                             {% endif %}
                             {% if note.report_document %}
                                 <div class="mb-3">
-                                    <strong>Report Document:</strong>
+                                    <strong>{% trans "Report Document:" %}</strong>
                                     <p>
                                         {% if note.report_document.name|lower|endswith:'.docx' or note.report_document.name|lower|endswith:'.doc' %}
                                             <a href="{% url 'meetings:meeting_notes_view' note.id %}" class="btn btn-sm btn-outline-info">
-                                                <i class="fas fa-eye"></i> View Report
+                                                <i class="fas fa-eye"></i> {% trans "View Report" %}
                                             </a>
                                         {% endif %}
                                         <a href="{{ note.report_document.url }}" download class="btn btn-sm btn-outline-primary">
-                                            <i class="fas fa-download"></i> Download
+                                            <i class="fas fa-download"></i> {% trans "Download" %}
                                         </a>
                                     </p>
                                 </div>
@@ -147,13 +148,13 @@
             {% else %}
                 <div class="card mb-4">
                     <div class="card-header bg-light d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0">Meeting Notes</h5>
+                        <h5 class="mb-0">{% trans "Meeting Notes" %}</h5>
                         <a href="{% url 'meetings:meeting_notes_create' meeting.id %}" class="btn btn-sm btn-outline-primary">
-                            <i class="fas fa-plus"></i> Add Notes
+                            <i class="fas fa-plus"></i> {% trans "Add Notes" %}
                         </a>
                     </div>
                     <div class="card-body text-center p-4">
-                        <p class="text-muted">No notes recorded yet</p>
+                        <p class="text-muted">{% trans "No notes recorded yet" %}</p>
                     </div>
                 </div>
             {% endif %}
@@ -208,7 +209,7 @@
                         </div>
                     {% empty %}
                         <div class="list-group-item text-center p-4">
-                            <p class="text-muted mb-0">No action items yet</p>
+                            <p class="text-muted mb-0">{% trans "No action items yet" %}</p>
                         </div>
                     {% endfor %}
                 </div>
@@ -252,7 +253,7 @@
                         </div>
                     {% empty %}
                         <div class="list-group-item text-center p-4">
-                            <p class="text-muted mb-0">No attachments yet</p>
+                            <p class="text-muted mb-0">{% trans "No attachments yet" %}</p>
                         </div>
                     {% endfor %}
                 </div>

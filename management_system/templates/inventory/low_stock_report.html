@@ -1,14 +1,15 @@
 {% extends 'base.html' %}
 
+{% load i18n %}
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2><i class="fas fa-exclamation-triangle me-2"></i>Low Stock Report</h2>
+    <h2><i class="fas fa-exclamation-triangle me-2"></i>{% trans "Low Stock Report" %}</h2>
     <div>
         <button onclick="window.print()" class="btn btn-outline-primary btn-sm me-2">
-            <i class="fas fa-print me-1"></i>Print
+            <i class="fas fa-print me-1"></i>{% trans "Print" %}
         </button>
         <a href="{% url 'inventory:stock_list' %}" class="btn btn-secondary btn-sm">
-            <i class="fas fa-arrow-left me-1"></i>Back to Inventory
+            <i class="fas fa-arrow-left me-1"></i>{% trans "Back to Inventory" %}
         </a>
     </div>
 </div>
@@ -16,7 +17,7 @@
 <!-- Summary -->
 <div class="card mb-4">
     <div class="card-header bg-warning">
-        <h5 class="mb-0 text-white"><i class="fas fa-exclamation-circle me-2"></i>Low Stock Alert Summary</h5>
+        <h5 class="mb-0 text-white"><i class="fas fa-exclamation-circle me-2"></i>{% trans "Low Stock Alert Summary" %}</h5>
     </div>
     <div class="card-body">
         <div class="row">
@@ -24,7 +25,7 @@
                 <div class="card bg-light">
                     <div class="card-body text-center">
                         <h3 class="text-danger">{{ total_low_stock }}</h3>
-                        <p class="text-muted mb-0">Low Stock Items</p>
+                        <p class="text-muted mb-0">{% trans "Low Stock Items" %}</p>
                     </div>
                 </div>
             </div>
@@ -32,7 +33,7 @@
                 <div class="card bg-light">
                     <div class="card-body text-center">
                         <h3 class="text-warning">FCFA {{ total_value|floatformat:0 }}</h3>
-                        <p class="text-muted mb-0">Total Value at Risk</p>
+                        <p class="text-muted mb-0">{% trans "Total Value at Risk" %}</p>
                     </div>
                 </div>
             </div>
@@ -40,7 +41,7 @@
                 <div class="card bg-light">
                     <div class="card-body text-center">
                         <h3 class="text-info">{{ category_summary|length }}</h3>
-                        <p class="text-muted mb-0">Categories Affected</p>
+                        <p class="text-muted mb-0">{% trans "Categories Affected" %}</p>
                     </div>
                 </div>
             </div>
@@ -51,7 +52,7 @@
 <!-- Category Summary -->
 <div class="card mb-4">
     <div class="card-header bg-white">
-        <h5 class="mb-0">Low Stock by Category</h5>
+        <h5 class="mb-0">{% trans "Low Stock by Category" %}</h5>
     </div>
     <div class="card-body">
         {% if category_summary %}
@@ -59,11 +60,11 @@
             <table class="table table-sm">
                 <thead>
                     <tr>
-                        <th>Category</th>
-                        <th>Low Stock Items</th>
-                        <th>Total Items</th>
-                        <th>Total Value</th>
-                        <th width="40%">Severity</th>
+                        <th>{% trans "Category" %}</th>
+                        <th>{% trans "Low Stock Items" %}</th>
+                        <th>{% trans "Total Items" %}</th>
+                        <th>{% trans "Total Value" %}</th>
+                        <th width="40%">{% trans "Severity" %}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -89,7 +90,7 @@
             </table>
         </div>
         {% else %}
-        <p class="text-center text-muted py-4">No low stock items by category.</p>
+        <p class="text-center text-muted py-4">{% trans "No low stock items by category." %}</p>
         {% endif %}
     </div>
 </div>
@@ -97,7 +98,7 @@
 <!-- Low Stock Items -->
 <div class="card">
     <div class="card-header bg-white">
-        <h5 class="mb-0">Low Stock Items (Quantity ≤ Reorder Level)</h5>
+        <h5 class="mb-0">{% trans "Low Stock Items (Quantity ≤ Reorder Level)" %}</h5>
     </div>
     <div class="card-body">
         {% if low_stock_items %}
@@ -105,16 +106,16 @@
             <table class="table table-hover">
                 <thead class="table-light">
                     <tr>
-                        <th>Item Code</th>
-                        <th>Name</th>
-                        <th>Category</th>
-                        <th>Current Qty</th>
-                        <th>Reorder Level</th>
-                        <th>Shortage</th>
-                        <th>Unit Price</th>
-                        <th>Value at Risk</th>
-                        <th>Supplier</th>
-                        <th>Actions</th>
+                        <th>{% trans "Item Code" %}</th>
+                        <th>{% trans "Name" %}</th>
+                        <th>{% trans "Category" %}</th>
+                        <th>{% trans "Current Qty" %}</th>
+                        <th>{% trans "Reorder Level" %}</th>
+                        <th>{% trans "Shortage" %}</th>
+                        <th>{% trans "Unit Price" %}</th>
+                        <th>{% trans "Value at Risk" %}</th>
+                        <th>{% trans "Supplier" %}</th>
+                        <th>{% trans "Actions" %}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -123,7 +124,7 @@
                         <td>
                             <strong>{{ item.item_code }}</strong>
                             {% if item.quantity == 0 %}
-                            <span class="badge bg-danger">Out of Stock</span>
+                            <span class="badge bg-danger">{% trans "Out of Stock" %}</span>
                             {% endif %}
                         </td>
                         <td>{{ item.name }}</td>
@@ -149,7 +150,7 @@
                             {% if shortage > 0 %}
                             <span class="badge bg-danger">{{ shortage }} needed</span>
                             {% else %}
-                            <span class="badge bg-secondary">At reorder level</span>
+                            <span class="badge bg-secondary">{% trans "At reorder level" %}</span>
                             {% endif %}
                             {% endwith %}
                         </td>
@@ -174,10 +175,10 @@
         {% else %}
         <div class="text-center py-5">
             <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
-            <h5>No Low Stock Items</h5>
-            <p class="text-muted">All inventory items are above their reorder levels. Great job!</p>
+            <h5>{% trans "No Low Stock Items" %}</h5>
+            <p class="text-muted">{% trans "All inventory items are above their reorder levels. Great job!" %}</p>
             <a href="{% url 'inventory:stock_list' %}" class="btn btn-primary mt-2">
-                <i class="fas fa-boxes me-1"></i>View All Inventory
+                <i class="fas fa-boxes me-1"></i>{% trans "View All Inventory" %}
             </a>
         </div>
         {% endif %}
@@ -188,18 +189,18 @@
 {% if low_stock_items %}
 <div class="card mt-4">
     <div class="card-header bg-white">
-        <h5 class="mb-0"><i class="fas fa-lightbulb me-2"></i>Recommended Actions</h5>
+        <h5 class="mb-0"><i class="fas fa-lightbulb me-2"></i>{% trans "Recommended Actions" %}</h5>
     </div>
     <div class="card-body">
         <div class="row">
             <div class="col-md-6">
                 <div class="card bg-light">
                     <div class="card-body">
-                        <h6><i class="fas fa-shopping-cart text-primary me-2"></i>Restock Priority</h6>
+                        <h6><i class="fas fa-shopping-cart text-primary me-2"></i>{% trans "Restock Priority" %}</h6>
                         <ul class="mb-0">
-                            <li>Restock items marked as "Out of Stock" first</li>
-                            <li>Focus on high-value items with significant shortages</li>
-                            <li>Contact suppliers for items with long lead times</li>
+                            <li>{% trans "Restock items marked as \"Out of Stock\" first" %}</li>
+                            <li>{% trans "Focus on high-value items with significant shortages" %}</li>
+                            <li>{% trans "Contact suppliers for items with long lead times" %}</li>
                         </ul>
                     </div>
                 </div>
@@ -207,11 +208,11 @@
             <div class="col-md-6">
                 <div class="card bg-light">
                     <div class="card-body">
-                        <h6><i class="fas fa-cog text-warning me-2"></i>System Adjustments</h6>
+                        <h6><i class="fas fa-cog text-warning me-2"></i>{% trans "System Adjustments" %}</h6>
                         <ul class="mb-0">
-                            <li>Review and adjust reorder levels if needed</li>
-                            <li>Consider increasing safety stock for critical items</li>
-                            <li>Set up automatic reorder alerts</li>
+                            <li>{% trans "Review and adjust reorder levels if needed" %}</li>
+                            <li>{% trans "Consider increasing safety stock for critical items" %}</li>
+                            <li>{% trans "Set up automatic reorder alerts" %}</li>
                         </ul>
                     </div>
                 </div>

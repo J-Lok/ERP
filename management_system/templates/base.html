@@ -31,6 +31,11 @@
       --amber:      oklch(0.78 0.17 75);
       --blue:       oklch(0.65 0.17 245);
       --purple:     oklch(0.68 0.17 300);
+      --glass-sidebar: rgba(8, 13, 18, 0.82);
+      --glass-topbar: rgba(22, 27, 34, 0.82);
+      --glass-card: rgba(22, 27, 34, 0.65);
+      --glow-teal: rgba(13, 148, 136, 0.08);
+      --glow-indigo: rgba(99, 102, 241, 0.08);
     }
     [data-bs-theme="light"] {
       --bg:         #f3f4f6;
@@ -42,6 +47,11 @@
       --muted:      #4b5563;
       --muted-dim:  #6b7280;
       --sidebar-bg: #ffffff;
+      --glass-sidebar: rgba(255, 255, 255, 0.85);
+      --glass-topbar: rgba(255, 255, 255, 0.85);
+      --glass-card: rgba(255, 255, 255, 0.7);
+      --glow-teal: rgba(13, 148, 136, 0.04);
+      --glow-indigo: rgba(99, 102, 241, 0.04);
     }
 
     /* ── Reset & Base ── */
@@ -80,7 +90,9 @@
     /* ── Sidebar ── */
     .zentral-sidebar {
       width: 220px; min-width: 220px;
-      background: var(--sidebar-bg);
+      background: var(--glass-sidebar) !important;
+      backdrop-filter: blur(12px) saturate(180%);
+      -webkit-backdrop-filter: blur(12px) saturate(180%);
       border-right: 1px solid var(--border);
       display: flex; flex-direction: column; height: 100vh;
       position: sticky; top: 0;
@@ -111,16 +123,20 @@
     .nav-item-inner {
       display: flex; align-items: center; gap: 12px;
       min-height: 40px;
-      padding: 10px 12px; border-radius: 8px; border: none; cursor: pointer;
+      padding: 10px 12px; border-radius: 0 8px 8px 0; border: none; cursor: pointer;
       background: transparent; color: var(--muted); width: 100%;
       text-align: left; text-decoration: none;
-      transition: background .15s, color .15s;
+      transition: background .2s, color .2s, border-color .2s;
       font-family: 'Plus Jakarta Sans', sans-serif; font-size: 13.5px; font-weight: 400;
+      border-left: 3px solid transparent;
     }
     .nav-item-inner i { font-size: 15px; flex-shrink: 0; width: 18px; text-align: center; }
-    .nav-item-inner:hover { background: var(--surface2); color: var(--text); }
+    .nav-item-inner:hover { background: var(--surface2); color: var(--text); border-left-color: var(--muted-dim); }
     .nav-item-inner.active {
-      background: var(--accent-dim); color: var(--accent); font-weight: 600;
+      background: linear-gradient(90deg, var(--accent-dim), transparent) !important;
+      color: var(--accent) !important;
+      font-weight: 600;
+      border-left-color: var(--accent) !important;
     }
     .nav-active-dot {
       margin-left: auto; width: 5px; height: 5px; border-radius: 50%;
@@ -146,9 +162,14 @@
 
     /* ── Top bar ── */
     .zentral-topbar {
+      position: relative;
+      z-index: 1020;
       min-height: 60px; display: flex; align-items: center;
       padding: 0 24px; border-bottom: 1px solid var(--border);
-      background: var(--surface); gap: 16px; flex-shrink: 0;
+      background: var(--glass-topbar) !important;
+      backdrop-filter: blur(12px) saturate(180%);
+      -webkit-backdrop-filter: blur(12px) saturate(180%);
+      gap: 16px; flex-shrink: 0;
     }
     .topbar-toggle {
       background: none; border: none; color: var(--muted); cursor: pointer;
@@ -185,25 +206,36 @@
     /* ── Content ── */
     .zentral-content {
       flex: 1; overflow-y: auto; padding: 32px 40px;
-      background: var(--bg);
+      background: radial-gradient(circle at 90% 10%, var(--glow-teal), transparent 45%), 
+                  radial-gradient(circle at 10% 90%, var(--glow-indigo), transparent 45%), 
+                  var(--bg) !important;
     }
 
     /* ── Bootstrap overrides ── */
     .card {
-      background: var(--surface) !important;
+      background: var(--glass-card) !important;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
       border: 1px solid var(--border) !important;
-      border-radius: 8px !important;
+      border-radius: 12px !important;
       color: var(--text) !important;
       overflow: hidden;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12) !important;
+      transition: transform 0.22s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.22s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.22s !important;
+    }
+    .card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2) !important;
+      border-color: var(--muted-dim) !important;
     }
     .card-header {
-      background: var(--surface) !important;
+      background: transparent !important;
       border-bottom: 1px solid var(--border) !important;
       padding: 14px 18px !important;
       font-weight: 600; font-size: 14px;
     }
-    .card-body { background: var(--surface) !important; color: var(--text) !important; padding: 18px !important; }
-    .card-footer { background: var(--surface) !important; border-top: 1px solid var(--border) !important; }
+    .card-body { background: transparent !important; color: var(--text) !important; padding: 18px !important; }
+    .card-footer { background: transparent !important; border-top: 1px solid var(--border) !important; }
 
     /* ── Rounded utilities (override Bootstrap's default 0.25rem) ── */
     .rounded   { border-radius: 8px !important; }
@@ -436,6 +468,7 @@
       .zentral-sidebar {
         position: fixed; z-index: 1040; transform: translateX(-100%);
         width: 240px; min-width: 240px; box-shadow: 16px 0 40px rgba(0,0,0,.35);
+        transition: transform 0.25s ease-in-out;
       }
       .zentral-sidebar.mobile-open { transform: translateX(0); }
       .zentral-sidebar.collapsed { width: 240px; min-width: 240px; }
@@ -451,6 +484,12 @@
       .page-header { align-items: flex-start; gap: 14px; flex-direction: column; }
       .page-header-actions { width: 100%; justify-content: flex-start; }
       .page-header-actions .btn { flex: 1 1 auto; }
+      
+      .sidebar-backdrop {
+        position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(0,0,0,.5); z-index: 1035; display: none;
+      }
+      .sidebar-backdrop.show { display: block; }
     }
 
     @media (max-width: 575.98px) {
@@ -471,6 +510,9 @@
 
 {% if user.is_authenticated %}
 <div class="zentral-shell">
+
+  <!-- Sidebar Backdrop -->
+  <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
 
   <!-- ── Sidebar ── -->
   <aside class="zentral-sidebar {% if request.COOKIES.sidebar_collapsed == '1' %}collapsed{% endif %}" id="zentral-sidebar">
@@ -619,14 +661,14 @@
               <form method="post" action="{% url 'accounts:set_language' %}">{% csrf_token %}
                 <input type="hidden" name="language" value="en">
                 <input type="hidden" name="next" value="{{ request.path }}">
-                <button type="submit" class="dropdown-item {% if user.language != 'fr' %}fw-bold{% endif %}">🇬🇧 English</button>
+                <button type="submit" class="dropdown-item {% if user.language != 'fr' %}fw-bold{% endif %}">{% trans "🇬🇧 English" %}</button>
               </form>
             </li>
             <li>
               <form method="post" action="{% url 'accounts:set_language' %}">{% csrf_token %}
                 <input type="hidden" name="language" value="fr">
                 <input type="hidden" name="next" value="{{ request.path }}">
-                <button type="submit" class="dropdown-item {% if user.language == 'fr' %}fw-bold{% endif %}">🇫🇷 Français</button>
+                <button type="submit" class="dropdown-item {% if user.language == 'fr' %}fw-bold{% endif %}">{% trans "🇫🇷 Français" %}</button>
               </form>
             </li>
           </ul>
@@ -741,9 +783,10 @@
     });
   }
 
-  // ── Sidebar collapse ──
+  // ── Sidebar collapse & mobile drawer ──
   const sidebar = document.getElementById('zentral-sidebar');
   const toggle  = document.getElementById('sidebar-toggle');
+  const backdrop = document.getElementById('sidebar-backdrop');
   const SK = 'zentral-sidebar-collapsed';
 
   function applySidebar(collapsed, instant) {
@@ -754,11 +797,41 @@
     document.cookie = `sidebar_collapsed=${collapsed?'1':'0'};path=/;max-age=31536000`;
   }
   applySidebar(localStorage.getItem(SK) === '1', true);
+
+  function closeMobileSidebar() {
+    if (sidebar) sidebar.classList.remove('mobile-open');
+    if (backdrop) backdrop.classList.remove('show');
+  }
+
+  function openMobileSidebar() {
+    if (sidebar) sidebar.classList.add('mobile-open');
+    if (backdrop) backdrop.classList.add('show');
+  }
+
   if (toggle) {
     toggle.addEventListener('click', () => {
-      const next = !sidebar.classList.contains('collapsed');
-      localStorage.setItem(SK, next ? '1' : '0');
-      applySidebar(next, false);
+      if (window.innerWidth < 992) {
+        if (sidebar && sidebar.classList.contains('mobile-open')) {
+          closeMobileSidebar();
+        } else {
+          openMobileSidebar();
+        }
+      } else {
+        const next = !sidebar.classList.contains('collapsed');
+        localStorage.setItem(SK, next ? '1' : '0');
+        applySidebar(next, false);
+      }
+    });
+  }
+
+  if (backdrop) {
+    backdrop.addEventListener('click', closeMobileSidebar);
+  }
+
+  // Close sidebar on link click (useful for mobile)
+  if (sidebar) {
+    sidebar.querySelectorAll('.nav-item-inner').forEach(link => {
+      link.addEventListener('click', closeMobileSidebar);
     });
   }
 
@@ -770,7 +843,9 @@
         const target = document.getElementById(label.getAttribute('for'));
         if (target && target.required) {
           hasRequired = true;
-          label.classList.add('required-label');
+          if (!label.querySelector('.asteriskField') && !label.innerHTML.includes('*')) {
+            label.classList.add('required-label');
+          }
         }
       });
       if (hasRequired && !form.querySelector('.required-field-note')) {

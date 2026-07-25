@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 
+{% load i18n %}
 {% block title %}Delete Bank Account{% endblock %}
 
 {% block content %}
@@ -9,25 +10,25 @@
             <div class="card border-danger">
                 <div class="card-header bg-danger text-white">
                     <h3 class="card-title mb-0">
-                        <i class="fas fa-exclamation-triangle"></i> Delete Bank Account
+                        <i class="fas fa-exclamation-triangle"></i> {% trans "Delete Bank Account" %}
                     </h3>
                 </div>
                 <div class="card-body">
-                    <p class="mb-4">Are you sure you want to delete the bank account <strong>"{{ bank_account.name }}"</strong>?</p>
+                    <p class="mb-4">{% trans "Are you sure you want to delete the bank account" %} <strong>"{{ bank_account.name }}"</strong>?</p>
 
                     <div class="alert alert-warning">
-                        <strong>Warning:</strong> This action cannot be undone. All associated statements and reconciliations will also be deleted.
+                        <strong>{% trans "Warning:" %}</strong> {% trans "This action cannot be undone. All associated statements and reconciliations will also be deleted." %}
                     </div>
 
                     <div class="card mt-3">
                         <div class="card-body">
-                            <h6>Bank Account Details:</h6>
+                            <h6>{% trans "Bank Account Details:" %}</h6>
                             <ul class="list-unstyled">
-                                <li><strong>Name:</strong> {{ bank_account.name }}</li>
-                                <li><strong>Account Number:</strong> {{ bank_account.account_number }}</li>
-                                <li><strong>Bank Name:</strong> {{ bank_account.bank_name }}</li>
-                                <li><strong>Linked Account:</strong> {{ bank_account.account.code }} - {{ bank_account.account.name }}</li>
-                                <li><strong>Opening Balance:</strong> {{ bank_account.opening_balance|floatformat:2 }}</li>
+                                <li><strong>{% trans "Name:" %}</strong> {{ bank_account.name }}</li>
+                                <li><strong>{% trans "Account Number:" %}</strong> {{ bank_account.account_number }}</li>
+                                <li><strong>{% trans "Bank Name:" %}</strong> {{ bank_account.bank_name }}</li>
+                                <li><strong>{% trans "Linked Account:" %}</strong> {{ bank_account.account.code }} - {{ bank_account.account.name }}</li>
+                                <li><strong>{% trans "Opening Balance:" %}</strong> {{ bank_account.opening_balance|floatformat:2 }}</li>
                             </ul>
                         </div>
                     </div>
@@ -36,10 +37,10 @@
                         {% csrf_token %}
                         <div class="d-flex gap-2">
                             <button type="submit" class="btn btn-danger">
-                                <i class="fas fa-trash"></i> Yes, Delete Bank Account
+                                <i class="fas fa-trash"></i> {% trans "Yes, Delete Bank Account" %}
                             </button>
                             <a href="{% url 'finance:bank_account_list' %}" class="btn btn-secondary">
-                                <i class="fas fa-times"></i> Cancel
+                                <i class="fas fa-times"></i> {% trans "Cancel" %}
                             </a>
                         </div>
                     </form>

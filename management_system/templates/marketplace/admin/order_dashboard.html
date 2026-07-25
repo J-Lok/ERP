@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load i18n %}
 {% load static %}
 
 {% block title %}Order Management - {{ block.super }}{% endblock %}
@@ -40,19 +41,19 @@
 <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h1 class="h3 mb-0"><i class="fas fa-boxes me-2"></i>Order Management</h1>
-            <p class="text-muted mb-0">Manage customer orders from the marketplace</p>
+            <h1 class="h3 mb-0"><i class="fas fa-boxes me-2"></i>{% trans "Order Management" %}</h1>
+            <p class="text-muted mb-0">{% trans "Manage customer orders from the marketplace" %}</p>
         </div>
         <div class="d-flex gap-2">
             <a href="{% url 'marketplace:admin_order_quick_create' %}" class="btn btn-outline-success">
-                <i class="fas fa-cash-register me-2"></i>Quick In-Store Order
+                <i class="fas fa-cash-register me-2"></i>{% trans "Quick In-Store Order" %}
             </a>
             <button id="dashboard-share-link" type="button" class="btn btn-outline-primary" title="Copy marketplace link">
-                <i class="fas fa-share-square me-2"></i>Share Marketplace
+                <i class="fas fa-share-square me-2"></i>{% trans "Share Marketplace" %}
             </button>
             <input id="dashboard-shop-link" type="text" value="{{ shop_link }}" readonly class="d-none" aria-hidden="true">
             <a href="{% url 'marketplace:admin_order_list' %}" class="btn btn-primary">
-                <i class="fas fa-list me-2"></i>View All Orders
+                <i class="fas fa-list me-2"></i>{% trans "View All Orders" %}
             </a>
         </div>
     </div>
@@ -65,7 +66,7 @@
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
                             <h2 class="mb-0">{{ total_orders }}</h2>
-                            <small>Total Orders</small>
+                            <small>{% trans "Total Orders" %}</small>
                         </div>
                         <div class="stat-icon bg-white bg-opacity-25">
                             <i class="fas fa-shopping-cart"></i>
@@ -80,7 +81,7 @@
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
                             <h2 class="mb-0">{{ pending_orders }}</h2>
-                            <small>Pending Orders</small>
+                            <small>{% trans "Pending Orders" %}</small>
                         </div>
                         <div class="stat-icon bg-white bg-opacity-25">
                             <i class="fas fa-clock"></i>
@@ -95,7 +96,7 @@
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
                             <h2 class="mb-0">{{ shipped_orders }}</h2>
-                            <small>Shipped Orders</small>
+                            <small>{% trans "Shipped Orders" %}</small>
                         </div>
                         <div class="stat-icon bg-white bg-opacity-25">
                             <i class="fas fa-truck"></i>
@@ -110,7 +111,7 @@
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
                             <h2 class="mb-0">FCFA {{ total_revenue|floatformat:2 }}</h2>
-                            <small>Total Revenue</small>
+                            <small>{% trans "Total Revenue" %}</small>
                         </div>
                         <div class="stat-icon bg-white bg-opacity-25">
                             <i class="fas fa-dollar-sign"></i>
@@ -151,15 +152,15 @@
                                     </div>
                                     <div class="col-md-3 text-end">
                                         <a href="{% url 'marketplace:admin_order_detail' order.pk %}" class="btn btn-sm btn-info mb-1">
-                                            <i class="fas fa-eye"></i> View
+                                            <i class="fas fa-eye"></i> {% trans "View" %}
                                         </a>
                                         <button type="button" class="btn btn-sm btn-outline-primary mb-1 copy-shop-link" data-link="{{ order.shop_link }}" title="Copy marketplace link">
-                                            <i class="fas fa-share-square"></i> Share
+                                            <i class="fas fa-share-square"></i> {% trans "Share" %}
                                         </button>
                                         <form method="post" action="{% url 'marketplace:admin_order_confirm' order.pk %}" class="d-inline">
                                             {% csrf_token %}
                                             <button type="submit" class="btn btn-sm btn-success mb-1">
-                                                <i class="fas fa-check"></i> Confirm
+                                                <i class="fas fa-check"></i> {% trans "Confirm" %}
                                             </button>
                                         </form>
                                     </div>
@@ -170,8 +171,8 @@
                     {% else %}
                         <div class="text-center py-5">
                             <i class="fas fa-check-circle fa-4x text-success mb-3"></i>
-                            <h5>No pending orders!</h5>
-                            <p class="text-muted">All orders have been processed</p>
+                            <h5>{% trans "No pending orders!" %}</h5>
+                            <p class="text-muted">{% trans "All orders have been processed" %}</p>
                         </div>
                     {% endif %}
                 </div>
@@ -182,7 +183,7 @@
         <div class="col-lg-4">
             <div class="card">
                 <div class="card-header">
-                    <h5 class="mb-0"><i class="fas fa-history me-2"></i>Recent Orders</h5>
+                    <h5 class="mb-0"><i class="fas fa-history me-2"></i>{% trans "Recent Orders" %}</h5>
                 </div>
                 <div class="card-body">
                     {% for order in recent_orders %}

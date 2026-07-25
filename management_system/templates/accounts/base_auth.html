@@ -171,7 +171,9 @@
         var target = document.getElementById(label.getAttribute('for'));
         if (target && target.required) {
           hasRequired = true;
-          label.classList.add('required-label');
+          if (!label.querySelector('.asteriskField') && !label.innerHTML.includes('*')) {
+            label.classList.add('required-label');
+          }
         }
       });
       if (hasRequired && !form.querySelector('.required-field-note')) {

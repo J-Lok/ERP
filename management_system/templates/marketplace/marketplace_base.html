@@ -1,3 +1,4 @@
+{% load i18n %}
 <!DOCTYPE html>
 <html lang="en" data-bs-theme="light">
 <head>
@@ -167,17 +168,17 @@
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'marketplace:shop' %}">
-                            <i class="fas fa-shopping-bag me-1"></i>Shop
+                            <i class="fas fa-shopping-bag me-1"></i>{% trans "Shop" %}
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'marketplace:order_list' %}">
-                            <i class="fas fa-box me-1"></i>My Orders
+                            <i class="fas fa-box me-1"></i>{% trans "My Orders" %}
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'marketplace:view_wishlist' %}">
-                            <i class="fas fa-heart me-1"></i>Wishlist
+                            <i class="fas fa-heart me-1"></i>{% trans "Wishlist" %}
                         </a>
                     </li>
                 </ul>
@@ -193,12 +194,12 @@
                     </li>
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="userDropdown" data-bs-toggle="dropdown">
-                            <i class="fas fa-user-circle me-1"></i>Account
+                            <i class="fas fa-user-circle me-1"></i>{% trans "Account" %}
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end">
-                            <li><a class="dropdown-item" href="{% url 'marketplace:client_profile' %}"><i class="fas fa-user me-2"></i>Profile</a></li>
+                            <li><a class="dropdown-item" href="{% url 'marketplace:client_profile' %}"><i class="fas fa-user me-2"></i>{% trans "Profile" %}</a></li>
                             <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item text-danger" href="{% url 'marketplace:client_logout' %}"><i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
+                            <li><a class="dropdown-item text-danger" href="{% url 'marketplace:client_logout' %}"><i class="fas fa-sign-out-alt me-2"></i>{% trans "Logout" %}</a></li>
                         </ul>
                     </li>
                 </ul>
@@ -207,12 +208,12 @@
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'marketplace:client_login' %}">
-                            <i class="fas fa-sign-in-alt me-1"></i>Login
+                            <i class="fas fa-sign-in-alt me-1"></i>{% trans "Login" %}
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'marketplace:client_register' %}">
-                            <i class="fas fa-user-plus me-1"></i>Register
+                            <i class="fas fa-user-plus me-1"></i>{% trans "Register" %}
                         </a>
                     </li>
                 </ul>
@@ -244,7 +245,7 @@
         <div class="container">
             <div class="row">
                 <div class="col-md-4 mb-4">
-                    <h5 class="mb-3">About Us</h5>
+                    <h5 class="mb-3">{% trans "About Us" %}</h5>
                     <p class="text-muted">
                         {% if company %}
                             {{ company.name }} - Your trusted online marketplace
@@ -254,17 +255,17 @@
                     </p>
                 </div>
                 <div class="col-md-4 mb-4">
-                    <h5 class="mb-3">Quick Links</h5>
+                    <h5 class="mb-3">{% trans "Quick Links" %}</h5>
                     <ul class="list-unstyled">
-                        <li><a href="{% url 'marketplace:shop' %}" class="footer-link">Shop</a></li>
+                        <li><a href="{% url 'marketplace:shop' %}" class="footer-link">{% trans "Shop" %}</a></li>
                         {% if request.session.client_id %}
-                        <li><a href="{% url 'marketplace:order_list' %}" class="footer-link">My Orders</a></li>
-                        <li><a href="{% url 'marketplace:client_profile' %}" class="footer-link">Profile</a></li>
+                        <li><a href="{% url 'marketplace:order_list' %}" class="footer-link">{% trans "My Orders" %}</a></li>
+                        <li><a href="{% url 'marketplace:client_profile' %}" class="footer-link">{% trans "Profile" %}</a></li>
                         {% endif %}
                     </ul>
                 </div>
                 <div class="col-md-4 mb-4">
-                    <h5 class="mb-3">Contact</h5>
+                    <h5 class="mb-3">{% trans "Contact" %}</h5>
                     {% if company %}
                     <p class="text-muted">
                         <i class="fas fa-envelope me-2"></i>{{ company.contact_email }}<br>

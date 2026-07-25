@@ -1,8 +1,9 @@
 {% extends 'marketplace/marketplace_base.html' %}
+{% load i18n %}
 {% block title %}Wishlist - {{ block.super }}{% endblock %}
 {% block content %}
 <div class="container">
-    <h2 class="mb-4"><i class="fas fa-heart me-2"></i>My Wishlist</h2>
+    <h2 class="mb-4"><i class="fas fa-heart me-2"></i>{% trans "My Wishlist" %}</h2>
     
     {% if items %}
     <div class="row">
@@ -17,11 +18,11 @@
                     <form method="post" action="{% url 'marketplace:add_to_cart' item.stock.pk %}">
                         {% csrf_token %}
                         <input type="hidden" name="quantity" value="1">
-                        <button type="submit" class="btn btn-primary w-100 mb-2">Add to Cart</button>
+                        <button type="submit" class="btn btn-primary w-100 mb-2">{% trans "Add to Cart" %}</button>
                     </form>
                     <form method="post" action="{% url 'marketplace:remove_from_wishlist' item.pk %}">
                         {% csrf_token %}
-                        <button type="submit" class="btn btn-outline-danger w-100">Remove</button>
+                        <button type="submit" class="btn btn-outline-danger w-100">{% trans "Remove" %}</button>
                     </form>
                 </div>
             </div>
@@ -31,8 +32,8 @@
     {% else %}
     <div class="text-center py-5">
         <i class="fas fa-heart fa-5x text-muted mb-3"></i>
-        <h4>Your wishlist is empty</h4>
-        <a href="{% url 'marketplace:shop' %}" class="btn btn-primary mt-3">Browse Products</a>
+        <h4>{% trans "Your wishlist is empty" %}</h4>
+        <a href="{% url 'marketplace:shop' %}" class="btn btn-primary mt-3">{% trans "Browse Products" %}</a>
     </div>
     {% endif %}
 </div>

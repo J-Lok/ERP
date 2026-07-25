@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load i18n %}
 {% load static %}
 {% load mathfilters %}
 {% block title %}{{ project.name }} - {{ block.super }}{% endblock %}
@@ -60,7 +61,7 @@
         <div>
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb mb-2">
-                    <li class="breadcrumb-item"><a href="{% url 'projects:project_list' %}">Projects</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'projects:project_list' %}">{% trans "Projects" %}</a></li>
                     <li class="breadcrumb-item active">{{ project.name }}</li>
                 </ol>
             </nav>
@@ -87,10 +88,10 @@
         </div>
         <div>
             <a href="{% url 'projects:project_edit' project.pk %}" class="btn btn-primary">
-                <i class="fas fa-edit me-2"></i>Edit Project
+                <i class="fas fa-edit me-2"></i>{% trans "Edit Project" %}
             </a>
             <a href="{% url 'projects:project_delete' project.pk %}" class="btn btn-outline-danger">
-                <i class="fas fa-trash me-2"></i>Delete
+                <i class="fas fa-trash me-2"></i>{% trans "Delete" %}
             </a>
         </div>
     </div>
@@ -101,25 +102,25 @@
             <!-- Project Info Card -->
             <div class="card mb-4">
                 <div class="card-body">
-                    <h5 class="card-title mb-3">Project Information</h5>
+                    <h5 class="card-title mb-3">{% trans "Project Information" %}</h5>
                     {% if project.description %}
                     <p class="text-muted">{{ project.description }}</p>
                     {% else %}
-                    <p class="text-muted fst-italic">No description provided.</p>
+                    <p class="text-muted fst-italic">{% trans "No description provided." %}</p>
                     {% endif %}
                     
                     <div class="row mt-4">
                         <div class="col-md-6">
-                            <p><strong><i class="fas fa-calendar-start me-2"></i>Start Date:</strong> {{ project.start_date|date:"F d, Y" }}</p>
-                            <p><strong><i class="fas fa-calendar-check me-2"></i>End Date:</strong> {{ project.end_date|date:"F d, Y" }}</p>
+                            <p><strong><i class="fas fa-calendar-start me-2"></i>{% trans "Start Date:" %}</strong> {{ project.start_date|date:"F d, Y" }}</p>
+                            <p><strong><i class="fas fa-calendar-check me-2"></i>{% trans "End Date:" %}</strong> {{ project.end_date|date:"F d, Y" }}</p>
                         </div>
                         <div class="col-md-6">
-                            <p><strong><i class="fas fa-dollar-sign me-2"></i>Budget:</strong> ${{ project.budget|floatformat:2 }}</p>
-                            <p><strong><i class="fas fa-user-tie me-2"></i>Manager:</strong> 
+                            <p><strong><i class="fas fa-dollar-sign me-2"></i>{% trans "Budget:" %}</strong> ${{ project.budget|floatformat:2 }}</p>
+                            <p><strong><i class="fas fa-user-tie me-2"></i>{% trans "Manager:" %}</strong> 
                                 {% if project.manager %}
                                     {{ project.manager.user.get_full_name }}
                                 {% else %}
-                                    <em>Not assigned</em>
+                                    <em>{% trans "Not assigned" %}</em>
                                 {% endif %}
                             </p>
                         </div>
@@ -128,7 +129,7 @@
                     <!-- Progress Bar -->
                     <div class="mt-3">
                         <div class="d-flex justify-content-between align-items-center mb-2">
-                            <strong>Overall Progress</strong>
+                            <strong>{% trans "Overall Progress" %}</strong>
                             <span class="badge bg-primary">{{ progress_percentage }}%</span>
                         </div>
                         <div class="progress" style="height: 25px;">
@@ -151,7 +152,7 @@
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="mb-0"><i class="fas fa-tasks me-2"></i>Tasks ({{ total_taches }})</h5>
                     <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#addTaskModal">
-                        <i class="fas fa-plus me-1"></i>Add Task
+                        <i class="fas fa-plus me-1"></i>{% trans "Add Task" %}
                     </button>
                 </div>
                 <div class="card-body">
@@ -160,19 +161,19 @@
                         <div class="col-md-4">
                             <div class="text-center p-3 rounded-3" style="background:var(--surface2)">
                                 <h3 class="mb-0 text-secondary">{{ taches_a_faire }}</h3>
-                                <small class="text-muted">To Do</small>
+                                <small class="text-muted">{% trans "To Do" %}</small>
                             </div>
                         </div>
                         <div class="col-md-4">
                             <div class="text-center p-3 rounded-3" style="background:var(--surface2)">
                                 <h3 class="mb-0 text-primary">{{ taches_en_cours }}</h3>
-                                <small class="text-muted">In Progress</small>
+                                <small class="text-muted">{% trans "In Progress" %}</small>
                             </div>
                         </div>
                         <div class="col-md-4">
                             <div class="text-center p-3 rounded-3" style="background:var(--surface2)">
                                 <h3 class="mb-0 text-success">{{ taches_terminees }}</h3>
-                                <small class="text-muted">Completed</small>
+                                <small class="text-muted">{% trans "Completed" %}</small>
                             </div>
                         </div>
                     </div>
@@ -233,26 +234,26 @@
                                         <li>
                                             <a class="dropdown-item" href="#" 
                                                onclick="changeTaskStatus({{ tache.id }}, 'termine')">
-                                                <i class="fas fa-check text-success me-2"></i>Mark Complete
+                                                <i class="fas fa-check text-success me-2"></i>{% trans "Mark Complete" %}
                                             </a>
                                         </li>
                                         <li>
                                             <a class="dropdown-item" href="#" 
                                                onclick="changeTaskStatus({{ tache.id }}, 'en_cours')">
-                                                <i class="fas fa-play text-primary me-2"></i>Mark In Progress
+                                                <i class="fas fa-play text-primary me-2"></i>{% trans "Mark In Progress" %}
                                             </a>
                                         </li>
                                         <li><hr class="dropdown-divider"></li>
                                         <li>
                                             <a class="dropdown-item" href="#" 
                                                onclick="editTask({{ tache.id }})">
-                                                <i class="fas fa-edit me-2"></i>Edit
+                                                <i class="fas fa-edit me-2"></i>{% trans "Edit" %}
                                             </a>
                                         </li>
                                         <li>
                                             <a class="dropdown-item text-danger" href="#" 
                                                onclick="deleteTask({{ tache.id }})">
-                                                <i class="fas fa-trash me-2"></i>Delete
+                                                <i class="fas fa-trash me-2"></i>{% trans "Delete" %}
                                             </a>
                                         </li>
                                     </ul>
@@ -264,9 +265,9 @@
                     {% else %}
                     <div class="text-center py-5">
                         <i class="fas fa-tasks fa-3x text-muted mb-3"></i>
-                        <p class="text-muted">No tasks yet. Add your first task to get started!</p>
+                        <p class="text-muted">{% trans "No tasks yet. Add your first task to get started!" %}</p>
                         <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addTaskModal">
-                            <i class="fas fa-plus me-2"></i>Add Task
+                            <i class="fas fa-plus me-2"></i>{% trans "Add Task" %}
                         </button>
                     </div>
                     {% endif %}
@@ -284,7 +285,7 @@
             <!-- Team Members -->
             <div class="card mb-4">
                 <div class="card-header">
-                    <h5 class="mb-0"><i class="fas fa-users me-2"></i>Team Members</h5>
+                    <h5 class="mb-0"><i class="fas fa-users me-2"></i>{% trans "Team Members" %}</h5>
                 </div>
                 <div class="card-body">
                     {% if team_members %}
@@ -302,7 +303,7 @@
                         {% endfor %}
                     </div>
                     {% else %}
-                    <p class="text-muted text-center py-3">No team members assigned</p>
+                    <p class="text-muted text-center py-3">{% trans "No team members assigned" %}</p>
                     {% endif %}
                 </div>
             </div>
@@ -310,12 +311,12 @@
             <!-- Quick Stats -->
             <div class="card">
                 <div class="card-header">
-                    <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Statistics</h5>
+                    <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>{% trans "Statistics" %}</h5>
                 </div>
                 <div class="card-body">
                     <div class="mb-3">
                         <div class="d-flex justify-content-between mb-1">
-                            <small class="text-muted">Task Completion</small>
+                            <small class="text-muted">{% trans "Task Completion" %}</small>
                             <small class="fw-bold">
                                 {% if total_taches > 0 %}
                                     {{ taches_terminees }} / {{ total_taches }}
@@ -330,21 +331,21 @@
                     </div>
                     <hr>
                     <div class="d-flex justify-content-between mb-2">
-                        <span class="text-muted">Created:</span>
+                        <span class="text-muted">{% trans "Created:" %}</span>
                         <span class="fw-bold">{{ project.created_at|date:"M d, Y" }}</span>
                     </div>
                     <div class="d-flex justify-content-between mb-2">
-                        <span class="text-muted">Last Updated:</span>
+                        <span class="text-muted">{% trans "Last Updated:" %}</span>
                         <span class="fw-bold">{{ project.updated_at|date:"M d, Y" }}</span>
                     </div>
                     <div class="d-flex justify-content-between">
-                        <span class="text-muted">Days Remaining:</span>
+                        <span class="text-muted">{% trans "Days Remaining:" %}</span>
                         <span class="fw-bold">
                             {% now "Y-m-d" as today %}
                             {% if project.end_date|date:"Y-m-d" > today %}
                                 {{ project.end_date|timeuntil }}
                             {% else %}
-                                <span class="text-danger">Overdue</span>
+                                <span class="text-danger">{% trans "Overdue" %}</span>
                             {% endif %}
                         </span>
                     </div>
@@ -361,53 +362,53 @@
             <form method="post" action="{% url 'projects:sous_tache_create' project.id %}">
                 {% csrf_token %}
                 <div class="modal-header">
-                    <h5 class="modal-title">Add New Task</h5>
+                    <h5 class="modal-title">{% trans "Add New Task" %}</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label class="form-label">Task Title *</label>
+                        <label class="form-label">{% trans "Task Title *" %}</label>
                         {{ tache_form.titre }}
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Description</label>
+                        <label class="form-label">{% trans "Description" %}</label>
                         {{ tache_form.description }}
                     </div>
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">Assigned To</label>
+                            <label class="form-label">{% trans "Assigned To" %}</label>
                             {{ tache_form.assigne_a }}
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">Priority</label>
+                            <label class="form-label">{% trans "Priority" %}</label>
                             {{ tache_form.priorite }}
                         </div>
                     </div>
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">Start Date</label>
+                            <label class="form-label">{% trans "Start Date" %}</label>
                             {{ tache_form.date_debut }}
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">Due Date</label>
+                            <label class="form-label">{% trans "Due Date" %}</label>
                             {{ tache_form.date_echeance }}
                         </div>
                     </div>
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">Estimated Hours</label>
+                            <label class="form-label">{% trans "Estimated Hours" %}</label>
                             {{ tache_form.duree_estimee }}
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">Order</label>
+                            <label class="form-label">{% trans "Order" %}</label>
                             {{ tache_form.ordre }}
                         </div>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% trans "Cancel" %}</button>
                     <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-save me-2"></i>Add Task
+                        <i class="fas fa-save me-2"></i>{% trans "Add Task" %}
                     </button>
                 </div>
             </form>

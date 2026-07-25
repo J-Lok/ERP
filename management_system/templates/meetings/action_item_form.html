@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load i18n %}
 {% load crispy_forms_tags %}
 
 {% block title %}{{ title }}{% endblock %}
@@ -18,10 +19,10 @@
                         {{ form|crispy }}
                         <div class="d-grid gap-2 d-sm-flex justify-content-sm-end mt-4">
                             <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-save"></i> Save
+                                <i class="fas fa-save"></i> {% trans "Save" %}
                             </button>
                             <a href="{% url 'meetings:meeting_detail' meeting.id %}" class="btn btn-outline-secondary">
-                                Cancel
+                                {% trans "Cancel" %}
                             </a>
                         </div>
                     </form>

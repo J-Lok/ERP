@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load i18n %}
 {% block title %}Order #{{ order.order_number }} - {{ block.super }}{% endblock %}
 {% block content %}
 <div class="container-fluid">
@@ -9,14 +10,14 @@
             <p class="text-muted mb-0">Placed on {{ order.created_at|date:"F d, Y H:i" }}</p>
         </div>
         <a href="{% url 'marketplace:admin_order_list' %}" class="btn btn-secondary">
-            <i class="fas fa-arrow-left me-2"></i>Back to Orders
+            <i class="fas fa-arrow-left me-2"></i>{% trans "Back to Orders" %}
         </a>
     </div>
 
     <!-- Quick Actions -->
     <div class="card mb-4 border-primary">
         <div class="card-header bg-primary text-white">
-            <h5 class="mb-0"><i class="fas fa-bolt me-2"></i>Quick Actions</h5>
+            <h5 class="mb-0"><i class="fas fa-bolt me-2"></i>{% trans "Quick Actions" %}</h5>
         </div>
         <div class="card-body">
             <div class="row text-center">
@@ -33,7 +34,7 @@
                                 {{ order.get_status_display }}
                             </span>
                         </h4>
-                        <small class="text-muted">Current Status</small>
+                        <small class="text-muted">{% trans "Current Status" %}</small>
                     </div>
                 </div>
                 
@@ -42,14 +43,14 @@
                     <form method="post" action="{% url 'marketplace:admin_order_confirm' order.pk %}">
                         {% csrf_token %}
                         <button type="submit" class="btn btn-success btn-lg w-100">
-                            <i class="fas fa-check-circle me-2"></i>Confirm Order
+                            <i class="fas fa-check-circle me-2"></i>{% trans "Confirm Order" %}
                         </button>
                     </form>
                 </div>
                 {% elif order.status == 'confirmed' %}
                 <div class="col-md-3">
                     <a href="{% url 'marketplace:admin_order_ship' order.pk %}" class="btn btn-primary btn-lg w-100">
-                        <i class="fas fa-truck me-2"></i>Mark as Shipped
+                        <i class="fas fa-truck me-2"></i>{% trans "Mark as Shipped" %}
                     </a>
                 </div>
                 {% elif order.status == 'shipped' %}
@@ -57,7 +58,7 @@
                     <form method="post" action="{% url 'marketplace:admin_order_deliver' order.pk %}">
                         {% csrf_token %}
                         <button type="submit" class="btn btn-success btn-lg w-100">
-                            <i class="fas fa-box-open me-2"></i>Mark as Delivered
+                            <i class="fas fa-box-open me-2"></i>{% trans "Mark as Delivered" %}
                         </button>
                     </form>
                 </div>
@@ -65,10 +66,10 @@
                 
                 <div class="col-md-3">
                     <button id="copy-shop-link" type="button" class="btn btn-outline-primary btn-lg w-100">
-                        <i class="fas fa-share-square me-2"></i>Share Shop Link
+                        <i class="fas fa-share-square me-2"></i>{% trans "Share Shop Link" %}
                     </button>
                     <input id="shop-link" type="text" value="{{ shop_link }}" readonly class="d-none" aria-hidden="true">
-                    <p class="small text-muted mt-2 mb-0">Copies the company marketplace link for the client.</p>
+                    <p class="small text-muted mt-2 mb-0">{% trans "Copies the company marketplace link for the client." %}</p>
                 </div>
                 
                 <div class="col-md-3">
@@ -82,7 +83,7 @@
                             {{ order.get_payment_status_display }}
                         </span>
                     </h4>
-                    <small class="text-muted">Payment Status</small>
+                    <small class="text-muted">{% trans "Payment Status" %}</small>
                 </div>
 
                 <div class="col-md-3">
@@ -96,13 +97,13 @@
                             {{ order.get_finance_sync_status_display }}
                         </span>
                     </h4>
-                    <small class="text-muted">Finance Sync</small>
+                    <small class="text-muted">{% trans "Finance Sync" %}</small>
                 </div>
                 
                 {% if order.status not in 'delivered,cancelled' %}
                 <div class="col-md-3">
                     <a href="{% url 'marketplace:admin_order_cancel' order.pk %}" class="btn btn-danger btn-lg w-100">
-                        <i class="fas fa-times-circle me-2"></i>Cancel Order
+                        <i class="fas fa-times-circle me-2"></i>{% trans "Cancel Order" %}
                     </a>
                 </div>
                 {% endif %}
@@ -114,15 +115,15 @@
         <!-- Order Items -->
         <div class="col-md-8">
             <div class="card mb-4">
-                <div class="card-header"><h5><i class="fas fa-shopping-bag me-2"></i>Order Items</h5></div>
+                <div class="card-header"><h5><i class="fas fa-shopping-bag me-2"></i>{% trans "Order Items" %}</h5></div>
                 <div class="card-body">
                     <table class="table">
                         <thead>
                             <tr>
-                                <th>Item</th>
-                                <th>Price</th>
-                                <th>Qty</th>
-                                <th class="text-end">Total</th>
+                                <th>{% trans "Item" %}</th>
+                                <th>{% trans "Price" %}</th>
+                                <th>{% trans "Qty" %}</th>
+                                <th class="text-end">{% trans "Total" %}</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -140,19 +141,19 @@
                         </tbody>
                         <tfoot class="table-secondary">
                             <tr>
-                                <td colspan="3" class="text-end"><strong>Subtotal:</strong></td>
+                                <td colspan="3" class="text-end"><strong>{% trans "Subtotal:" %}</strong></td>
                                 <td class="text-end">FCFA {{ order.subtotal|floatformat:2 }}</td>
                             </tr>
                             <tr>
-                                <td colspan="3" class="text-end"><strong>Tax:</strong></td>
+                                <td colspan="3" class="text-end"><strong>{% trans "Tax:" %}</strong></td>
                                 <td class="text-end">FCFA {{ order.tax|floatformat:2 }}</td>
                             </tr>
                             <tr>
-                                <td colspan="3" class="text-end"><strong>Shipping:</strong></td>
+                                <td colspan="3" class="text-end"><strong>{% trans "Shipping:" %}</strong></td>
                                 <td class="text-end">FCFA {{ order.shipping|floatformat:2 }}</td>
                             </tr>
                             <tr class="table-primary">
-                                <td colspan="3" class="text-end"><h5 class="mb-0">TOTAL:</h5></td>
+                                <td colspan="3" class="text-end"><h5 class="mb-0">{% trans "TOTAL:" %}</h5></td>
                                 <td class="text-end"><h5 class="mb-0">FCFA {{ order.total|floatformat:2 }}</h5></td>
                             </tr>
                         </tfoot>
@@ -165,7 +166,7 @@
         <div class="col-md-4">
             <!-- Client Info -->
             <div class="card mb-4">
-                <div class="card-header"><h5><i class="fas fa-user me-2"></i>Client Information</h5></div>
+                <div class="card-header"><h5><i class="fas fa-user me-2"></i>{% trans "Client Information" %}</h5></div>
                 <div class="card-body">
                     <h6>{{ order.client.get_full_name }}</h6>
                     <p class="mb-1"><i class="fas fa-envelope me-2"></i>{{ order.client.email }}</p>
@@ -175,7 +176,7 @@
 
             <!-- Shipping Address -->
             <div class="card mb-4">
-                <div class="card-header"><h5><i class="fas fa-map-marker-alt me-2"></i>Shipping Address</h5></div>
+                <div class="card-header"><h5><i class="fas fa-map-marker-alt me-2"></i>{% trans "Shipping Address" %}</h5></div>
                 <div class="card-body">
                     <p class="mb-0">
                         {{ order.shipping_address }}<br>
@@ -187,24 +188,24 @@
 
             <!-- Timestamps -->
             <div class="card">
-                <div class="card-header"><h5><i class="fas fa-clock me-2"></i>Timeline</h5></div>
+                <div class="card-header"><h5><i class="fas fa-clock me-2"></i>{% trans "Timeline" %}</h5></div>
                 <div class="card-body">
-                    <p><strong>Created:</strong><br>{{ order.created_at|date:"M d, Y H:i" }}</p>
+                    <p><strong>{% trans "Created:" %}</strong><br>{{ order.created_at|date:"M d, Y H:i" }}</p>
                     {% if order.confirmed_at %}
-                    <p><strong>Confirmed:</strong><br>{{ order.confirmed_at|date:"M d, Y H:i" }}</p>
+                    <p><strong>{% trans "Confirmed:" %}</strong><br>{{ order.confirmed_at|date:"M d, Y H:i" }}</p>
                     {% endif %}
                     {% if order.shipped_at %}
-                    <p><strong>Shipped:</strong><br>{{ order.shipped_at|date:"M d, Y H:i" }}</p>
+                    <p><strong>{% trans "Shipped:" %}</strong><br>{{ order.shipped_at|date:"M d, Y H:i" }}</p>
                     {% endif %}
                     {% if order.delivered_at %}
-                    <p class="mb-0"><strong>Delivered:</strong><br>{{ order.delivered_at|date:"M d, Y H:i" }}</p>
+                    <p class="mb-0"><strong>{% trans "Delivered:" %}</strong><br>{{ order.delivered_at|date:"M d, Y H:i" }}</p>
                     {% endif %}
                 </div>
             </div>
 
             <!-- Payment Update -->
             <div class="card mt-3">
-                <div class="card-header"><h6><i class="fas fa-credit-card me-2"></i>Update Payment</h6></div>
+                <div class="card-header"><h6><i class="fas fa-credit-card me-2"></i>{% trans "Update Payment" %}</h6></div>
                 <div class="card-body">
                     <form method="post" action="{% url 'marketplace:admin_order_update_payment' order.pk %}">
                         {% csrf_token %}
@@ -213,18 +214,18 @@
                             <option value="{{ value }}" {% if order.payment_status == value %}selected{% endif %}>{{ label }}</option>
                             {% endfor %}
                         </select>
-                        <button type="submit" class="btn btn-primary btn-sm w-100">Update</button>
+                        <button type="submit" class="btn btn-primary btn-sm w-100">{% trans "Update" %}</button>
                     </form>
                 </div>
             </div>
 
             <div class="card mt-3">
-                <div class="card-header"><h6><i class="fas fa-book me-2"></i>Finance Posting</h6></div>
+                <div class="card-header"><h6><i class="fas fa-book me-2"></i>{% trans "Finance Posting" %}</h6></div>
                 <div class="card-body">
-                    <p class="mb-2"><strong>Status:</strong> {{ order.get_finance_sync_status_display }}</p>
+                    <p class="mb-2"><strong>{% trans "Status:" %}</strong> {{ order.get_finance_sync_status_display }}</p>
                     {% if order.finance_journal_entry %}
                     <p class="mb-2">
-                        <strong>Journal Entry:</strong>
+                        <strong>{% trans "Journal Entry:" %}</strong>
                         <a href="{% url 'finance:journal_entry_detail' order.finance_journal_entry.pk %}">
                             {{ order.finance_journal_entry.reference|default:order.finance_journal_entry.pk }}
                         </a>
@@ -232,20 +233,20 @@
                     {% endif %}
                     {% if order.finance_reversal_journal_entry %}
                     <p class="mb-2">
-                        <strong>Reversal Entry:</strong>
+                        <strong>{% trans "Reversal Entry:" %}</strong>
                         <a href="{% url 'finance:journal_entry_detail' order.finance_reversal_journal_entry.pk %}">
                             {{ order.finance_reversal_journal_entry.reference|default:order.finance_reversal_journal_entry.pk }}
                         </a>
                     </p>
                     {% endif %}
                     {% if order.finance_synced_at %}
-                    <p class="mb-2"><strong>Synced:</strong> {{ order.finance_synced_at|date:"M d, Y H:i" }}</p>
+                    <p class="mb-2"><strong>{% trans "Synced:" %}</strong> {{ order.finance_synced_at|date:"M d, Y H:i" }}</p>
                     {% endif %}
                     {% if order.finance_reversed_at %}
-                    <p class="mb-2"><strong>Reversed:</strong> {{ order.finance_reversed_at|date:"M d, Y H:i" }}</p>
+                    <p class="mb-2"><strong>{% trans "Reversed:" %}</strong> {{ order.finance_reversed_at|date:"M d, Y H:i" }}</p>
                     {% endif %}
                     {% if order.finance_sync_error %}
-                    <p class="mb-0 text-danger"><strong>Error:</strong> {{ order.finance_sync_error }}</p>
+                    <p class="mb-0 text-danger"><strong>{% trans "Error:" %}</strong> {{ order.finance_sync_error }}</p>
                     {% endif %}
                 </div>
             </div>

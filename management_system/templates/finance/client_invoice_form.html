@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load i18n %}
 {% block title %}{{ title }} — Finance{% endblock %}
 
 {% block content %}
@@ -6,7 +7,7 @@
   <div>
     <nav aria-label="breadcrumb">
       <ol class="breadcrumb mb-1">
-        <li class="breadcrumb-item"><a href="{% url 'finance:client_invoice_list' %}">Client Invoices</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'finance:client_invoice_list' %}">{% trans "Client Invoices" %}</a></li>
         <li class="breadcrumb-item active">{{ title }}</li>
       </ol>
     </nav>
@@ -21,7 +22,7 @@
       <!-- Invoice Header -->
       <div class="card shadow-sm mb-4">
         <div class="card-header">
-          <h5 class="mb-0">Invoice Details</h5>
+          <h5 class="mb-0">{% trans "Invoice Details" %}</h5>
         </div>
         <div class="card-body">
           <div class="row g-3">
@@ -60,7 +61,7 @@
       <!-- Client Details -->
       <div class="card shadow-sm mb-4">
         <div class="card-header">
-          <h5 class="mb-0">Client Details</h5>
+          <h5 class="mb-0">{% trans "Client Details" %}</h5>
         </div>
         <div class="card-body">
           <div class="row g-3">
@@ -92,7 +93,7 @@
       <!-- Invoice Lines -->
       <div class="card shadow-sm mb-4">
         <div class="card-header">
-          <h5 class="mb-0">Invoice Lines</h5>
+          <h5 class="mb-0">{% trans "Invoice Lines" %}</h5>
         </div>
         <div class="card-body">
           {{ formset.management_form }}
@@ -138,7 +139,7 @@
             {% endfor %}
           </div>
           <button type="button" class="btn btn-outline-secondary btn-sm" id="add-line">
-            <i class="fas fa-plus me-1"></i>Add Line
+            <i class="fas fa-plus me-1"></i>{% trans "Add Line" %}
           </button>
         </div>
       </div>
@@ -146,7 +147,7 @@
       <!-- Notes -->
       <div class="card shadow-sm mb-4">
         <div class="card-header">
-          <h5 class="mb-0">Notes</h5>
+          <h5 class="mb-0">{% trans "Notes" %}</h5>
         </div>
         <div class="card-body">
           {{ form.notes }}
@@ -161,14 +162,14 @@
       <!-- Summary -->
       <div class="card shadow-sm sticky-top" style="top: 20px;">
         <div class="card-header">
-          <h5 class="mb-0">Summary</h5>
+          <h5 class="mb-0">{% trans "Summary" %}</h5>
         </div>
         <div class="card-body">
           <div class="d-grid gap-2">
             <button type="submit" class="btn btn-primary">
-              <i class="fas fa-save me-1"></i>Save Invoice
+              <i class="fas fa-save me-1"></i>{% trans "Save Invoice" %}
             </button>
-            <a href="{% url 'finance:client_invoice_list' %}" class="btn btn-outline-secondary">Cancel</a>
+            <a href="{% url 'finance:client_invoice_list' %}" class="btn btn-outline-secondary">{% trans "Cancel" %}</a>
           </div>
         </div>
       </div>

@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load i18n %}
 {% block title %}{{ title }} — HR{% endblock %}
 
 {% block content %}
@@ -21,8 +22,8 @@
         <div class="col-md-6">{{ form.status.label_tag }} {{ form.status }}</div>
       </div>
       <div class="mt-4">
-        <button type="submit" class="btn btn-primary">Save Review</button>
-        <a href="{% url 'hr:performance_review_list' %}" class="btn btn-outline-secondary">Cancel</a>
+        <button type="submit" class="btn btn-primary">{% trans "Save Review" %}</button>
+        <a href="{% url 'hr:performance_review_list' %}" class="btn btn-outline-secondary">{% trans "Cancel" %}</a>
       </div>
     </form>
   </div>

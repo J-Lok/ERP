@@ -1,14 +1,15 @@
 {% extends 'base.html' %}
 
+{% load i18n %}
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2><i class="fas fa-chart-line me-2"></i>Stock Movement Report</h2>
+    <h2><i class="fas fa-chart-line me-2"></i>{% trans "Stock Movement Report" %}</h2>
     <div>
         <button onclick="window.print()" class="btn btn-outline-primary btn-sm me-2">
-            <i class="fas fa-print me-1"></i>Print
+            <i class="fas fa-print me-1"></i>{% trans "Print" %}
         </button>
         <a href="{% url 'inventory:stock_list' %}" class="btn btn-secondary btn-sm">
-            <i class="fas fa-arrow-left me-1"></i>Back to Inventory
+            <i class="fas fa-arrow-left me-1"></i>{% trans "Back to Inventory" %}
         </a>
     </div>
 </div>
@@ -16,7 +17,7 @@
 <!-- Report Period -->
 <div class="alert alert-info mb-4">
     <i class="fas fa-calendar me-2"></i>
-    <strong>Report Period:</strong> {{ start_date|date:"F d, Y" }} to {{ end_date|date:"F d, Y" }}
+    <strong>{% trans "Report Period:" %}</strong> {{ start_date|date:"F d, Y" }} to {{ end_date|date:"F d, Y" }}
     <span class="ms-3"><i class="fas fa-clock me-1"></i>Generated: {{ report_date|date:"F d, Y" }}</span>
 </div>
 
@@ -26,7 +27,7 @@
         <div class="card bg-primary text-white">
             <div class="card-body text-center">
                 <h3 class="mb-0">{{ total_transactions }}</h3>
-                <small>Total Transactions</small>
+                <small>{% trans "Total Transactions" %}</small>
             </div>
         </div>
     </div>
@@ -34,7 +35,7 @@
         <div class="card bg-success text-white">
             <div class="card-body text-center">
                 <h3 class="mb-0">{{ total_in }}</h3>
-                <small>Units In</small>
+                <small>{% trans "Units In" %}</small>
             </div>
         </div>
     </div>
@@ -42,7 +43,7 @@
         <div class="card bg-danger text-white">
             <div class="card-body text-center">
                 <h3 class="mb-0">{{ total_out }}</h3>
-                <small>Units Out</small>
+                <small>{% trans "Units Out" %}</small>
             </div>
         </div>
     </div>
@@ -50,7 +51,7 @@
         <div class="card bg-info text-white">
             <div class="card-body text-center">
                 <h3 class="mb-0">{{ total_in|add:total_out }}</h3>
-                <small>Total Movement</small>
+                <small>{% trans "Total Movement" %}</small>
             </div>
         </div>
     </div>
@@ -59,13 +60,13 @@
 <!-- Daily Movement Chart -->
 <div class="card mb-4">
     <div class="card-header bg-white">
-        <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Daily Movement Trend</h5>
+        <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>{% trans "Daily Movement Trend" %}</h5>
     </div>
     <div class="card-body">
         {% if daily_trend %}
         <canvas id="movementChart" height="100"></canvas>
         {% else %}
-        <p class="text-center text-muted py-4">No movement data available for this period.</p>
+        <p class="text-center text-muted py-4">{% trans "No movement data available for this period." %}</p>
         {% endif %}
     </div>
 </div>
@@ -73,7 +74,7 @@
 <!-- Movement by Item -->
 <div class="card">
     <div class="card-header bg-white">
-        <h5 class="mb-0"><i class="fas fa-table me-2"></i>Stock Movement by Item</h5>
+        <h5 class="mb-0"><i class="fas fa-table me-2"></i>{% trans "Stock Movement by Item" %}</h5>
     </div>
     <div class="card-body">
         {% if movement_data %}
@@ -81,13 +82,13 @@
             <table class="table table-hover">
                 <thead class="table-light">
                     <tr>
-                        <th>Item Code</th>
-                        <th>Item Name</th>
-                        <th>Category</th>
-                        <th class="text-success">Total In</th>
-                        <th class="text-danger">Total Out</th>
-                        <th class="text-primary">Net Movement</th>
-                        <th>Turnover Rate</th>
+                        <th>{% trans "Item Code" %}</th>
+                        <th>{% trans "Item Name" %}</th>
+                        <th>{% trans "Category" %}</th>
+                        <th class="text-success">{% trans "Total In" %}</th>
+                        <th class="text-danger">{% trans "Total Out" %}</th>
+                        <th class="text-primary">{% trans "Net Movement" %}</th>
+                        <th>{% trans "Turnover Rate" %}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -138,8 +139,8 @@
         {% else %}
         <div class="text-center py-5">
             <i class="fas fa-exchange-alt fa-3x text-muted mb-3"></i>
-            <h5>No Movement Data</h5>
-            <p class="text-muted">No stock transactions found for the selected period.</p>
+            <h5>{% trans "No Movement Data" %}</h5>
+            <p class="text-muted">{% trans "No stock transactions found for the selected period." %}</p>
         </div>
         {% endif %}
     </div>
@@ -153,15 +154,15 @@
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
                         <i class="fas fa-download me-2 text-muted"></i>
-                        <span class="text-muted">Export this report:</span>
+                        <span class="text-muted">{% trans "Export this report:" %}</span>
                     </div>
                     <div>
                         <a href="{% url 'inventory:stock_transaction_export' %}?date_from={{ start_date|date:'Y-m-d' }}&date_to={{ end_date|date:'Y-m-d' }}" 
                            class="btn btn-sm btn-success me-2">
-                            <i class="fas fa-file-excel me-1"></i>Export to Excel
+                            <i class="fas fa-file-excel me-1"></i>{% trans "Export to Excel" %}
                         </a>
                         <button onclick="window.print()" class="btn btn-sm btn-primary">
-                            <i class="fas fa-print me-1"></i>Print Report
+                            <i class="fas fa-print me-1"></i>{% trans "Print Report" %}
                         </button>
                     </div>
                 </div>

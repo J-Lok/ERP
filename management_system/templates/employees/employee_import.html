@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 
+{% load i18n %}
 {% block title %}Import Employees — ERP System{% endblock %}
 
 {% block content %}
@@ -8,10 +9,10 @@
         <div class="card shadow-sm">
             <div class="card-header bg-white d-flex justify-content-between align-items-center">
                 <h4 class="mb-0">
-                    <i class="fas fa-file-import me-2 text-primary" aria-hidden="true"></i>Import Employees
+                    <i class="fas fa-file-import me-2 text-primary" aria-hidden="true"></i>{% trans "Import Employees" %}
                 </h4>
                 <a href="{% url 'employees:employee_list' %}" class="btn btn-outline-secondary btn-sm">
-                    <i class="fas fa-arrow-left me-1" aria-hidden="true"></i>Back
+                    <i class="fas fa-arrow-left me-1" aria-hidden="true"></i>{% trans "Back" %}
                 </a>
             </div>
 
@@ -21,12 +22,12 @@
                 <div class="alert alert-warning d-flex align-items-start mb-4" role="note">
                     <i class="fas fa-exclamation-triangle me-2 mt-1 flex-shrink-0" aria-hidden="true"></i>
                     <div>
-                        <strong>Before you import:</strong>
+                        <strong>{% trans "Before you import:" %}</strong>
                         <ul class="mb-0 mt-1 ps-3 small">
-                            <li>Download the template first to ensure the correct column format.</li>
-                            <li>Employee IDs must be unique within your company.</li>
-                            <li>New user accounts are created automatically; the temporary password is <code>TempPassword123</code> — users should change it on first login.</li>
-                            <li>Rows with errors are skipped; a summary is shown after import.</li>
+                            <li>{% trans "Download the template first to ensure the correct column format." %}</li>
+                            <li>{% trans "Employee IDs must be unique within your company." %}</li>
+                            <li>{% trans "New user accounts are created automatically; the temporary password is" %} <code>{% trans "TempPassword123" %}</code> {% trans "— users should change it on first login." %}</li>
+                            <li>{% trans "Rows with errors are skipped; a summary is shown after import." %}</li>
                         </ul>
                     </div>
                 </div>
@@ -34,71 +35,71 @@
                 {# ---- Column reference ---- #}
                 <div class="mb-4">
                     <h6 class="text-muted text-uppercase small mb-2">
-                        <i class="fas fa-table me-1" aria-hidden="true"></i>Expected Columns
+                        <i class="fas fa-table me-1" aria-hidden="true"></i>{% trans "Expected Columns" %}
                     </h6>
                     <div class="table-responsive">
                         <table class="table table-bordered table-sm small mb-0">
                             <thead class="table-light">
                                 <tr>
-                                    <th>Column</th>
-                                    <th>Required</th>
-                                    <th>Description</th>
-                                    <th>Example</th>
+                                    <th>{% trans "Column" %}</th>
+                                    <th>{% trans "Required" %}</th>
+                                    <th>{% trans "Description" %}</th>
+                                    <th>{% trans "Example" %}</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <tr>
-                                    <td><strong>Employee ID</strong></td>
-                                    <td><span class="badge bg-danger">Required</span></td>
-                                    <td>Unique employee identifier</td>
-                                    <td>EMP-001</td>
+                                    <td><strong>{% trans "Employee ID" %}</strong></td>
+                                    <td><span class="badge bg-danger">{% trans "Required" %}</span></td>
+                                    <td>{% trans "Unique employee identifier" %}</td>
+                                    <td>{% trans "EMP-001" %}</td>
                                 </tr>
                                 <tr>
-                                    <td><strong>First Name</strong></td>
-                                    <td><span class="badge bg-danger">Required</span></td>
-                                    <td>Employee first name</td>
-                                    <td>John</td>
+                                    <td><strong>{% trans "First Name" %}</strong></td>
+                                    <td><span class="badge bg-danger">{% trans "Required" %}</span></td>
+                                    <td>{% trans "Employee first name" %}</td>
+                                    <td>{% trans "John" %}</td>
                                 </tr>
                                 <tr>
-                                    <td><strong>Last Name</strong></td>
-                                    <td><span class="badge bg-danger">Required</span></td>
-                                    <td>Employee last name</td>
-                                    <td>Doe</td>
+                                    <td><strong>{% trans "Last Name" %}</strong></td>
+                                    <td><span class="badge bg-danger">{% trans "Required" %}</span></td>
+                                    <td>{% trans "Employee last name" %}</td>
+                                    <td>{% trans "Doe" %}</td>
                                 </tr>
                                 <tr>
-                                    <td><strong>Email</strong></td>
-                                    <td><span class="badge bg-danger">Required</span></td>
-                                    <td>Email address</td>
-                                    <td>john.doe@company.com</td>
+                                    <td><strong>{% trans "Email" %}</strong></td>
+                                    <td><span class="badge bg-danger">{% trans "Required" %}</span></td>
+                                    <td>{% trans "Email address" %}</td>
+                                    <td>{% trans "john.doe@company.com" %}</td>
                                 </tr>
                                 <tr>
-                                    <td>Phone</td>
-                                    <td><span class="badge bg-secondary">Optional</span></td>
-                                    <td>Phone number</td>
+                                    <td>{% trans "Phone" %}</td>
+                                    <td><span class="badge bg-secondary">{% trans "Optional" %}</span></td>
+                                    <td>{% trans "Phone number" %}</td>
                                     <td>+1234567890</td>
                                 </tr>
                                 <tr>
-                                    <td>Department</td>
-                                    <td><span class="badge bg-secondary">Optional</span></td>
-                                    <td>Must match an existing department name</td>
-                                    <td>Engineering</td>
+                                    <td>{% trans "Department" %}</td>
+                                    <td><span class="badge bg-secondary">{% trans "Optional" %}</span></td>
+                                    <td>{% trans "Must match an existing department name" %}</td>
+                                    <td>{% trans "Engineering" %}</td>
                                 </tr>
                                 <tr>
-                                    <td>Role</td>
-                                    <td><span class="badge bg-secondary">Optional</span></td>
-                                    <td>Employee role slug</td>
-                                    <td>developer</td>
+                                    <td>{% trans "Role" %}</td>
+                                    <td><span class="badge bg-secondary">{% trans "Optional" %}</span></td>
+                                    <td>{% trans "Employee role slug" %}</td>
+                                    <td>{% trans "developer" %}</td>
                                 </tr>
                                 <tr>
-                                    <td>Status</td>
-                                    <td><span class="badge bg-secondary">Optional</span></td>
-                                    <td>Employment status</td>
-                                    <td>active</td>
+                                    <td>{% trans "Status" %}</td>
+                                    <td><span class="badge bg-secondary">{% trans "Optional" %}</span></td>
+                                    <td>{% trans "Employment status" %}</td>
+                                    <td>{% trans "active" %}</td>
                                 </tr>
                                 <tr>
-                                    <td>Salary</td>
-                                    <td><span class="badge bg-secondary">Optional</span></td>
-                                    <td>Annual salary (numeric)</td>
+                                    <td>{% trans "Salary" %}</td>
+                                    <td><span class="badge bg-secondary">{% trans "Optional" %}</span></td>
+                                    <td>{% trans "Annual salary (numeric)" %}</td>
                                     <td>50000</td>
                                 </tr>
                             </tbody>
@@ -112,22 +113,22 @@
 
                     <div class="mb-4">
                         <label for="excel_file" class="form-label fw-semibold">
-                            Select Excel File <span class="text-danger">*</span>
+                            {% trans "Select Excel File" %} <span class="text-danger">*</span>
                         </label>
                         <input type="file" class="form-control" id="excel_file" name="excel_file"
                                accept=".xlsx,.xls" required>
-                        <div class="form-text">Accepted formats: .xlsx, .xls</div>
+                        <div class="form-text">{% trans "Accepted formats: .xlsx, .xls" %}</div>
                     </div>
 
                     <div class="d-flex gap-2 flex-wrap">
                         <button type="submit" class="btn btn-primary" id="import-btn">
-                            <i class="fas fa-upload me-2" aria-hidden="true"></i>Import Employees
+                            <i class="fas fa-upload me-2" aria-hidden="true"></i>{% trans "Import Employees" %}
                         </button>
                         <a href="{% url 'employees:download_employee_template' %}" class="btn btn-outline-info">
-                            <i class="fas fa-download me-2" aria-hidden="true"></i>Download Template
+                            <i class="fas fa-download me-2" aria-hidden="true"></i>{% trans "Download Template" %}
                         </a>
                         <a href="{% url 'employees:employee_list' %}" class="btn btn-outline-secondary">
-                            <i class="fas fa-times me-2" aria-hidden="true"></i>Cancel
+                            <i class="fas fa-times me-2" aria-hidden="true"></i>{% trans "Cancel" %}
                         </a>
                     </div>
                 </form>
