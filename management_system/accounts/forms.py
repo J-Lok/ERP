@@ -3,7 +3,8 @@ from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth import authenticate
 from django.core.exceptions import ValidationError
 
-from .models import User, Company, Invitation
+from .models import User, Company, Invitation, CompanyEmailSettings
+from marketplace.models import CompanyPaymentSettings
 
 
 # ---------------------------------------------------------------------------
@@ -193,3 +194,22 @@ class CompanyProfileForm(forms.ModelForm):
 
     def clean_domain(self):
         return self.instance.domain
+
+
+class CompanyEmailSettingsForm(forms.ModelForm):
+    class Meta:
+        model = CompanyEmailSettings
+        fields = ['email_host', 'email_port', 'email_use_tls', 'email_host_user', 'email_host_password', 'default_from_email', 'is_active']
+        widgets = {
+            'email_host_password': forms.PasswordInput(render_value=True),
+        }
+
+
+class CompanyPaymentSettingsForm(forms.ModelForm):
+    class Meta:
+        model = CompanyPaymentSettings
+        fields = ['stripe_publishable_key', 'stripe_secret_key', 'flutterwave_public_key', 'flutterwave_secret_key', 'is_active']
+        widgets = {
+            'stripe_secret_key': forms.PasswordInput(render_value=True),
+            'flutterwave_secret_key': forms.PasswordInput(render_value=True),
+        }

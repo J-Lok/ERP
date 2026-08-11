@@ -89,11 +89,11 @@ class MarketplaceSingleCompanyOrderTests(TestCase):
                 'shipping_phone': '+23400000000',
                 'notes': 'Handle with care',
             },
-            follow=True,
+            follow=False,
         )
 
-        self.assertRedirects(response, reverse('marketplace:order_list'))
         order = Order.objects.get()
+        self.assertRedirects(response, reverse('marketplace:payment_gateway', kwargs={'pk': order.pk}))
         self.assertEqual(order.company, self.company_a)
         self.assertEqual(order.total, Decimal('50.00'))
         self.stock_a.refresh_from_db()

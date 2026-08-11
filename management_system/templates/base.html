@@ -678,11 +678,8 @@
         <div class="dropdown">
           <button class="topbar-btn dropdown-toggle" data-bs-toggle="dropdown" id="notif-btn">
             <i class="fas fa-bell"></i>
-            {% if unread_notifications > 0 %}
-            <span class="notif-badge">{{ unread_notifications }}</span>
-            {% else %}
-            <span class="notif-dot"></span>
-            {% endif %}
+            <span id="notif-badge-count" class="notif-badge {% if not unread_notifications %}d-none{% endif %}">{{ unread_notifications|default:0 }}</span>
+            <span id="notif-dot-badge" class="notif-dot {% if unread_notifications %}d-none{% endif %}"></span>
           </button>
           <ul class="dropdown-menu dropdown-menu-end notif-dropdown">
             <li><h6 class="dropdown-header">{% trans "Notifications" %}</h6></li>
@@ -856,7 +853,32 @@
       }
     });
   }
-  document.addEventListener('DOMContentLoaded', enhanceRequiredFormFields);
+  document.addEventListener('DOMContentLoaded', function() {
+    enhanceRequiredFormFields();
+    pollNotifications();
+  });
+
+  function pollNotifications() {
+    fetch('/notifications/api/unread-count/')
+      .then(response => response.json())
+      .then(data => {
+        const count = data.count;
+        const countBadge = document.getElementById('notif-badge-count');
+        const dotBadge = document.getElementById('notif-dot-badge');
+        if (countBadge && dotBadge) {
+          if (count > 0) {
+            countBadge.textContent = count;
+            countBadge.classList.remove('d-none');
+            dotBadge.classList.add('d-none');
+          } else {
+            countBadge.classList.add('d-none');
+            dotBadge.classList.remove('d-none');
+          }
+        }
+      })
+      .catch(err => console.error('Notification polling error:', err));
+  }
+  setInterval(pollNotifications, 30000);
 
 })();
 </script>
