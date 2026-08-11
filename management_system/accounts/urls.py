@@ -20,6 +20,8 @@ urlpatterns = [
 
     # Profile
     path('profile/company/', views.company_profile, name='company_profile'),
+    path('profile/company/email-settings/', views.company_email_settings, name='company_email_settings'),
+    path('profile/company/payment-settings/', views.company_payment_settings, name='company_payment_settings'),
     path('profile/user/', views.user_profile, name='user_profile'),
     path('profile/edit/', views.edit_profile, name='edit_profile'),
 

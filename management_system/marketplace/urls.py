@@ -33,6 +33,13 @@ urlpatterns = [
     path('orders/', views.order_list, name='order_list'),
     path('orders/<int:pk>/', views.order_detail, name='order_detail'),
     path('orders/<int:pk>/cancel/', views.cancel_order, name='cancel_order'),
+    path('orders/<int:pk>/pay/', views.payment_gateway, name='payment_gateway'),
+    path('orders/<int:pk>/payment-success/', views.payment_success, name='payment_success'),
+    path('orders/<int:pk>/payment-success/flutterwave/', views.flutterwave_verify, name='flutterwave_verify'),
+    path('orders/<int:pk>/payment-cancelled/', views.payment_cancelled, name='payment_cancelled'),
+    path('orders/<int:pk>/print/', views.order_print, name='order_print'),
+    path('orders/<int:order_id>/return/', views.request_return, name='request_return'),
+    path('product/<int:stock_id>/review/', views.add_product_review, name='add_product_review'),
     
     # Client Profile
     path('profile/', views.client_profile, name='client_profile'),

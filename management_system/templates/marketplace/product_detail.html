@@ -67,5 +67,77 @@
             {% endif %}
         </div>
     </div>
+
+    <!-- Product Reviews Section -->
+    <hr class="my-5">
+    <div class="row">
+        <!-- Review List -->
+        <div class="col-md-6 mb-4">
+            <h4 class="mb-4">{% trans "Customer Reviews" %}</h4>
+            {% with reviews=stock.reviews.all %}
+            {% if reviews %}
+                <div class="d-flex flex-column gap-3">
+                    {% for review in reviews %}
+                    <div class="card border-0 shadow-sm p-3 bg-light" style="border-radius: 0.75rem;">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h6 class="mb-0 fw-bold">{{ review.client.get_full_name }}</h6>
+                            <span class="text-muted small">{{ review.created_at|date:"Y-m-d" }}</span>
+                        </div>
+                        <div class="text-warning mb-2" style="font-size: 13px;">
+                            {% for i in "12345" %}
+                                {% if review.rating >= forloop.counter %}
+                                    <i class="fas fa-star"></i>
+                                {% else %}
+                                    <i class="far fa-star"></i>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                        <p class="mb-0 text-muted small">{{ review.comment }}</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="alert alert-light text-center py-4 border">
+                    <i class="far fa-comments fa-2x text-muted mb-2 d-block"></i>
+                    {% trans "No reviews yet. Be the first to review this product!" %}
+                </div>
+            {% endif %}
+            {% endwith %}
+        </div>
+
+        <!-- Add Review Form -->
+        <div class="col-md-6">
+            <h4 class="mb-4">{% trans "Write a Review" %}</h4>
+            {% if request.client %}
+                <div class="card border-0 shadow-sm p-4" style="border-radius: 0.75rem;">
+                    <form method="post" action="{% url 'marketplace:add_product_review' stock.pk %}">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label class="form-label small text-muted">{% trans "Rating" %}</label>
+                            <select class="form-select" name="rating" required>
+                                <option value="5" selected>5 ★★★★★</option>
+                                <option value="4">4 ★★★★</option>
+                                <option value="3">3 ★★★</option>
+                                <option value="2">2 ★★</option>
+                                <option value="1">1 ★</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small text-muted">{% trans "Review Comment" %}</label>
+                            <textarea class="form-control" name="comment" rows="4" required placeholder="{% trans 'Share your experience with this product...' %}"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">
+                            {% trans "Submit Review" %}
+                        </button>
+                    </form>
+                </div>
+            {% else %}
+                <div class="alert alert-warning">
+                    <i class="fas fa-sign-in-alt me-2"></i>
+                    <a href="{% url 'marketplace:client_login' %}" class="alert-link">{% trans "Login" %}</a> {% trans "to write a review." %}
+                </div>
+            {% endif %}
+        </div>
+    </div>
 </div>
 {% endblock %}

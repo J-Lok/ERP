@@ -1,0 +1,144 @@
+{% extends 'marketplace/marketplace_base.html' %}
+{% load i18n %}
+
+{% block title %}{% trans "Secure Checkout Payment" %} - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-6 col-md-8">
+            <div class="card shadow-lg border-0" style="border-radius: 1rem; overflow: hidden;">
+                <!-- Header -->
+                <div class="bg-primary text-white p-4 text-center">
+                    <h3 class="mb-1"><i class="fas fa-lock me-2"></i>{% trans "Secure Payment Portal" %}</h3>
+                    <p class="mb-0 text-white-50">{% trans "Order #" %}{{ order.order_number }}</p>
+                </div>
+
+                <div class="card-body p-4">
+                    <!-- Order Summary -->
+                    <div class="p-3 mb-4 rounded bg-light border">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-0 fw-bold">{% trans "Total Payable" %}</h6>
+                                <small class="text-muted">{{ order.items.count }} {% trans "item(s)" %}</small>
+                            </div>
+                            <h4 class="mb-0 text-primary fw-bold">FCFA {{ order.total|floatformat:0 }}</h4>
+                        </div>
+                    </div>
+
+                    <form method="post" id="payment-form">
+                        {% csrf_token %}
+                        <input type="hidden" name="simulated_success" id="simulated-success" value="false">
+
+                        <h6 class="fw-bold mb-3">{% trans "1. Choose Payment Method" %}</h6>
+                        <div class="row g-2 mb-4">
+                            <div class="col-6">
+                                <input type="radio" class="btn-check" name="payment_method" id="pay-card" value="card" checked>
+                                <label class="btn btn-outline-primary w-100 p-3" for="pay-card">
+                                    <i class="fab fa-stripe fa-3x d-block mb-2"></i>
+                                    {% trans "Pay with Stripe" %}
+                                    <span class="d-block small text-muted">{% trans "Real Checkout API" %}</span>
+                                </label>
+                            </div>
+                            <div class="col-6">
+                                <input type="radio" class="btn-check" name="payment_method" id="pay-momo" value="momo">
+                                <label class="btn btn-outline-primary w-100 p-3" for="pay-momo">
+                                    <i class="fas fa-mobile-alt fa-3x d-block mb-2"></i>
+                                    {% trans "Mobile Money" %}
+                                    <span class="d-block small text-muted">{% trans "MTN MoMo & Orange Money" %}</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Card/Stripe Message -->
+                        <div id="card-fields" class="payment-fields alert alert-info border-0 p-3">
+                            <h6 class="fw-bold mb-2"><i class="fab fa-stripe me-2 text-primary"></i>{% trans "Stripe Sandbox Checkout" %}</h6>
+                            <p class="small mb-0 text-muted">
+                                {% trans "You will be redirected to the official secure Stripe Hosted Checkout portal. You can complete the transaction using standard test credit cards (such as 4242 •••• •••• 4242)." %}
+                            </p>
+                        </div>
+
+                        <!-- Momo Inputs -->
+                        <div id="momo-fields" class="payment-fields d-none">
+                            <div class="alert alert-info border-0 p-3 mb-3">
+                                <h6 class="fw-bold mb-2"><i class="fas fa-mobile-alt me-2 text-primary"></i>{% trans "Mobile Money Checkout" %}</h6>
+                                <p class="small mb-0 text-muted">
+                                    {% trans "You will be redirected to the secure Flutterwave payment portal. You can complete the transaction using Orange Money or MTN Mobile Money in test mode." %}
+                                </p>
+                            </div>
+                            
+                            <div class="form-check form-switch mb-4">
+                                <input class="form-check-input" type="checkbox" role="switch" id="simulate-success-toggle">
+                                <label class="form-check-label text-muted small" for="simulate-success-toggle">
+                                    {% trans "Simulate Successful Payment (Local Sandbox)" %}
+                                </label>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary btn-lg w-100 py-3 fw-bold mt-3" id="pay-btn">
+                            <i class="fas fa-shield-alt me-2"></i><span id="btn-text">{% trans "Proceed to Stripe" %}</span>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const payCard = document.getElementById('pay-card');
+    const payMomo = document.getElementById('pay-momo');
+    const cardFields = document.getElementById('card-fields');
+    const momoFields = document.getElementById('momo-fields');
+    const successToggle = document.getElementById('simulate-success-toggle');
+    const successHidden = document.getElementById('simulated-success');
+    const payBtn = document.getElementById('pay-btn');
+    const btnText = document.getElementById('btn-text');
+
+    function updateMomoButtonText() {
+        if (successToggle.checked) {
+            btnText.textContent = '{% trans "Simulate Mobile Money Payment" %}';
+        } else {
+            btnText.textContent = '{% trans "Proceed to Mobile Money" %}';
+        }
+    }
+
+    payCard.addEventListener('change', function() {
+        if(this.checked) {
+            cardFields.classList.remove('d-none');
+            momoFields.classList.add('d-none');
+            btnText.textContent = '{% trans "Proceed to Stripe" %}';
+        }
+    });
+
+    payMomo.addEventListener('change', function() {
+        if(this.checked) {
+            momoFields.classList.remove('d-none');
+            cardFields.classList.add('d-none');
+            updateMomoButtonText();
+        }
+    });
+
+    successToggle.addEventListener('change', function() {
+        successHidden.value = this.checked ? 'true' : 'false';
+        if (payMomo.checked) {
+            updateMomoButtonText();
+        }
+    });
+
+    document.getElementById('payment-form').addEventListener('submit', function() {
+        payBtn.disabled = true;
+        if (payCard.checked) {
+            payBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>{% trans "Redirecting to Stripe..." %}';
+        } else {
+            if (successToggle.checked) {
+                payBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>{% trans "Processing simulated MOMO..." %}';
+            } else {
+                payBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>{% trans "Redirecting to Mobile Money..." %}';
+            }
+        }
+    });
+});
+</script>
+{% endblock %}
