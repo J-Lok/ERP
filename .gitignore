@@ -22,6 +22,10 @@ management_system/media/
 .env
 .env.*
 !.env.example
+!.env.production.example
+
+# Deployment (Let's Encrypt certs / ACME webroot generated on the VPS)
+deploy/certbot/
 
 # IDE
 .claude/
