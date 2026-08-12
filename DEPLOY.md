@@ -1,76 +1,83 @@
-# VPS deployment (Docker Compose)
+# VPS deployment (Docker Compose, behind aaPanel)
 
-This is the **production** stack, separate from the local dev `docker-compose.yml`.
-It adds Nginx (TLS termination + media serving) and Certbot (Let's Encrypt) in front
-of the same `web`/`db` services, and removes the dev-only bits (bind-mounted source,
-hardcoded dev secrets, exposed Postgres port).
+This VPS already runs other apps behind a panel (aaPanel/BT Panel) that owns ports
+80/443 and manages domains + SSL itself — the same pattern the `le-poloo` app on
+this box already uses (container listens on a loopback-only port, the panel
+reverse-proxies the public domain to it). This stack follows that pattern:
+`docker-compose.prod.yml` only runs `db` (Postgres) and `web` (this app); the panel
+handles the public-facing side.
 
-Files involved: `docker-compose.prod.yml`, `deploy/nginx/`, `deploy/init-letsencrypt.sh`,
-`.env.production.example`. The app/Dockerfile itself are unchanged.
+Files involved: `docker-compose.prod.yml`, `.env.production.example`,
+`deploy/media/`. The app code and `Dockerfile` are unchanged.
 
-## 0. Prerequisites
-
-- A VPS running Linux with Docker + the Docker Compose plugin installed
-  (`docker compose version` should work).
-- A domain's DNS **A record** (and AAAA if using IPv6) pointing at the VPS's public IP.
-  Let's Encrypt validates over HTTP on port 80, so this must resolve before step 3.
-- Ports 80 and 443 open on the VPS firewall.
-
-## 1. Get the code onto the VPS
-
-```bash
-git clone <your-repo-url> erp && cd erp
-```
-
-## 2. Configure environment
+## 1. Configure environment
 
 ```bash
 cp .env.production.example .env
 ```
 
-Edit `.env` and fill in every value — at minimum: `SECRET_KEY` (generate one, e.g.
-`python3 -c "import secrets; print(secrets.token_urlsafe(50))"`), `DOMAIN`,
-`ALLOWED_HOSTS`, `CSRF_TRUSTED_ORIGINS`, `LETSENCRYPT_EMAIL`, `POSTGRES_PASSWORD` /
-`DATABASE_URL` (keep them consistent), and `RESEND_API_KEY` for email.
+Fill in every value — at minimum: `SECRET_KEY`, `ALLOWED_HOSTS`,
+`CSRF_TRUSTED_ORIGINS` (your real domain), `POSTGRES_PASSWORD` / `DATABASE_URL`
+(keep them consistent), and `RESEND_API_KEY` for email.
 
-If you don't have Cloudinary credentials yet, leave those three blank — uploaded
-files will persist on a Docker volume on the VPS instead, served directly by nginx.
+If you don't have Cloudinary credentials, leave those three blank — uploaded
+files persist in `./deploy/media` on the VPS instead, and the panel serves them
+directly (step 3).
 
-## 3. Issue the first TLS certificate
+## 2. Check port 8010 is free, then start the stack
+
+Other apps on this VPS already use 5051, 5101, 5433, 8072, 5769 — 8010 should be
+clear, but confirm:
 
 ```bash
-chmod +x deploy/init-letsencrypt.sh
-./deploy/init-letsencrypt.sh
+sudo ss -tulpn | grep 8010
 ```
 
-This starts a temporary self-signed cert so nginx can boot, requests the real
-Let's Encrypt certificate via the HTTP-01 challenge, then reloads nginx. Run it
-once — it's idempotent but unnecessary on subsequent deploys.
-
-## 4. Bring the stack up
+If something's already there, change the `8010` in `docker-compose.prod.yml`'s
+`web.ports` to a free port and use that port everywhere below instead.
 
 ```bash
 docker compose -f docker-compose.prod.yml up -d --build
 ```
 
-The `web` container runs `migrate` automatically on start (see `Dockerfile`), and
-static files were already collected at image-build time (served via whitenoise).
+`web` runs `migrate` automatically on start (see `Dockerfile`); static files were
+already collected at image-build time and are served via whitenoise.
 
-## 5. Create an admin user
+## 3. Point aaPanel at it
+
+In aaPanel:
+
+1. **Website → Add site** for your domain (or reuse an existing site entry if one
+   was already created for this app).
+2. Set it up as a **reverse proxy** to `http://127.0.0.1:8010` (whatever port you
+   used in step 2).
+3. **SSL** tab → issue a free Let's Encrypt certificate for the domain through
+   aaPanel's own SSL manager (same as your other panel-managed sites) and force
+   HTTPS.
+4. Add a location block so uploaded media is served directly from disk instead of
+   proxied through gunicorn — in the site's **Config file**, add this *above* the
+   existing reverse-proxy `location /` block:
+
+   ```nginx
+   location /media/ {
+       alias /path/to/this/repo/deploy/media/;
+   }
+   ```
+
+   Replace `/path/to/this/repo` with the actual path on the VPS (e.g.
+   `/www/wwwroot/erp` or wherever you cloned it).
+5. Also add, near the top of the `server` block, to allow file uploads larger
+   than aaPanel's 1M default:
+
+   ```nginx
+   client_max_body_size 25M;
+   ```
+
+## 4. Create an admin user
 
 ```bash
 docker compose -f docker-compose.prod.yml exec web \
   python management_system/manage.py createsuperuser
-```
-
-## 6. Keep certificates renewed
-
-The `certbot` service in `docker-compose.prod.yml` checks for renewal every 12h
-automatically, but nginx needs a reload to pick up a renewed certificate file.
-Add a host crontab entry:
-
-```cron
-0 3 * * * cd /path/to/erp && docker compose -f docker-compose.prod.yml exec nginx nginx -s reload >> /var/log/erp-nginx-reload.log 2>&1
 ```
 
 ## Redeploying after a code change
@@ -80,12 +87,15 @@ git pull
 docker compose -f docker-compose.prod.yml up -d --build
 ```
 
-`db` data and `media_volume` persist across rebuilds since they're named volumes.
+`db` data (named volume) and `./deploy/media` (bind mount) persist across
+rebuilds.
 
 ## Notes
 
-- Postgres and gunicorn are **not** published to the host — only nginx (80/443) is
-  publicly reachable; everything else talks over the internal compose network.
-- To back up the database: `docker compose -f docker-compose.prod.yml exec db pg_dump -U <POSTGRES_USER> <POSTGRES_DB> > backup.sql`
+- Postgres is bound to `127.0.0.1:5433` only (see `docker-compose.prod.yml` for
+  the SSH-tunnel command to reach it from your machine) — not exposed to the
+  internet. `web` is `127.0.0.1:8010` only — same story; only the panel's own
+  Nginx (80/443) is public.
+- Back up the database: `docker compose -f docker-compose.prod.yml exec db pg_dump -U <POSTGRES_USER> <POSTGRES_DB> > backup.sql`
 - Local development is unaffected — keep using `docker compose up` with the
   existing `docker-compose.yml`.
