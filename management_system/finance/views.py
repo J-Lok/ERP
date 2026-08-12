@@ -913,7 +913,7 @@ def bank_reconciliation_detail(request, pk):
 def financial_report_list(request):
     """List available financial reports."""
     company = request.user.company
-    reports = FinancialReport.objects.filter(company=company).order_by('-created_date')
+    reports = FinancialReport.objects.filter(company=company).order_by('-generated_at')
 
     context = {
         'reports': reports,

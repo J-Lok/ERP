@@ -1042,7 +1042,7 @@ def generate_order_pdf_bytes(order):
         p.drawString(50, y, str(item.item_name)[:35])
         p.drawString(300, y, str(item.quantity))
         p.drawString(370, y, f"FCFA {item.unit_price:,.0f}")
-        p.drawString(470, y, f"FCFA {item.total_price:,.0f}")
+        p.drawString(470, y, f"FCFA {item.subtotal:,.0f}")
         y -= 20
 
     # Summary Line
