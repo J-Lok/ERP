@@ -38,7 +38,7 @@ services:
       # The panel (aaPanel/BT Panel) owns 80/443 and reverse-proxies your domain
       # to this port — nothing here is reachable from the internet directly.
       # Change 8010 if it's already taken by something else on this VPS.
-      - "127.0.0.1:8010:8000"
+      - "0.0.0.0:8010:8000"
 
 volumes:
   postgres_data:
