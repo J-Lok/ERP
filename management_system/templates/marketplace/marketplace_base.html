@@ -283,6 +283,12 @@
         </div>
     </footer>
 
+    {% if company and company.whatsapp_number %}
+    <a href="https://wa.me/{{ company.whatsapp_number|cut:'+'|cut:' ' }}" target="_blank" class="btn btn-success rounded-circle shadow-lg d-flex align-items-center justify-content-center" style="position: fixed; bottom: 20px; left: 20px; width: 56px; height: 56px; z-index: 1050; font-size: 28px;" title="Chat with us on WhatsApp">
+        <i class="fab fa-whatsapp text-white"></i>
+    </a>
+    {% endif %}
+
     <button id="themeToggle" class="btn btn-outline-secondary theme-toggle-btn" type="button" aria-label="Toggle dark mode">
         <i class="fas fa-moon"></i>
     </button>

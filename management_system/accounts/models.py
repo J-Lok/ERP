@@ -25,6 +25,21 @@ class Company(models.Model):
         blank=True,
         validators=[RegexValidator(r'^\+?[\d\s\-().]{7,20}$', 'Enter a valid phone number.')],
     )
+    whatsapp_number = models.CharField(
+        max_length=30,
+        blank=True,
+        help_text='WhatsApp contact number for marketplace clients (e.g. +2376XXXXXXXX)',
+    )
+    orange_money_number = models.CharField(
+        max_length=30,
+        blank=True,
+        help_text='Orange Money transaction number for client payments',
+    )
+    mtn_momo_number = models.CharField(
+        max_length=30,
+        blank=True,
+        help_text='MTN Mobile Money transaction number for client payments',
+    )
     address = models.TextField(blank=True)
     subscription_plan = models.CharField(
         max_length=20,

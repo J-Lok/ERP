@@ -186,7 +186,11 @@ class CompanyProfileForm(forms.ModelForm):
 
     class Meta:
         model = Company
-        fields = ['name', 'domain', 'contact_email', 'contact_phone', 'address', 'subscription_plan', 'is_active']
+        fields = [
+            'name', 'domain', 'contact_email', 'contact_phone', 
+            'whatsapp_number', 'orange_money_number', 'mtn_momo_number',
+            'address', 'subscription_plan', 'is_active'
+        ]
         widgets = {
             'domain': forms.TextInput(attrs={'readonly': True}),
             'address': forms.Textarea(attrs={'rows': 3}),

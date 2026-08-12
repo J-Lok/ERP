@@ -38,6 +38,7 @@ urlpatterns = [
     path('orders/<int:pk>/payment-success/flutterwave/', views.flutterwave_verify, name='flutterwave_verify'),
     path('orders/<int:pk>/payment-cancelled/', views.payment_cancelled, name='payment_cancelled'),
     path('orders/<int:pk>/print/', views.order_print, name='order_print'),
+    path('orders/<int:pk>/pdf/', views.order_pdf, name='order_pdf'),
     path('orders/<int:order_id>/return/', views.request_return, name='request_return'),
     path('product/<int:stock_id>/review/', views.add_product_review, name='add_product_review'),
     

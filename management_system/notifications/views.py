@@ -222,11 +222,23 @@ def notification_preferences(request):
 
 @login_required
 def get_unread_count(request):
-    """Get unread notification count for AJAX requests."""
-    count = Notification.objects.filter(
+    """Get unread notification count and live feed for AJAX requests."""
+    unread_qs = Notification.objects.filter(
         user=request.user,
         is_read=False,
         is_archived=False
-    ).count()
+    )
+    count = unread_qs.count()
+    
+    recent_items = list(unread_qs.order_by('-created_at')[:5].values(
+        'id', 'title', 'message', 'notification_type', 'created_at'
+    ))
+    
+    # Format created_at for JSON serialization
+    for item in recent_items:
+        item['created_at'] = item['created_at'].strftime('%Y-%m-%d %H:%M')
 
-    return JsonResponse({'count': count})
+    return JsonResponse({
+        'count': count,
+        'recent': recent_items
+    })

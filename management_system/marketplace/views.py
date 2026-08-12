@@ -1,4 +1,8 @@
 import os
+import io
+from reportlab.lib.pagesizes import letter
+from reportlab.pdfgen import canvas
+from django.http import HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -1041,3 +1045,82 @@ def flutterwave_verify(request, pk):
     except Exception as e:
         messages.error(request, f'Verification error: {e}')
         return redirect('marketplace:payment_gateway', pk=order.pk)
+
+
+def generate_order_pdf_bytes(order):
+    """Generate a clean server-side PDF invoice for an order using ReportLab."""
+    buffer = io.BytesIO()
+    p = canvas.Canvas(buffer, pagesize=letter)
+    width, height = letter
+
+    # Header
+    p.setFont("Helvetica-Bold", 18)
+    p.drawString(50, height - 50, f"{order.company.name.upper()} - INVOICE")
+    
+    p.setFont("Helvetica", 10)
+    p.drawString(50, height - 70, f"Order Number: #{order.order_number}")
+    p.drawString(50, height - 85, f"Date: {order.created_at.strftime('%Y-%m-%d %H:%M')}")
+    p.drawString(50, height - 100, f"Order Status: {order.get_status_display()}")
+    p.drawString(50, height - 115, f"Payment Status: {order.get_payment_status_display()}")
+
+    # Customer info
+    p.setFont("Helvetica-Bold", 10)
+    p.drawString(350, height - 50, "Billed To:")
+    p.setFont("Helvetica", 10)
+    p.drawString(350, height - 65, f"Client: {order.client.get_full_name()}")
+    p.drawString(350, height - 80, f"Email: {order.client.email}")
+    p.drawString(350, height - 95, f"Phone: {order.client.phone or 'N/A'}")
+    if order.shipping_address:
+        p.drawString(350, height - 110, f"Address: {order.shipping_address[:30]}")
+
+    # Divider line
+    p.setLineWidth(1)
+    p.line(50, height - 135, width - 50, height - 135)
+
+    # Table Headers
+    y = height - 155
+    p.setFont("Helvetica-Bold", 11)
+    p.drawString(50, y, "Item Description")
+    p.drawString(300, y, "Qty")
+    p.drawString(370, y, "Unit Price")
+    p.drawString(470, y, "Total")
+    
+    p.setLineWidth(0.5)
+    p.line(50, y - 5, width - 50, y - 5)
+    y -= 25
+
+    p.setFont("Helvetica", 10)
+    for item in order.items.all():
+        if y < 100:
+            p.showPage()
+            y = height - 50
+        p.drawString(50, y, str(item.item_name)[:35])
+        p.drawString(300, y, str(item.quantity))
+        p.drawString(370, y, f"FCFA {item.unit_price:,.0f}")
+        p.drawString(470, y, f"FCFA {item.total_price:,.0f}")
+        y -= 20
+
+    # Summary Line
+    p.line(50, y - 5, width - 50, y - 5)
+    y -= 25
+    p.setFont("Helvetica-Bold", 12)
+    p.drawString(370, y, "Total Payable:")
+    p.drawString(470, y, f"FCFA {order.total:,.0f}")
+
+    p.showPage()
+    p.save()
+    pdf_bytes = buffer.getvalue()
+    buffer.close()
+    return pdf_bytes
+
+
+@client_login_required
+def order_pdf(request, pk):
+    """Download server-side generated PDF invoice."""
+    client = request.client
+    order = get_object_or_404(Order, pk=pk, client=client)
+    
+    pdf_bytes = generate_order_pdf_bytes(order)
+    response = HttpResponse(pdf_bytes, content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="Invoice_{order.order_number}.pdf"'
+    return response

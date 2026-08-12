@@ -65,6 +65,26 @@
                 </button>
             </form>
             {% endif %}
+
+            <!-- Merchant Contact & Payment Info -->
+            {% if stock.company.whatsapp_number or stock.company.orange_money_number or stock.company.mtn_momo_number %}
+            <div class="card border-0 shadow-sm mt-3 bg-light p-3" style="border-radius: 0.75rem;">
+                <h6 class="fw-bold mb-2 text-dark"><i class="fas fa-store me-2 text-primary"></i>{% trans "Merchant Contact & Payment Info" %}</h6>
+                {% if stock.company.whatsapp_number %}
+                <a href="https://wa.me/{{ stock.company.whatsapp_number|cut:'+'|cut:' ' }}" target="_blank" class="btn btn-success btn-sm w-100 mb-2 fw-bold">
+                    <i class="fab fa-whatsapp me-2"></i>{% trans "Chat on WhatsApp" %} ({{ stock.company.whatsapp_number }})
+                </a>
+                {% endif %}
+                <div class="small text-muted">
+                    {% if stock.company.orange_money_number %}
+                    <div><i class="fas fa-wallet text-warning me-1"></i><strong>Orange Money:</strong> {{ stock.company.orange_money_number }}</div>
+                    {% endif %}
+                    {% if stock.company.mtn_momo_number %}
+                    <div><i class="fas fa-mobile text-warning me-1"></i><strong>MTN MoMo:</strong> {{ stock.company.mtn_momo_number }}</div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
         </div>
     </div>
 

@@ -9,10 +9,18 @@
             <h2>Order #{{ order.order_number }}</h2>
             <p class="text-muted mb-0">Placed on {{ order.created_at|date:"F d, Y H:i" }}</p>
         </div>
-        <div class="d-flex gap-2">
+        <div class="d-flex gap-2 flex-wrap">
+            <a href="{% url 'marketplace:order_pdf' order.pk %}" class="btn btn-primary">
+                <i class="fas fa-file-pdf me-2"></i>{% trans "Télécharger la Facture (PDF)" %}
+            </a>
             <a href="{% url 'marketplace:order_print' order.pk %}" target="_blank" class="btn btn-outline-primary">
                 <i class="fas fa-print me-2"></i>{% trans "Print Receipt" %}
             </a>
+            {% if order.company.whatsapp_number %}
+            <a href="https://wa.me/{{ order.company.whatsapp_number|cut:'+'|cut:' ' }}?text=Hello,%20I%20have%20a%20question%20about%20Order%20%23{{ order.order_number }}" target="_blank" class="btn btn-success">
+                <i class="fab fa-whatsapp me-2"></i>{% trans "WhatsApp Merchant" %}
+            </a>
+            {% endif %}
             <a href="{% url 'marketplace:order_list' %}" class="btn btn-secondary">
                 <i class="fas fa-arrow-left me-2"></i>{% trans "Back to My Orders" %}
             </a>
