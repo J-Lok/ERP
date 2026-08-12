@@ -212,8 +212,10 @@ class CompanyEmailSettingsForm(forms.ModelForm):
 class CompanyPaymentSettingsForm(forms.ModelForm):
     class Meta:
         model = CompanyPaymentSettings
-        fields = ['stripe_publishable_key', 'stripe_secret_key', 'flutterwave_public_key', 'flutterwave_secret_key', 'is_active']
+        fields = ['whatsapp_number', 'orange_money_number', 'mtn_momo_number', 'payment_instructions', 'is_active']
         widgets = {
-            'stripe_secret_key': forms.PasswordInput(render_value=True),
-            'flutterwave_secret_key': forms.PasswordInput(render_value=True),
+            'whatsapp_number': forms.TextInput(attrs={'class': 'form-control', 'placeholder': '+237690000000'}),
+            'orange_money_number': forms.TextInput(attrs={'class': 'form-control', 'placeholder': '690000000'}),
+            'mtn_momo_number': forms.TextInput(attrs={'class': 'form-control', 'placeholder': '670000000'}),
+            'payment_instructions': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Payment instructions for customers'}),
         }

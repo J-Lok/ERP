@@ -594,7 +594,7 @@
       </a>
       {% endif %}
 
-      {% if is_company_admin or user.is_superuser %}
+      {% if is_company_admin or user.is_superuser or user|has_role:'admin,manager,stock_manager' %}
       <a href="{% url 'marketplace:admin_order_dashboard' %}" class="nav-item-inner {% if request.resolver_match.app_name == 'marketplace' and request.resolver_match.url_name == 'admin_order_dashboard' %}active{% endif %}">
         <i class="fas fa-shopping-cart"></i>
         <span class="link-text">{% trans "Manage Orders" %}</span>
@@ -644,6 +644,11 @@
       </button>
 
       <div class="topbar-actions">
+
+        <!-- Help / Tutorial toggle -->
+        <button class="topbar-btn replay-tutorial-trigger" title="System Tutorial & Guide" id="tutorial-trigger-btn">
+          <i class="fas fa-question-circle text-primary"></i>
+        </button>
 
         <!-- Theme toggle -->
         <button class="topbar-btn" id="theme-toggle" title="Toggle theme">
@@ -899,5 +904,6 @@
 })();
 </script>
 {% block extra_js %}{% endblock %}
+{% include 'includes/tutorial_modal.html' %}
 </body>
 </html>

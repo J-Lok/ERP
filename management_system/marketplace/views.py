@@ -650,98 +650,28 @@ def edit_client_profile(request):
 @client_login_required
 @require_http_methods(['GET', 'POST'])
 def payment_gateway(request, pk):
-    """Secure Stripe & Mobile Money Payment Gateway for Marketplace Orders."""
+    """Direct Merchant Payment Contact Gateway for Marketplace Orders."""
     client = request.client
     order = get_object_or_404(Order, pk=pk, client=client)
 
     if order.payment_status == 'paid':
-        messages.warning(request, 'This order is already paid.')
+        messages.warning(request, 'This order is already marked as paid.')
         return redirect('marketplace:order_list')
 
+    payment_settings = CompanyPaymentSettings.objects.filter(company=order.company).first()
+
     if request.method == 'POST':
-        payment_method = request.POST.get('payment_method')
-        simulated_success = request.POST.get('simulated_success') == 'true'
-
-        if payment_method == 'card':
-            # Create real Stripe checkout session!
-            payment_settings, _ = CompanyPaymentSettings.objects.get_or_create(company=order.company)
-            secret_key = payment_settings.stripe_secret_key or os.environ.get('STRIPE_SECRET_KEY', '')
-            
-            # Setup success and cancel callbacks
-            success_url = request.build_absolute_uri(
-                reverse('marketplace:payment_success', kwargs={'pk': order.pk})
-            ) + "?session_id={CHECKOUT_SESSION_ID}"
-            
-            cancel_url = request.build_absolute_uri(
-                reverse('marketplace:payment_cancelled', kwargs={'pk': order.pk})
-            )
-
-            try:
-                session = create_stripe_checkout_session(
-                    order=order,
-                    secret_key=secret_key,
-                    success_url=success_url,
-                    cancel_url=cancel_url
-                )
-                return redirect(session['url'])
-            except Exception as e:
-                messages.error(request, f'Stripe initialization failed: {e}')
-                return redirect('marketplace:payment_gateway', pk=order.pk)
-
-        elif payment_method == 'momo':
-            if simulated_success:
-                # Mobile money simulator
-                try:
-                    with db_transaction.atomic():
-                        order.payment_status = 'paid'
-                        order.status = 'confirmed'
-                        order.save(update_fields=['payment_status', 'status', 'updated_at'])
-                        
-                        try:
-                            post_order_payment_to_finance(order, user=None)
-                            messages.success(
-                                request, 
-                                f'Payment of FCFA {order.total:.0f} confirmed via Mobile Money! '
-                                f'Order #{order.order_number} is confirmed and posted to the General Ledger.'
-                            )
-                        except MarketplaceFinancePostingError as exc:
-                            messages.warning(
-                                request,
-                                f'Payment confirmed via Mobile Money! Order #{order.order_number} is confirmed. '
-                                f'Note: Finance posting pending: {exc}'
-                            )
-                except Exception as e:
-                    messages.error(request, f'Payment confirmation failed: {e}')
-                    return redirect('marketplace:payment_gateway', pk=order.pk)
-
-                return redirect('marketplace:order_list')
-            else:
-                # Real Orange Money & MTN MoMo payment redirection using Flutterwave!
-                payment_settings, _ = CompanyPaymentSettings.objects.get_or_create(company=order.company)
-                secret_key = payment_settings.flutterwave_secret_key or os.environ.get('FLUTTERWAVE_SECRET_KEY', '')
-                
-                redirect_url = request.build_absolute_uri(
-                    reverse('marketplace:flutterwave_verify', kwargs={'pk': order.pk})
-                )
-
-                try:
-                    response = create_flutterwave_checkout_session(
-                        order=order,
-                        secret_key=secret_key,
-                        redirect_url=redirect_url
-                    )
-                    if response.get('status') == 'success':
-                        checkout_link = response['data']['link']
-                        return redirect(checkout_link)
-                    else:
-                        raise Exception(response.get('message', 'Failed to generate checkout link.'))
-                except Exception as e:
-                    messages.error(request, f'Mobile Money gateway failed: {e}')
-                    return redirect('marketplace:payment_gateway', pk=order.pk)
+        messages.success(
+            request,
+            f'Thank you! Your payment notification for Order #{order.order_number} has been recorded. '
+            'The merchant will verify your payment and update your order.'
+        )
+        return redirect('marketplace:order_list')
 
     return render(request, 'marketplace/payment_gateway.html', {
         'order': order,
         'client': client,
+        'payment_settings': payment_settings,
     })
 
 
@@ -1131,9 +1061,21 @@ def generate_order_pdf_bytes(order):
 
 @client_login_required
 def order_pdf(request, pk):
-    """Download server-side generated PDF invoice."""
+    """Download server-side generated PDF invoice for clients."""
     client = request.client
     order = get_object_or_404(Order, pk=pk, client=client)
+    
+    pdf_bytes = generate_order_pdf_bytes(order)
+    response = HttpResponse(pdf_bytes, content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="Invoice_{order.order_number}.pdf"'
+    return response
+
+
+@login_required
+def admin_order_pdf(request, pk):
+    """Download server-side generated PDF invoice for staff/company admins."""
+    company = request.user.company
+    order = get_object_or_404(Order, pk=pk, company=company)
     
     pdf_bytes = generate_order_pdf_bytes(order)
     response = HttpResponse(pdf_bytes, content_type='application/pdf')

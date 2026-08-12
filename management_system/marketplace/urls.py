@@ -34,9 +34,6 @@ urlpatterns = [
     path('orders/<int:pk>/', views.order_detail, name='order_detail'),
     path('orders/<int:pk>/cancel/', views.cancel_order, name='cancel_order'),
     path('orders/<int:pk>/pay/', views.payment_gateway, name='payment_gateway'),
-    path('orders/<int:pk>/payment-success/', views.payment_success, name='payment_success'),
-    path('orders/<int:pk>/payment-success/flutterwave/', views.flutterwave_verify, name='flutterwave_verify'),
-    path('orders/<int:pk>/payment-cancelled/', views.payment_cancelled, name='payment_cancelled'),
     path('orders/<int:pk>/print/', views.order_print, name='order_print'),
     path('orders/<int:pk>/pdf/', views.order_pdf, name='order_pdf'),
     path('orders/<int:order_id>/return/', views.request_return, name='request_return'),
@@ -56,5 +53,6 @@ urlpatterns = [
     path('admin/orders/<int:pk>/deliver/', admin_views.admin_order_deliver, name='admin_order_deliver'),
     path('admin/orders/<int:pk>/cancel/', admin_views.admin_order_cancel, name='admin_order_cancel'),
     path('admin/orders/<int:pk>/payment/', admin_views.admin_order_update_payment, name='admin_order_update_payment'),
+    path('admin/orders/<int:pk>/pdf/', views.admin_order_pdf, name='admin_order_pdf'),
     path('admin/clients/', admin_views.admin_client_list, name='admin_client_list'),
 ]

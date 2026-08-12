@@ -3,6 +3,7 @@
 {% block title %}Transactions — Finance{% endblock %}
 
 {% block content %}
+{% include 'finance/_nav.html' %}
 <div class="d-flex justify-content-between align-items-center mb-4">
   <h2 class="mb-0"><i class="fas fa-exchange-alt text-primary me-2"></i>{% trans "Transactions" %}</h2>
   <a href="{% url 'finance:transaction_create' %}" class="btn btn-primary btn-sm">

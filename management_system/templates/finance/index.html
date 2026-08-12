@@ -9,23 +9,38 @@
     <a href="{% url 'finance:transaction_create' %}" class="btn btn-primary btn-sm">
       <i class="fas fa-plus me-1"></i>{% trans "New Transaction" %}
     </a>
-    <a href="{% url 'finance:journal_create' %}" class="btn btn-outline-primary btn-sm">
-      <i class="fas fa-book-open me-1"></i>{% trans "New Journal" %}
-    </a>
-    <a href="{% url 'finance:journal_entry_create' %}" class="btn btn-outline-secondary btn-sm">
-      <i class="fas fa-file-invoice-dollar me-1"></i>{% trans "New Journal Entry" %}
-    </a>
-    <a href="{% url 'finance:client_invoice_create' %}" class="btn btn-outline-info btn-sm">
-      <i class="fas fa-file-invoice-dollar me-1"></i>{% trans "New Client Invoice" %}
-    </a>
-    <a href="{% url 'finance:supplier_invoice_create' %}" class="btn btn-outline-warning btn-sm">
-      <i class="fas fa-file-invoice me-1"></i>{% trans "New Supplier Invoice" %}
-    </a>
-    <a href="{% url 'finance:marketplace_finance_settings' %}" class="btn btn-outline-dark btn-sm">
-      <i class="fas fa-store me-1"></i>{% trans "Marketplace Mapping" %}
-    </a>
+    <div class="dropdown">
+      <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+        <i class="fas fa-ellipsis-h me-1"></i>{% trans "More" %}
+      </button>
+      <ul class="dropdown-menu dropdown-menu-end">
+        <li>
+          <a class="dropdown-item" href="{% url 'finance:journal_create' %}">
+            <i class="fas fa-book-open me-2"></i>{% trans "New Journal" %}
+          </a>
+        </li>
+        <li>
+          <a class="dropdown-item" href="{% url 'finance:journal_entry_create' %}">
+            <i class="fas fa-file-invoice-dollar me-2"></i>{% trans "New Journal Entry" %}
+          </a>
+        </li>
+        <li><hr class="dropdown-divider"></li>
+        <li>
+          <a class="dropdown-item" href="{% url 'finance:client_invoice_create' %}">
+            <i class="fas fa-file-invoice-dollar me-2"></i>{% trans "New Client Invoice" %}
+          </a>
+        </li>
+        <li>
+          <a class="dropdown-item" href="{% url 'finance:supplier_invoice_create' %}">
+            <i class="fas fa-file-invoice me-2"></i>{% trans "New Supplier Invoice" %}
+          </a>
+        </li>
+      </ul>
+    </div>
   </div>
 </div>
+
+{% include 'finance/_nav.html' %}
 
 <div class="alert {% if marketplace_finance_settings and marketplace_finance_settings.is_enabled %}alert-success{% else %}alert-warning{% endif %} d-flex justify-content-between align-items-center mb-4">
   <div>

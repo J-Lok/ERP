@@ -20,7 +20,7 @@
             <div class="card-body">
                 <div class="alert alert-info">
                     <i class="fas fa-info-circle me-2"></i>
-                    {% trans "Configure Stripe and Flutterwave credentials. Standard sandbox keys (starting with pk_test_ and sk_test_ / FLWSECK_TEST-) will allow customers to perform real test checkout payments natively." %}
+                    {% trans "Configure optional direct contact numbers (WhatsApp, Orange Money, MTN MoMo) and instructions for customer payment transfers." %}
                 </div>
 
                 <form method="post" novalidate>
@@ -33,22 +33,22 @@
                     </div>
                     {% endif %}
 
-                    <h5 class="mb-3 text-primary">
-                        <i class="fab fa-stripe me-1" aria-hidden="true"></i>
-                        {% trans "Stripe Payment Gateway Credentials" %}
+                    <h5 class="mb-3 text-success">
+                        <i class="fab fa-whatsapp me-1" aria-hidden="true"></i>
+                        {% trans "WhatsApp & Mobile Money Payment Contacts" %}
                     </h5>
                     <div class="row g-3 mb-4">
-                        <div class="col-md-6">{{ form.stripe_publishable_key|as_crispy_field }}</div>
-                        <div class="col-md-6">{{ form.stripe_secret_key|as_crispy_field }}</div>
+                        <div class="col-md-4">{{ form.whatsapp_number|as_crispy_field }}</div>
+                        <div class="col-md-4">{{ form.orange_money_number|as_crispy_field }}</div>
+                        <div class="col-md-4">{{ form.mtn_momo_number|as_crispy_field }}</div>
                     </div>
 
                     <h5 class="mb-3 text-primary">
-                        <i class="fas fa-mobile-alt me-1" aria-hidden="true"></i>
-                        {% trans "Flutterwave (OM / MoMo) Credentials" %}
+                        <i class="fas fa-file-alt me-1" aria-hidden="true"></i>
+                        {% trans "Custom Payment Instructions" %}
                     </h5>
-                    <div class="row g-3 mb-4">
-                        <div class="col-md-6">{{ form.flutterwave_public_key|as_crispy_field }}</div>
-                        <div class="col-md-6">{{ form.flutterwave_secret_key|as_crispy_field }}</div>
+                    <div class="mb-4">
+                        {{ form.payment_instructions|as_crispy_field }}
                     </div>
 
                     <div class="mb-3">

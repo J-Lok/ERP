@@ -247,29 +247,28 @@ class ReturnRequest(models.Model):
 
 class CompanyPaymentSettings(models.Model):
     company = models.OneToOneField(Company, on_delete=models.CASCADE, related_name='payment_settings')
-    stripe_publishable_key = models.CharField(
-        max_length=255, 
+    whatsapp_number = models.CharField(
+        max_length=50,
         default='',
         blank=True,
-        help_text='Stripe Publishable Key (starts with pk_)'
+        help_text='WhatsApp contact number for payments (e.g., +237690000000)'
     )
-    stripe_secret_key = models.CharField(
-        max_length=255, 
+    orange_money_number = models.CharField(
+        max_length=50,
         default='',
         blank=True,
-        help_text='Stripe Secret Key (starts with sk_)'
+        help_text='Orange Money transfer number'
     )
-    flutterwave_public_key = models.CharField(
-        max_length=255,
+    mtn_momo_number = models.CharField(
+        max_length=50,
         default='',
         blank=True,
-        help_text='Flutterwave Public Key (starts with FLWPUBK_)'
+        help_text='MTN Mobile Money transfer number'
     )
-    flutterwave_secret_key = models.CharField(
-        max_length=255,
+    payment_instructions = models.TextField(
         default='',
         blank=True,
-        help_text='Flutterwave Secret Key (starts with FLWSECK_)'
+        help_text='Payment instructions displayed to customers during checkout'
     )
     is_active = models.BooleanField(default=True)
 
