@@ -480,6 +480,22 @@ def checkout(request):
                     # Clear cart
                     cart.items.all().delete()
                     
+                    # Notify company users of new order
+                    try:
+                        from notifications.utils import notify_users
+                        from django.contrib.auth import get_user_model
+                        UserModel = get_user_model()
+                        company_users = UserModel.objects.filter(company=order.company, is_active=True)
+                        notify_users(
+                            users=company_users,
+                            notification_type='system',
+                            title=f"New Order #{order.order_number}",
+                            message=f"New order #{order.order_number} (FCFA {order.total:,.0f}) placed by {client.get_full_name()}.",
+                            related_object=order
+                        )
+                    except Exception as notif_err:
+                        pass
+                    
                     messages.success(request, f'Order placed successfully! Order number: {order.order_number}. Please proceed with payment.')
                     return redirect('marketplace:payment_gateway', pk=order.pk)
                     
