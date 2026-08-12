@@ -186,7 +186,6 @@ def shop(request):
         'stocks': stocks,
         'categories': categories,
         'company': company,
-        'companies': all_companies,
         'query': query,
         'selected_category': category_id,
         'cart_count': cart_count,

@@ -13,19 +13,6 @@
 <div class="container">
     <h1 class="mb-4"><i class="fas fa-shopping-bag me-2"></i>Shop{% if company %} - {{ company.name }}{% endif %}</h1>
     
-    <!-- Company selector -->
-    <div class="row mb-3">
-        <div class="col-md-4">
-            <form method="get">
-                <select name="company" class="form-select" onchange="this.form.submit()">
-                    {% for comp in companies %}
-                    <option value="{{ comp.domain }}" {% if company and company.domain == comp.domain %}selected{% endif %}>{{ comp.name }}</option>
-                    {% endfor %}
-                </select>
-            </form>
-        </div>
-    </div>
-
     <!-- Filters -->
     <div class="row mb-4">
         <div class="col-md-8">

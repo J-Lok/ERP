@@ -151,10 +151,10 @@
         <div class="container">
             <a class="navbar-brand" href="{% url 'marketplace:shop' %}">
                 <i class="fas fa-store me-2"></i>
-                {% if request.session.client_id %}
+                {% if company %}
                     {{ company.name }} Shop
                 {% else %}
-                    Marketplace
+                    Shop
                 {% endif %}
             </a>
             
