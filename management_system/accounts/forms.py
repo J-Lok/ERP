@@ -3,7 +3,8 @@ from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth import authenticate
 from django.core.exceptions import ValidationError
 
-from .models import User, Company, Invitation
+from .models import User, Company, Invitation, CompanyEmailSettings
+from marketplace.models import CompanyPaymentSettings
 
 
 # ---------------------------------------------------------------------------
@@ -185,7 +186,11 @@ class CompanyProfileForm(forms.ModelForm):
 
     class Meta:
         model = Company
-        fields = ['name', 'domain', 'contact_email', 'contact_phone', 'address', 'subscription_plan', 'is_active']
+        fields = [
+            'name', 'domain', 'contact_email', 'contact_phone', 
+            'whatsapp_number', 'orange_money_number', 'mtn_momo_number',
+            'address', 'subscription_plan', 'is_active'
+        ]
         widgets = {
             'domain': forms.TextInput(attrs={'readonly': True}),
             'address': forms.Textarea(attrs={'rows': 3}),
@@ -193,3 +198,24 @@ class CompanyProfileForm(forms.ModelForm):
 
     def clean_domain(self):
         return self.instance.domain
+
+
+class CompanyEmailSettingsForm(forms.ModelForm):
+    class Meta:
+        model = CompanyEmailSettings
+        fields = ['email_host', 'email_port', 'email_use_tls', 'email_host_user', 'email_host_password', 'default_from_email', 'is_active']
+        widgets = {
+            'email_host_password': forms.PasswordInput(render_value=True),
+        }
+
+
+class CompanyPaymentSettingsForm(forms.ModelForm):
+    class Meta:
+        model = CompanyPaymentSettings
+        fields = ['whatsapp_number', 'orange_money_number', 'mtn_momo_number', 'payment_instructions', 'is_active']
+        widgets = {
+            'whatsapp_number': forms.TextInput(attrs={'class': 'form-control', 'placeholder': '+237690000000'}),
+            'orange_money_number': forms.TextInput(attrs={'class': 'form-control', 'placeholder': '690000000'}),
+            'mtn_momo_number': forms.TextInput(attrs={'class': 'form-control', 'placeholder': '670000000'}),
+            'payment_instructions': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Payment instructions for customers'}),
+        }

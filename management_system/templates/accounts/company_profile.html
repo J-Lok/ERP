@@ -19,6 +19,12 @@
                         {% if count %}<span class="badge bg-warning text-dark ms-1">{{ count }}</span>{% endif %}
                         {% endwith %}
                     </a>
+                    <a href="{% url 'accounts:company_email_settings' %}" class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-cog me-1"></i>{% trans "Email Settings" %}
+                    </a>
+                    <a href="{% url 'accounts:company_payment_settings' %}" class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-credit-card me-1"></i>{% trans "Payment Settings" %}
+                    </a>
                     <span class="badge bg-success">{% trans "Administrator View" %}</span>
                 </div>
             </div>

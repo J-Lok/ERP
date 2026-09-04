@@ -7,6 +7,7 @@ from django.utils import timezone
 import pandas as pd
 import io
 import json
+import math
 from datetime import datetime, timedelta
 
 from .models import Stock, StockTransaction, StockCategory
@@ -388,6 +389,43 @@ def stock_transaction_export(request):
     response['Content-Disposition'] = 'attachment; filename="stock_transactions.xlsx"'
     return response
 
+def _safe_int(val, default=0):
+    """Convert a value from an Excel/pandas cell to int, treating NaN/None as default."""
+    if val is None:
+        return default
+    if isinstance(val, float) and math.isnan(val):
+        return default
+    if isinstance(val, str) and not val.strip():
+        return default
+    try:
+        return int(val)
+    except (ValueError, TypeError):
+        return default
+
+
+def _safe_float(val, default=0.0):
+    """Convert a value from an Excel/pandas cell to float, treating NaN/None as default."""
+    if val is None:
+        return default
+    if isinstance(val, float) and math.isnan(val):
+        return default
+    if isinstance(val, str) and not val.strip():
+        return default
+    try:
+        return float(val)
+    except (ValueError, TypeError):
+        return default
+
+
+def _safe_str(val, default=''):
+    """Convert a value from an Excel/pandas cell to a stripped string, treating NaN/None as default."""
+    if val is None:
+        return default
+    if isinstance(val, float) and math.isnan(val):
+        return default
+    return str(val).strip()
+
+
 @role_required(*INVENTORY_WRITE_ROLES)
 def stock_import(request):
     """Import stock items from Excel"""
@@ -423,8 +461,8 @@ def stock_import(request):
                     row_num = index + 2
                     
                     try:
-                        item_code = str(row.get('item_code', '')).strip()
-                        name = str(row.get('name', '')).strip()
+                        item_code = _safe_str(row.get('item_code'))
+                        name = _safe_str(row.get('name'))
                         
                         if not item_code or not name:
                             errors.append(f'Row {row_num}: Missing required fields')
@@ -434,7 +472,7 @@ def stock_import(request):
                         # Get or create category
                         category = None
                         if 'category' in df.columns and pd.notna(row.get('category')):
-                            category_name = str(row.get('category')).strip()
+                            category_name = _safe_str(row.get('category'))
                             if category_name:
                                 category = category_cache.get(category_name)
                                 if not category:
@@ -452,15 +490,15 @@ def stock_import(request):
                             # Update existing item
                             stock.name = name
                             stock.category = category
-                            stock.description = str(row.get('description', '')).strip()
-                            stock.quantity = int(row.get('quantity', 0) or 0)
-                            stock.unit = str(row.get('unit', 'pcs')).strip()
-                            stock.cost_price = float(row.get('cost_price', 0) or 0)
-                            stock.selling_price = float(row.get('selling_price', 0) or 0)
-                            stock.reorder_level = int(row.get('reorder_level', 0) or 0)
-                            stock.supplier_name = str(row.get('supplier_name', '')).strip()
-                            stock.supplier_contact = str(row.get('supplier_contact', '')).strip()
-                            stock.location = str(row.get('location', '')).strip()
+                            stock.description = _safe_str(row.get('description'))
+                            stock.quantity = _safe_int(row.get('quantity'), 0)
+                            stock.unit = _safe_str(row.get('unit'), 'pcs')
+                            stock.cost_price = _safe_float(row.get('cost_price'), 0)
+                            stock.selling_price = _safe_float(row.get('selling_price'), 0)
+                            stock.reorder_level = _safe_int(row.get('reorder_level'), 0)
+                            stock.supplier_name = _safe_str(row.get('supplier_name'))
+                            stock.supplier_contact = _safe_str(row.get('supplier_contact'))
+                            stock.location = _safe_str(row.get('location'))
                             
                             # Update is_marketplace_visible if provided
                             if 'is_marketplace_visible' in df.columns and pd.notna(row.get('is_marketplace_visible')):
@@ -469,7 +507,7 @@ def stock_import(request):
                             
                             # Update last_restocked if quantity increased
                             if 'quantity' in df.columns and pd.notna(row.get('quantity')):
-                                new_quantity = int(row.get('quantity') or 0)
+                                new_quantity = _safe_int(row.get('quantity'), 0)
                                 if new_quantity > stock.quantity:
                                     stock.last_restocked = timezone.now().date()
                             
@@ -487,15 +525,15 @@ def stock_import(request):
                                 item_code=item_code,
                                 name=name,
                                 category=category,
-                                description=str(row.get('description', '')).strip(),
-                                quantity=int(row.get('quantity', 0) or 0),
-                                unit=str(row.get('unit', 'pcs')).strip(),
-                                cost_price=float(row.get('cost_price', 0) or 0),
-                                selling_price=float(row.get('selling_price', 0) or 0),
-                                reorder_level=int(row.get('reorder_level', 0) or 0),
-                                supplier_name=str(row.get('supplier_name', '')).strip(),
-                                supplier_contact=str(row.get('supplier_contact', '')).strip(),
-                                location=str(row.get('location', '')).strip(),
+                                description=_safe_str(row.get('description')),
+                                quantity=_safe_int(row.get('quantity'), 0),
+                                unit=_safe_str(row.get('unit'), 'pcs'),
+                                cost_price=_safe_float(row.get('cost_price'), 0),
+                                selling_price=_safe_float(row.get('selling_price'), 0),
+                                reorder_level=_safe_int(row.get('reorder_level'), 0),
+                                supplier_name=_safe_str(row.get('supplier_name')),
+                                supplier_contact=_safe_str(row.get('supplier_contact')),
+                                location=_safe_str(row.get('location')),
                                 is_marketplace_visible=is_visible,
                                 created_by=request.user,
                             )

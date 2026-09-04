@@ -1,6 +1,6 @@
 from django.db import models
 from django.conf import settings
-from django.core.validators import MinValueValidator
+from django.core.validators import MinValueValidator, MaxValueValidator
 from accounts.models import Company
 from inventory.models import Stock
 
@@ -209,3 +209,72 @@ class WishlistItem(models.Model):
     
     def __str__(self):
         return f"{self.stock.name} in {self.wishlist.client.get_full_name()}'s wishlist"
+
+class ProductReview(models.Model):
+    stock = models.ForeignKey(Stock, on_delete=models.CASCADE, related_name='reviews')
+    client = models.ForeignKey(Client, on_delete=models.CASCADE, related_name='reviews')
+    rating = models.PositiveIntegerField(validators=[MinValueValidator(1), MaxValueValidator(5)])
+    comment = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        unique_together = ['stock', 'client']
+
+    def __str__(self):
+        return f"Review by {self.client.get_full_name()} for {self.stock.name}"
+
+
+class ReturnRequest(models.Model):
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('approved', 'Approved'),
+        ('rejected', 'Rejected'),
+    ]
+    order = models.ForeignKey('Order', on_delete=models.CASCADE, related_name='return_requests')
+    client = models.ForeignKey(Client, on_delete=models.CASCADE, related_name='return_requests')
+    reason = models.TextField()
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Return Request for Order #{self.order.order_number} ({self.status})"
+
+
+class CompanyPaymentSettings(models.Model):
+    company = models.OneToOneField(Company, on_delete=models.CASCADE, related_name='payment_settings')
+    whatsapp_number = models.CharField(
+        max_length=50,
+        default='',
+        blank=True,
+        help_text='WhatsApp contact number for payments (e.g., +237690000000)'
+    )
+    orange_money_number = models.CharField(
+        max_length=50,
+        default='',
+        blank=True,
+        help_text='Orange Money transfer number'
+    )
+    mtn_momo_number = models.CharField(
+        max_length=50,
+        default='',
+        blank=True,
+        help_text='MTN Mobile Money transfer number'
+    )
+    payment_instructions = models.TextField(
+        default='',
+        blank=True,
+        help_text='Payment instructions displayed to customers during checkout'
+    )
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        verbose_name = 'Company Payment Settings'
+        verbose_name_plural = 'Company Payment Settings'
+
+    def __str__(self):
+        return f"Payment Settings for {self.company.name}"

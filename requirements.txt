@@ -1,4 +1,4 @@
-﻿asgiref==3.11.1
+asgiref==3.11.1
 crispy-bootstrap5==2025.6
 Django==6.0.2
 django-crispy-forms==2.5
@@ -22,3 +22,4 @@ whitenoise==6.9.0
 polib==1.2.0
 cloudinary==1.42.1
 django-cloudinary-storage==0.3.0
+reportlab>=4.0.0

@@ -25,6 +25,21 @@ class Company(models.Model):
         blank=True,
         validators=[RegexValidator(r'^\+?[\d\s\-().]{7,20}$', 'Enter a valid phone number.')],
     )
+    whatsapp_number = models.CharField(
+        max_length=30,
+        blank=True,
+        help_text='WhatsApp contact number for marketplace clients (e.g. +2376XXXXXXXX)',
+    )
+    orange_money_number = models.CharField(
+        max_length=30,
+        blank=True,
+        help_text='Orange Money transaction number for client payments',
+    )
+    mtn_momo_number = models.CharField(
+        max_length=30,
+        blank=True,
+        help_text='MTN Mobile Money transaction number for client payments',
+    )
     address = models.TextField(blank=True)
     subscription_plan = models.CharField(
         max_length=20,
@@ -199,3 +214,21 @@ class Invitation(models.Model):
             invited_by=invited_by,
             expires_at=timezone.now() + timedelta(days=7),
         )
+
+
+class CompanyEmailSettings(models.Model):
+    company = models.OneToOneField(Company, on_delete=models.CASCADE, related_name='email_settings')
+    email_host = models.CharField(max_length=255, default='smtp.gmail.com')
+    email_port = models.IntegerField(default=587)
+    email_use_tls = models.BooleanField(default=True)
+    email_host_user = models.CharField(max_length=255)
+    email_host_password = models.CharField(max_length=255)
+    default_from_email = models.EmailField(default='no-reply@zentral.com')
+    is_active = models.BooleanField(default=False)
+
+    class Meta:
+        verbose_name = 'Company Email Settings'
+        verbose_name_plural = 'Company Email Settings'
+
+    def __str__(self):
+        return f"Email Settings for {self.company.name}"

@@ -90,9 +90,16 @@
                                 </span>
                             </td>
                             <td>
-                                <a href="{% url 'marketplace:admin_order_detail' order.pk %}" class="btn btn-sm btn-primary">
-                                    <i class="fas fa-eye"></i>
-                                </a>
+                                <div class="d-flex gap-1">
+                                    <a href="{% url 'marketplace:admin_order_detail' order.pk %}" class="btn btn-sm btn-primary" title="{% trans "View Details" %}">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    {% if order.payment_status == 'paid' %}
+                                    <a href="{% url 'marketplace:admin_order_pdf' order.pk %}" class="btn btn-sm btn-outline-danger" title="{% trans "Download Invoice PDF" %}">
+                                        <i class="fas fa-file-pdf"></i>
+                                    </a>
+                                    {% endif %}
+                                </div>
                             </td>
                         </tr>
                         {% empty %}

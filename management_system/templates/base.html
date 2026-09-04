@@ -594,7 +594,7 @@
       </a>
       {% endif %}
 
-      {% if is_company_admin or user.is_superuser %}
+      {% if is_company_admin or user.is_superuser or user|has_role:'admin,manager,stock_manager' %}
       <a href="{% url 'marketplace:admin_order_dashboard' %}" class="nav-item-inner {% if request.resolver_match.app_name == 'marketplace' and request.resolver_match.url_name == 'admin_order_dashboard' %}active{% endif %}">
         <i class="fas fa-shopping-cart"></i>
         <span class="link-text">{% trans "Manage Orders" %}</span>
@@ -645,6 +645,11 @@
 
       <div class="topbar-actions">
 
+        <!-- Help / Tutorial toggle -->
+        <button class="topbar-btn replay-tutorial-trigger" title="System Tutorial & Guide" id="tutorial-trigger-btn">
+          <i class="fas fa-question-circle text-primary"></i>
+        </button>
+
         <!-- Theme toggle -->
         <button class="topbar-btn" id="theme-toggle" title="Toggle theme">
           <i class="fas fa-sun" id="theme-icon"></i>
@@ -678,11 +683,8 @@
         <div class="dropdown">
           <button class="topbar-btn dropdown-toggle" data-bs-toggle="dropdown" id="notif-btn">
             <i class="fas fa-bell"></i>
-            {% if unread_notifications > 0 %}
-            <span class="notif-badge">{{ unread_notifications }}</span>
-            {% else %}
-            <span class="notif-dot"></span>
-            {% endif %}
+            <span id="notif-badge-count" class="notif-badge {% if not unread_notifications %}d-none{% endif %}">{{ unread_notifications|default:0 }}</span>
+            <span id="notif-dot-badge" class="notif-dot {% if not unread_notifications %}d-none{% endif %}"></span>
           </button>
           <ul class="dropdown-menu dropdown-menu-end notif-dropdown">
             <li><h6 class="dropdown-header">{% trans "Notifications" %}</h6></li>
@@ -856,10 +858,52 @@
       }
     });
   }
-  document.addEventListener('DOMContentLoaded', enhanceRequiredFormFields);
+  document.addEventListener('DOMContentLoaded', function() {
+    enhanceRequiredFormFields();
+    pollNotifications();
+  });
+
+  function pollNotifications() {
+    fetch('/notifications/api/unread-count/')
+      .then(response => response.json())
+      .then(data => {
+        const count = data.count;
+        const countBadge = document.getElementById('notif-badge-count');
+        const dotBadge = document.getElementById('notif-dot-badge');
+        const notifDropdown = document.querySelector('.notif-dropdown');
+
+        if (countBadge && dotBadge) {
+          if (count > 0) {
+            countBadge.textContent = count;
+            countBadge.classList.remove('d-none');
+            dotBadge.classList.remove('d-none');
+          } else {
+            countBadge.classList.add('d-none');
+            dotBadge.classList.add('d-none');
+          }
+        }
+
+        if (notifDropdown && data.recent) {
+          let html = '<li><h6 class="dropdown-header">Notifications (' + count + ')</h6></li>';
+          if (data.recent.length > 0) {
+            data.recent.forEach(item => {
+              html += '<li><a class="dropdown-item py-2" href="/notifications/' + item.id + '/"><strong class="d-block text-truncate" style="max-width:240px;">' + (item.title || 'Notification') + '</strong><small class="text-muted d-block text-truncate" style="max-width:240px;">' + item.message + '</small><small class="text-muted" style="font-size:10px;">' + item.created_at + '</small></a></li>';
+            });
+            html += '<li><hr class="dropdown-divider"></li><li><a class="dropdown-item fw-bold text-primary" href="/notifications/?status=unread"><i class="fas fa-envelope me-2"></i>Voir toutes les notifications (' + count + ')</a></li>';
+          } else {
+            html += '<li><span class="dropdown-item" style="color:var(--muted);"><i class="fas fa-check-circle me-2" style="color:var(--accent);"></i>Aucune nouvelle notification</span></li>';
+          }
+          html += '<li><hr class="dropdown-divider"></li><li><a class="dropdown-item" href="/notifications/preferences/"><i class="fas fa-cog me-2"></i>Paramètres de notifications</a></li>';
+          notifDropdown.innerHTML = html;
+        }
+      })
+      .catch(err => console.error('Notification polling error:', err));
+  }
+  setInterval(pollNotifications, 10000);
 
 })();
 </script>
 {% block extra_js %}{% endblock %}
+{% include 'includes/tutorial_modal.html' %}
 </body>
 </html>

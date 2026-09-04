@@ -67,7 +67,7 @@ MEETINGS_DELETE_ROLES = ('admin', 'manager')
 MEETINGS_REPORT_ROLES = ('admin', 'manager', 'accountant')
 
 # Marketplace admin
-MARKETPLACE_ADMIN_ROLES = ('admin', 'manager')
+MARKETPLACE_ADMIN_ROLES = ('admin', 'manager', 'stock_manager')
 
 # Dashboard sections — which roles see which stat blocks
 DASHBOARD_FINANCE_ROLES  = ('admin', 'accountant', 'manager')

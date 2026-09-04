@@ -22,15 +22,14 @@ from .services import (
 def company_admin_required(view_func):
     """Decorator to require user to be company admin"""
     from functools import wraps
-    
     @wraps(view_func)
     def wrapper(request, *args, **kwargs):
         if not request.user.is_authenticated:
-            messages.error(request, 'Please login to continue.')
             return redirect('accounts:company_login')
         
-        if not request.user.is_company_admin:
-            messages.error(request, 'Only company administrators can access this page.')
+        user_role = getattr(request.user, 'role', '')
+        if not (request.user.is_superuser or request.user.is_company_admin or user_role in ('admin', 'manager', 'stock_manager')):
+            messages.error(request, 'You do not have permission to manage orders.')
             return redirect('core:dashboard')
         
         return view_func(request, *args, **kwargs)
@@ -48,11 +47,9 @@ def admin_order_quick_create(request):
 
     if request.method == 'POST' and form.is_valid():
         cd = form.cleaned_data
-        selected_stocks = [
-            cd.get(f'stock_{i}') for i in range(1, 6) if cd.get(f'stock_{i}')
-        ]
+        item_rows = cd.get('items', [])
 
-        if not selected_stocks:
+        if not item_rows:
             messages.error(request, 'Select at least one product for the order.')
             return render(request, 'marketplace/admin/order_quick_create.html', {'form': form})
 
@@ -64,17 +61,16 @@ def admin_order_quick_create(request):
                         messages.error(request, 'First name and phone are required for a walk-in customer.')
                         return render(request, 'marketplace/admin/order_quick_create.html', {'form': form})
                     client, _ = Client.objects.get_or_create(
-                        company=company,
                         phone=cd['phone'],
                         defaults={
                             'first_name': cd.get('first_name', ''),
                             'last_name': cd.get('last_name', ''),
-                            'email': cd.get('email', ''),
+                            'email': cd.get('email', f"walkin-{cd['phone']}@local.store"),
                         },
                     )
 
                 subtotal = sum(
-                    (stock.selling_price or 0) * 1 for stock in selected_stocks
+                    (item['stock'].selling_price or 0) * item['quantity'] for item in item_rows
                 )
 
                 order = Order.objects.create(
@@ -93,33 +89,39 @@ def admin_order_quick_create(request):
                     shipping_phone=cd.get('phone', getattr(client, 'phone', '')),
                 )
 
-                for stock in selected_stocks:
-                    if stock.quantity < 1:
-                        raise ValueError(f'"{stock.name}" is out of stock.')
+                for item in item_rows:
+                    stock = item['stock']
+                    qty = item['quantity']
+                    if stock.quantity < qty:
+                        raise ValueError(f'"{stock.name}" has only {stock.quantity} units in stock.')
+                    
+                    unit_price = stock.selling_price or 0
                     OrderItem.objects.create(
                         order=order,
                         stock=stock,
                         item_name=stock.name,
-                        item_code=getattr(stock, 'sku', '') or '',
-                        quantity=1,
-                        unit_price=stock.selling_price or 0,
+                        item_code=getattr(stock, 'sku', '') or getattr(stock, 'item_code', '') or '',
+                        quantity=qty,
+                        unit_price=unit_price,
+                        subtotal=unit_price * qty,
                     )
-                    stock.quantity = F('quantity') - 1
-                    stock.save(update_fields=['quantity'])
+                    
+                    Stock.objects.filter(pk=stock.pk).update(quantity=F('quantity') - qty)
+                    
                     StockTransaction.objects.create(
                         company=company,
                         stock=stock,
                         transaction_type='sale',
-                        quantity=-1,
+                        quantity=-qty,
                         remarks=f'In-store order #{order.order_number}',
                     )
 
                 try:
-                    post_order_payment_to_finance(order)
+                    post_order_payment_to_finance(order, user=request.user)
                 except MarketplaceFinancePostingError as exc:
                     set_order_finance_sync_error(order, str(exc))
 
-            messages.success(request, f'Order {order.order_number} created.')
+            messages.success(request, f'In-store order #{order.order_number} successfully created.')
             return redirect('marketplace:admin_order_detail', pk=order.pk)
 
         except ValueError as exc:

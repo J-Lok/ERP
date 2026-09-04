@@ -6,7 +6,8 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib.auth.views import PasswordChangeView
 from django.core.exceptions import PermissionDenied
-from django.core.mail import send_mail
+from django.core.mail import send_mail, get_connection, EmailMessage
+from django.conf import settings
 from django.shortcuts import render, redirect, get_object_or_404
 from django.template.loader import render_to_string
 from django.urls import reverse, reverse_lazy
@@ -20,8 +21,11 @@ from .forms import (
     InvitationAcceptForm,
     UserProfileForm,
     CompanyProfileForm,
+    CompanyEmailSettingsForm,
+    CompanyPaymentSettingsForm,
 )
-from .models import Company, User, Invitation
+from .models import Company, User, Invitation, CompanyEmailSettings
+from marketplace.models import CompanyPaymentSettings
 
 logger = logging.getLogger(__name__)
 
@@ -120,6 +124,39 @@ def custom_logout(request):
 # Invitation views
 # ---------------------------------------------------------------------------
 
+def send_company_email(company, subject, body, recipient_list, html_message=None):
+    """Send an email dynamically using company SMTP settings or default backend."""
+    try:
+        email_settings = CompanyEmailSettings.objects.get(company=company, is_active=True)
+        connection = get_connection(
+            backend='django.core.mail.backends.smtp.EmailBackend',
+            host=email_settings.email_host,
+            port=email_settings.email_port,
+            username=email_settings.email_host_user,
+            password=email_settings.email_host_password,
+            use_tls=email_settings.email_use_tls,
+        )
+        from_email = email_settings.default_from_email or settings.DEFAULT_FROM_EMAIL
+        if 'gmail.com' in email_settings.email_host.lower():
+            from_email = email_settings.email_host_user
+    except CompanyEmailSettings.DoesNotExist:
+        connection = get_connection()
+        from_email = getattr(settings, 'EMAIL_HOST_USER', None) or settings.DEFAULT_FROM_EMAIL
+
+    email = EmailMessage(
+        subject=subject,
+        body=body,
+        from_email=from_email,
+        to=recipient_list,
+        connection=connection,
+    )
+    if html_message:
+        email.content_subtype = "html"
+        email.body = html_message
+    
+    email.send()
+
+
 @login_required
 @company_admin_required
 @require_http_methods(['GET', 'POST'])
@@ -145,7 +182,7 @@ def invite_user(request):
             })
 
             try:
-                send_mail(subject, body, None, [email], fail_silently=False)
+                send_company_email(company, subject, body, [email])
                 messages.success(request, f'Invitation sent to {email}.')
                 logger.info('Invitation sent to %s for company %s by %s', email, company.name, request.user.email)
             except Exception as e:
@@ -244,6 +281,66 @@ def company_profile(request):
         'form': form,
         'company': company,
         'title': 'Company Profile',
+    })
+
+
+@login_required
+@require_http_methods(['GET', 'POST'])
+def company_email_settings(request):
+    """Manage company specific SMTP/email settings."""
+    if not request.user.is_company_admin:
+        raise PermissionDenied('Only company administrators can access this page.')
+
+    company = request.user.company
+    if company is None:
+        messages.error(request, 'You are not associated with any company.')
+        return redirect('core:dashboard')
+
+    email_settings, created = CompanyEmailSettings.objects.get_or_create(company=company)
+
+    if request.method == 'POST':
+        form = CompanyEmailSettingsForm(request.POST, instance=email_settings)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Company email settings updated successfully!')
+            return redirect('accounts:company_email_settings')
+    else:
+        form = CompanyEmailSettingsForm(instance=email_settings)
+
+    return render(request, 'accounts/company_email_settings.html', {
+        'form': form,
+        'company': company,
+        'title': 'Company Email Settings',
+    })
+
+
+@login_required
+@require_http_methods(['GET', 'POST'])
+def company_payment_settings(request):
+    """Manage company specific payment keys (Stripe and Flutterwave)."""
+    if not request.user.is_company_admin:
+        raise PermissionDenied('Only company administrators can access this page.')
+
+    company = request.user.company
+    if company is None:
+        messages.error(request, 'You are not associated with any company.')
+        return redirect('core:dashboard')
+
+    payment_settings, created = CompanyPaymentSettings.objects.get_or_create(company=company)
+
+    if request.method == 'POST':
+        form = CompanyPaymentSettingsForm(request.POST, instance=payment_settings)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Company payment settings updated successfully!')
+            return redirect('accounts:company_payment_settings')
+    else:
+        form = CompanyPaymentSettingsForm(instance=payment_settings)
+
+    return render(request, 'accounts/company_payment_settings.html', {
+        'form': form,
+        'company': company,
+        'title': 'Company Payment Settings',
     })
 
 

@@ -66,7 +66,7 @@ def post_order_payment_to_finance(order, user=None):
     """Create a balanced journal entry for a paid marketplace order."""
     with db_transaction.atomic():
         order = (
-            Order.objects.select_for_update()
+            Order.objects.select_for_update(of=('self',))
             .select_related(
                 'company',
                 'client',
@@ -188,7 +188,7 @@ def reverse_order_payment_in_finance(order, user=None, reason=''):
     """Create a reversing journal entry for an already-posted marketplace order."""
     with db_transaction.atomic():
         order = (
-            Order.objects.select_for_update()
+            Order.objects.select_for_update(of=('self',))
             .select_related(
                 'company',
                 'client',
