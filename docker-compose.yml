@@ -9,7 +9,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
-      - "5432:5432"
+      - "5433:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U zentral_user -d zentral"]
       interval: 5s
@@ -20,7 +20,7 @@ services:
     build: .
     restart: unless-stopped
     ports:
-      - "8000:8000"
+      - "8010:8000"
     environment:
       DATABASE_URL: postgresql://zentral_user:zentral_dev_2026@db:5432/zentral
       DEBUG: "True"

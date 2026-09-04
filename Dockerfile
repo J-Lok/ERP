@@ -22,6 +22,6 @@ RUN python management_system/manage.py collectstatic --noinput
 RUN adduser --disabled-password --gecos '' appuser && chown -R appuser /app
 USER appuser
 
-EXPOSE 8000
+EXPOSE 8010
 
 CMD ["sh", "-c", "python management_system/manage.py migrate --noinput && gunicorn --chdir management_system management_system.wsgi:application --workers 2 --threads 2 --bind 0.0.0.0:8000"]

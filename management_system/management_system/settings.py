@@ -144,7 +144,10 @@ if database_url:
         'default': dj_database_url.parse(
             database_url,
             conn_max_age=600,
-            ssl_require=not DEBUG,
+            # Managed providers (Render etc.) need sslmode=require, but a Postgres
+            # container on the compose network doesn't speak TLS at all — set
+            # DB_SSL_REQUIRE=False there. Defaults to the old "on unless DEBUG".
+            ssl_require=env_bool('DB_SSL_REQUIRE', not DEBUG),
         )
     }
 elif not DEBUG:
