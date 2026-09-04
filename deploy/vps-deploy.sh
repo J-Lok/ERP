@@ -142,14 +142,17 @@ fi
 
 # ----------------------------- port availability -----------------------------
 step "Checking port $APP_PORT"
-if ss -tulpn 2>/dev/null | grep -q "127.0.0.1:$APP_PORT "; then
-  if dc ps --format '{{.Service}}' 2>/dev/null | grep -qx web; then
-    ok "port $APP_PORT held by this stack"
-  else
-    die "port $APP_PORT is in use by another process. Set APP_PORT to a free port."
-  fi
-else
+# Advisory only. 'docker compose up' reports "port is already allocated" with far
+# better accuracy than we can here, so never abort the deploy on this check.
+PORT_LINE="$(ss -tulpn 2>/dev/null | grep "127.0.0.1:$APP_PORT " || true)"
+if [ -z "$PORT_LINE" ]; then
   ok "port $APP_PORT free"
+elif [ -n "$(dc ps -q web 2>/dev/null)" ] || printf '%s' "$PORT_LINE" | grep -qi docker; then
+  ok "port $APP_PORT held by docker (this stack)"
+else
+  warn "port $APP_PORT is in use and not obviously ours:"
+  printf '        %s\n' "$PORT_LINE"
+  warn "continuing - docker will fail clearly if the port is genuinely taken"
 fi
 
 grep -q "\"127.0.0.1:$APP_PORT:8000\"" "$COMPOSE_FILE" \
