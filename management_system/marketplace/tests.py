@@ -1,6 +1,7 @@
 from decimal import Decimal
 
 from django.contrib.auth import get_user_model
+from django.core.exceptions import ValidationError
 from django.test import Client as HttpClient, TestCase, override_settings
 from django.urls import reverse
 
@@ -109,6 +110,58 @@ class MarketplaceSingleCompanyOrderTests(TestCase):
         self.assertEqual(Order.objects.count(), 0)
         messages = [message.message for message in response.context['messages']]
         self.assertTrue(any('multiple companies' in message.lower() for message in messages))
+
+
+@override_settings(
+    ALLOWED_HOSTS=['testserver', 'localhost', '127.0.0.1'],
+    SECURE_SSL_REDIRECT=False,
+)
+class CompanyShopRoutingTests(TestCase):
+    @override_settings(
+        ALLOWED_HOSTS=['testserver', 'localhost', '127.0.0.1'],
+        SECURE_SSL_REDIRECT=False,
+    )
+    def setUp(self):
+        self.company = Company.objects.create(
+            name='Le Paquebot',
+            domain='le-paquebot',
+            contact_email='shop@example.com',
+        )
+        self.stock = Stock.objects.create(
+            company=self.company,
+            item_code='PAQ-1',
+            name='Paquebot Product',
+            category=None,
+            quantity=5,
+            unit='pcs',
+            cost_price=Decimal('12.00'),
+            selling_price=Decimal('20.00'),
+            reorder_level=1,
+            supplier_name='Supplier A',
+        )
+
+    def test_reserved_company_domain_is_rejected_by_model_validation(self):
+        company = Company(
+            name='Reserved Shop',
+            domain='admin',
+            contact_email='admin@example.com',
+        )
+
+        with self.assertRaises(ValidationError):
+            company.full_clean()
+
+    def test_legacy_company_param_redirects_to_root_company_shop(self):
+        response = self.client.get(f"{reverse('marketplace:shop')}?company={self.company.domain}")
+
+        self.assertEqual(response.status_code, 301)
+        self.assertEqual(response.url, f'/{self.company.domain}/')
+
+    def test_root_company_domain_renders_company_shop(self):
+        response = self.client.get(f'/{self.company.domain}/')
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, self.company.name)
+        self.assertContains(response, self.stock.name)
 
 
 @override_settings(

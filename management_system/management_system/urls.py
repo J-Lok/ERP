@@ -19,6 +19,8 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 
+from marketplace import views as marketplace_views
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('accounts.urls')),
@@ -42,6 +44,7 @@ urlpatterns = [
     
     # notifications app endpoints
     path('notifications/', include('notifications.urls')),
+    path('<str:company_domain>/', marketplace_views.company_shop_redirect, name='company_shop'),
 ]
 
 if settings.DEBUG:

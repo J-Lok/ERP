@@ -4,8 +4,15 @@ from datetime import timedelta
 from django.conf import settings
 from django.db import models
 from django.contrib.auth.models import AbstractUser, BaseUserManager
+from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator
 from django.utils import timezone
+
+RESERVED_COMPANY_DOMAINS = {
+    'admin', 'core', 'employees', 'projects', 'inventory', 'marketplace', 'finance',
+    'hr', 'crm', 'meetings', 'notifications', 'login', 'logout', 'register', 'invite',
+    'password-change', 'password-reset', 'reset', 'language', 'static', 'media', 'api'
+}
 
 
 class Company(models.Model):
@@ -57,6 +64,16 @@ class Company(models.Model):
             models.Index(fields=['domain']),
             models.Index(fields=['is_active']),
         ]
+
+    def clean(self):
+        super().clean()
+        domain = (self.domain or '').strip().lower()
+        if domain in RESERVED_COMPANY_DOMAINS:
+            raise ValidationError({'domain': f"Domain '{domain}' is reserved and cannot be used."})
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        return super().save(*args, **kwargs)
 
     def __str__(self):
         return self.name

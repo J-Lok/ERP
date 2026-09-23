@@ -35,6 +35,14 @@ def company_admin_required(view_func):
         return view_func(request, *args, **kwargs)
     return wrapper
 
+
+def _company_shop_url(request, company):
+    """Return the short root-domain marketplace URL for a company."""
+    if company is None:
+        return request.build_absolute_uri(reverse('marketplace:shop'))
+    return request.build_absolute_uri(f'/{company.domain.strip("/")}/')
+
+
 @login_required
 @company_admin_required
 def admin_order_quick_create(request):
@@ -164,14 +172,10 @@ def admin_order_dashboard(request):
     
     # Generate shop links for pending orders
     for order in pending_order_list:
-        order.shop_link = request.build_absolute_uri(
-            f"{reverse('marketplace:shop')}?company={quote(order.company.domain)}"
-        )
-    
+        order.shop_link = _company_shop_url(request, order.company)
+
     # Generate shop link for company
-    shop_link = request.build_absolute_uri(
-        f"{reverse('marketplace:shop')}?company={quote(company.domain)}"
-    )
+    shop_link = _company_shop_url(request, company)
     
     context = {
         'total_orders': total_orders,
@@ -328,9 +332,7 @@ def admin_order_detail(request, pk):
     """View and manage single order"""
     company = request.user.company
     order = get_object_or_404(Order, pk=pk, company=company)
-    shop_link = request.build_absolute_uri(
-        f"{reverse('marketplace:shop')}?company={quote(order.company.domain)}"
-    )
+    shop_link = _company_shop_url(request, order.company)
     
     context = {
         'order': order,

@@ -2,7 +2,7 @@ import os
 import io
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponsePermanentRedirect
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -104,21 +104,10 @@ def client_logout(request):
 
 
 # Shop Views
-def shop(request):
-    """Main shop view - display available products (public view, login required for checkout)"""
+def _render_shop_for_company(request, company=None):
+    """Render the marketplace shop for a selected company."""
     client = None
-    company = None
 
-    # determine company selection from GET param
-    domain_param = request.GET.get('company')
-    if domain_param:
-        try:
-            company = Company.objects.get(domain=domain_param, is_active=True)
-            request.session['marketplace_company'] = domain_param
-        except Company.DoesNotExist:
-            messages.error(request, 'Selected shop does not exist.')
-
-    # Get client if logged in
     if 'client_id' in request.session:
         try:
             client = Client.objects.get(id=request.session['client_id'], is_active=True)
@@ -126,40 +115,34 @@ def shop(request):
         except Client.DoesNotExist:
             del request.session['client_id']
 
-    # if no explicit company yet, look in session
-    if not company and 'marketplace_company' in request.session:
+    if company is None and 'marketplace_company' in request.session:
         try:
             company = Company.objects.get(domain=request.session['marketplace_company'], is_active=True)
         except Company.DoesNotExist:
             del request.session['marketplace_company']
             company = None
 
-    # Get all active companies for the dropdown menu
     all_companies = Company.objects.filter(is_active=True).order_by('name')
-    
-    # fallback to first company with stock if no company selected
     companies_with_stock = Company.objects.filter(
         stocks__quantity__gt=0
     ).distinct().order_by('name')
-    if not company and companies_with_stock.exists():
+
+    if company is None and companies_with_stock.exists():
         company = companies_with_stock.first()
-    
-    # If still no company but companies exist, use first active company
-    if not company and all_companies.exists():
+
+    if company is None and all_companies.exists():
         company = all_companies.first()
 
-    if not company:
+    if company is None:
         messages.info(request, 'No shops available currently.')
         return render(request, 'marketplace/shop.html', {'stocks': [], 'is_logged_in': False, 'companies': all_companies})
-    
-    # Get available stock items from this company
+
     stocks = Stock.objects.filter(
         company=company,
         quantity__gt=0,
         is_marketplace_visible=True
     ).select_related('category').order_by('-created_at')
-    
-    # Apply search
+
     query = request.GET.get('q', '').strip()
     if query:
         stocks = stocks.filter(
@@ -167,21 +150,18 @@ def shop(request):
             Q(description__icontains=query) |
             Q(item_code__icontains=query)
         )
-    
-    # Apply category filter
+
     category_id = request.GET.get('category')
     if category_id:
         stocks = stocks.filter(category_id=category_id)
-    
-    # Get categories for filter
+
     categories = StockCategory.objects.filter(company=company).order_by('name')
-    
-    # Get cart count if logged in
+
     cart_count = 0
     if client:
         cart = Cart.objects.filter(client=client).first()
         cart_count = cart.total_items if cart else 0
-    
+
     context = {
         'stocks': stocks,
         'categories': categories,
@@ -191,8 +171,32 @@ def shop(request):
         'cart_count': cart_count,
         'is_logged_in': client is not None,
     }
-    
+
     return render(request, 'marketplace/shop.html', context)
+
+
+def company_shop_redirect(request, company_domain):
+    """Render a marketplace shop at the root company domain URL, e.g. /le-paquebot/."""
+    if not company_domain:
+        return redirect('marketplace:shop')
+
+    try:
+        company = Company.objects.get(domain=company_domain, is_active=True)
+    except Company.DoesNotExist:
+        messages.error(request, 'Selected shop does not exist.')
+        return redirect('marketplace:shop')
+
+    request.session['marketplace_company'] = company.domain
+    return _render_shop_for_company(request, company=company)
+
+
+def shop(request):
+    """Main shop view - display available products (public view, login required for checkout)."""
+    legacy_company = request.GET.get('company', '').strip()
+    if legacy_company:
+        return HttpResponsePermanentRedirect(f'/{legacy_company.strip("/")}/')
+
+    return _render_shop_for_company(request)
 
 
 def product_detail(request, pk):
