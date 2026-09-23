@@ -8,8 +8,13 @@
 # HTTP-only vhost so aaPanel's Let's Encrypt manager can validate; once the cert
 # is in place, re-running writes the full HTTP+HTTPS vhost.
 #
+# Serves one app under several domain names. DOMAIN is the primary: it names the
+# project directory, the vhost file, the log files and the certificate directory.
+# ALT_DOMAINS are additional names answered by the same server blocks.
+#
 # Override any of these from the environment:
 #   DOMAIN=erp.example.com APP_PORT=8011 ./deploy/vps-deploy.sh
+#   ALT_DOMAINS="a.example.com b.example.com" ./deploy/vps-deploy.sh
 #
 # Flags: --no-pull  --no-build  --skip-nginx  --superuser
 #
@@ -17,10 +22,14 @@ set -euo pipefail
 
 # ------------------------------- configuration -------------------------------
 DOMAIN="${DOMAIN:-zentral.mec-cmr.com}"
+ALT_DOMAINS="${ALT_DOMAINS:-central.mec-cmr.com}"
 APP_DIR="${APP_DIR:-/www/wwwroot/$DOMAIN}"
 APP_PORT="${APP_PORT:-8010}"
 MAX_BODY="${MAX_BODY:-25M}"
 COMPOSE_FILE="docker-compose.prod.yml"
+
+# Accept comma- or space-separated ALT_DOMAINS, and collapse to a clean list.
+ALL_DOMAINS="$(printf '%s %s' "$DOMAIN" "$ALT_DOMAINS" | tr ',' ' ' | tr -s ' ' | sed 's/^ //;s/ $//')"
 
 NGINX_BIN="/www/server/nginx/sbin/nginx"     # aaPanel's nginx, NOT the apt one
 VHOST_DIR="/www/server/panel/vhost/nginx"
@@ -39,7 +48,7 @@ while [ $# -gt 0 ]; do
     --no-build)   DO_BUILD=0 ;;
     --skip-nginx) DO_NGINX=0 ;;
     --superuser)  DO_SUPERUSER=1 ;;
-    -h|--help)    sed -n '2,15p' "$0" | sed 's/^#\{1,\} \{0,1\}//'; exit 0 ;;
+    -h|--help)    sed -n '2,19p' "$0" | sed 's/^#\{1,\} \{0,1\}//'; exit 0 ;;
     *)            echo "Unknown flag: $1" >&2; exit 2 ;;
   esac
   shift
@@ -69,7 +78,14 @@ ok "project dir $APP_DIR"
 
 [ -f .env ] || die ".env missing. Run: cp .env.production.example .env  and fill it in."
 chmod 600 .env
-ok ".env present (mode 600)"
+# CRLF endings are silently fatal: Compose forwards the trailing \r into the
+# container, so initdb creates a role named "user\r" and the healthcheck still
+# passes (it reads the same mangled value), leaving a db nothing can log into.
+if [ "$(tr -d '\r' < .env | cksum)" != "$(cksum < .env)" ]; then
+  sed -i 's/\r$//' .env
+  warn "stripped CRLF line endings from .env"
+fi
+ok ".env present (mode 600, LF endings)"
 
 if [ "$DO_NGINX" = "1" ]; then
   [ -x "$NGINX_BIN" ] || die "aaPanel nginx not at $NGINX_BIN. Re-run with --skip-nginx."
@@ -94,15 +110,19 @@ ok "SECRET_KEY set"
 [ "$(getenv DEBUG)" = "False" ] || die "DEBUG must be False for a production deploy."
 ok "DEBUG=False"
 
-case ",$(getenv ALLOWED_HOSTS)," in
-  *",$DOMAIN,"*) ok "ALLOWED_HOSTS contains $DOMAIN" ;;
-  *) die "ALLOWED_HOSTS does not contain $DOMAIN - Django would return 400." ;;
-esac
-
-case "$(getenv CSRF_TRUSTED_ORIGINS)" in
-  *"https://$DOMAIN"*) ok "CSRF_TRUSTED_ORIGINS contains https://$DOMAIN" ;;
-  *) die "CSRF_TRUSTED_ORIGINS needs https://$DOMAIN (scheme included) or login fails." ;;
-esac
+# Every name nginx answers must also be accepted by Django, or that name 400s.
+ALLOWED_V="$(getenv ALLOWED_HOSTS)"
+CSRF_V="$(getenv CSRF_TRUSTED_ORIGINS)"
+for d in $ALL_DOMAINS; do
+  case ",$ALLOWED_V," in
+    *",$d,"*) ok "ALLOWED_HOSTS contains $d" ;;
+    *) die "ALLOWED_HOSTS does not contain $d - that domain would return 400." ;;
+  esac
+  case "$CSRF_V" in
+    *"https://$d"*) ok "CSRF_TRUSTED_ORIGINS contains https://$d" ;;
+    *) die "CSRF_TRUSTED_ORIGINS needs https://$d (scheme included) or login fails there." ;;
+  esac
+done
 
 # The bundled Postgres container speaks no TLS; ssl_require would refuse to connect.
 if [ "$(getenv DB_SSL_REQUIRE)" != "False" ]; then
@@ -139,6 +159,21 @@ if grep -q "ssl_require=not DEBUG," "$SETTINGS" 2>/dev/null; then
   sed -i "s/ssl_require=not DEBUG,/ssl_require=env_bool('DB_SSL_REQUIRE', not DEBUG),/" "$SETTINGS"
   warn "patched $SETTINGS to honour DB_SSL_REQUIRE (commit this upstream)"
 fi
+
+# --------------------------------- DNS check ---------------------------------
+# Advisory: a name that does not resolve here cannot pass ACME validation later.
+step "Resolving domains"
+SERVER_IP="$(curl -s -m 5 https://api.ipify.org 2>/dev/null || true)"
+for d in $ALL_DOMAINS; do
+  D_IP="$(getent ahostsv4 "$d" 2>/dev/null | awk '{print $1; exit}')"
+  if [ -z "$D_IP" ]; then
+    warn "$d does not resolve - certificate issuance for it will fail"
+  elif [ -n "$SERVER_IP" ] && [ "$D_IP" != "$SERVER_IP" ]; then
+    warn "$d -> $D_IP (this server is $SERVER_IP)"
+  else
+    ok "$d -> $D_IP"
+  fi
+done
 
 # ----------------------------- port availability -----------------------------
 step "Checking port $APP_PORT"
@@ -209,9 +244,18 @@ if [ "$DO_NGINX" = "1" ]; then
   [ -f "$VHOST" ] && cp "$VHOST" "$VHOST.bak.$(date +%Y%m%d-%H%M%S)"
 
   if [ "$HAVE_CERT" = "1" ]; then
-    step "Writing nginx vhost (HTTP + HTTPS)"
+    step "Writing nginx vhost (HTTP + HTTPS) for: $ALL_DOMAINS"
+    # A cert covering only some names leaves the others serving a mismatched
+    # certificate, which browsers reject outright.
+    SANS="$(openssl x509 -in "$CERT_DIR/fullchain.pem" -noout -ext subjectAltName 2>/dev/null || true)"
+    for d in $ALL_DOMAINS; do
+      case "$SANS" in
+        *"DNS:$d"*) ok "certificate covers $d" ;;
+        *) warn "certificate does NOT cover $d - re-issue including every domain" ;;
+      esac
+    done
   else
-    step "Writing nginx vhost (HTTP only - no certificate yet)"
+    step "Writing nginx vhost (HTTP only - no certificate yet) for: $ALL_DOMAINS"
   fi
 
   {
@@ -219,7 +263,7 @@ if [ "$DO_NGINX" = "1" ]; then
 server {
     listen 80;
     listen [::]:80;
-    server_name $DOMAIN;
+    server_name $ALL_DOMAINS;
 
     # From disk, so Let's Encrypt validation is never proxied or redirected.
     location ^~ /.well-known/acme-challenge/ {
@@ -241,7 +285,7 @@ NGINX
 server {
     listen 443 ssl;
     listen [::]:443 ssl;
-    server_name $DOMAIN;
+    server_name $ALL_DOMAINS;
 
     ssl_certificate     $CERT_DIR/fullchain.pem;
     ssl_certificate_key $CERT_DIR/privkey.pem;
@@ -323,14 +367,16 @@ NGINX
   "$NGINX_BIN" -s reload
   ok "nginx reloaded"
 
-  # Prove the ACME path reaches disk rather than the proxy.
+  # Prove the ACME path reaches disk rather than the proxy, on every name.
   mkdir -p "$APP_DIR/.well-known/acme-challenge"
   echo ok > "$APP_DIR/.well-known/acme-challenge/.probe"
-  if [ "$(curl -sS -m 10 "http://$DOMAIN/.well-known/acme-challenge/.probe" 2>/dev/null)" = "ok" ]; then
-    ok "ACME challenge path reachable"
-  else
-    warn "ACME path unreachable - certificate issuance/renewal will fail"
-  fi
+  for d in $ALL_DOMAINS; do
+    if [ "$(curl -sS -m 10 "http://$d/.well-known/acme-challenge/.probe" 2>/dev/null)" = "ok" ]; then
+      ok "ACME challenge path reachable on $d"
+    else
+      warn "ACME path unreachable on $d - issuance/renewal will fail for it"
+    fi
+  done
   rm -f "$APP_DIR/.well-known/acme-challenge/.probe"
 fi
 
@@ -343,17 +389,23 @@ fi
 # ---------------------------------- summary ----------------------------------
 step "Result"
 if [ "$DO_NGINX" = "1" ] && [ "$HAVE_CERT" = "1" ]; then
-  PUB="$(curl -s -o /dev/null -w '%{http_code}' -m 10 "https://$DOMAIN/" 2>/dev/null || echo '---')"
-  case "$PUB" in
-    200|302) ok "https://$DOMAIN/ -> HTTP $PUB - live" ;;
-    301)     warn "https://$DOMAIN/ -> 301. If it loops, X-Forwarded-Proto is missing." ;;
-    *)       warn "https://$DOMAIN/ -> $PUB. Check $LOG_DIR/$DOMAIN.error.log" ;;
-  esac
+  for d in $ALL_DOMAINS; do
+    PUB="$(curl -s -o /dev/null -w '%{http_code}' -m 10 "https://$d/" 2>/dev/null || echo '---')"
+    case "$PUB" in
+      200|302) ok "https://$d/ -> HTTP $PUB - live" ;;
+      301)     warn "https://$d/ -> 301. If it loops, X-Forwarded-Proto is missing." ;;
+      *)       warn "https://$d/ -> $PUB. Check $LOG_DIR/$DOMAIN.error.log" ;;
+    esac
+  done
 else
   echo
   echo "  App is running, HTTP only. To finish:"
-  echo "    1. Confirm DNS:  dig +short $DOMAIN"
-  echo "    2. aaPanel -> Website -> $DOMAIN -> SSL -> Let's Encrypt -> Apply"
+  echo "    1. Confirm DNS for every domain:"
+  for d in $ALL_DOMAINS; do echo "         dig +short $d"; done
+  echo "    2. aaPanel -> Website -> $DOMAIN -> add these as domains of the SAME site:"
+  for d in $ALL_DOMAINS; do echo "         $d"; done
+  echo "       then SSL -> Let's Encrypt -> tick ALL of them -> Apply."
+  echo "       One certificate must cover every name, or the others break."
   echo "    3. Re-run this script; it adds the HTTPS block automatically."
 fi
 echo
