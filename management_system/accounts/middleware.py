@@ -3,7 +3,7 @@ from datetime import timedelta
 from django.utils import timezone, translation
 from django.utils.deprecation import MiddlewareMixin
 from django.shortcuts import redirect
-from django.urls import reverse, resolve, Resolver404
+from django.urls import Resolver404, resolve, reverse
 
 
 class CompanyContextMiddleware(MiddlewareMixin):
@@ -43,54 +43,9 @@ class RequireLoginMiddleware(MiddlewareMixin):
     """
     Enforce authentication for private ERP routes.
 
-    Public endpoints (login/register/reset, public marketplace/shop, static/media)
+    Public endpoints (login/register/reset, marketplace, admin auth, static/media)
     remain accessible without Django user authentication.
     """
-    PUBLIC_URL_NAMES = {
-        'company_login',
-        'accept_invitation',
-        'password_reset',
-        'password_reset_done',
-        'password_reset_confirm',
-        'password_reset_complete',
-        'shop',
-        'company_shop',
-        'product_detail',
-        'shop_by_category',
-        'view_cart',
-        'add_to_cart',
-        'update_cart_item',
-        'remove_from_cart',
-        'clear_cart',
-        'view_wishlist',
-        'add_to_wishlist',
-        'remove_from_wishlist',
-        'checkout',
-        'order_list',
-        'order_detail',
-        'order_pdf',
-        'order_print',
-        'cancel_order',
-        'payment_gateway',
-        'request_return',
-        'add_product_review',
-        'client_login',
-        'client_register',
-        'client_logout',
-        'client_profile',
-        'edit_client_profile',
-    }
-
-    PUBLIC_PREFIXES = (
-        '/admin/',
-        '/static/',
-        '/media/products/',
-    )
-
-    PUBLIC_EXACT_PATHS = (
-        '/',
-        '/login/',
-    )
 
     def process_request(self, request):
         if request.user.is_authenticated:
@@ -98,12 +53,27 @@ class RequireLoginMiddleware(MiddlewareMixin):
 
         path = request.path
 
-        if path in self.PUBLIC_EXACT_PATHS or path.startswith(self.PUBLIC_PREFIXES):
+        public_prefixes = (
+            '/admin/',
+            '/marketplace/',
+            '/static/',
+            '/media/',
+            '/password-reset/',
+            '/reset/',
+            '/register/',
+            '/invite/accept/',
+        )
+        public_exact_paths = (
+            '/',
+            '/login/',
+        )
+
+        if path in public_exact_paths or path.startswith(public_prefixes):
             return None
 
+        # Public company shop links such as /<company_domain>/ (the "Share Marketplace" URL)
         try:
-            match = resolve(path)
-            if match.url_name in self.PUBLIC_URL_NAMES and not path.startswith('/marketplace/admin/'):
+            if resolve(path).url_name == 'company_shop':
                 return None
         except Resolver404:
             pass
