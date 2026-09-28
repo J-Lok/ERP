@@ -11,7 +11,7 @@ from django.conf import settings
 from django.shortcuts import render, redirect, get_object_or_404
 from django.template.loader import render_to_string
 from django.urls import reverse, reverse_lazy
-from django.views.decorators.http import require_http_methods
+from django.views.decorators.http import require_http_methods, require_POST
 
 from .decorators import company_admin_required
 from .forms import (
@@ -25,6 +25,7 @@ from .forms import (
     CompanyPaymentSettingsForm,
 )
 from .models import Company, User, Invitation, CompanyEmailSettings
+from .utils import safe_next_url
 from marketplace.models import CompanyPaymentSettings
 
 logger = logging.getLogger(__name__)
@@ -52,7 +53,7 @@ def company_login(request):
             _record_login_ip(request, user)
 
             messages.success(request, f'Welcome back, {user.first_name or user.email}!')
-            next_url = request.GET.get('next') or 'core:dashboard'
+            next_url = safe_next_url(request, default_url='core:dashboard')
             return redirect(next_url)
     else:
         form = CompanyLoginForm(request)
@@ -110,10 +111,16 @@ def company_register(request):
     })
 
 
-@require_http_methods(['GET', 'POST'])
+@login_required
+def logout_confirm(request):
+    """Show a logout confirmation page. Actual logout is a POST to custom_logout."""
+    return render(request, 'core/logout.html')
+
+
+@require_POST
 @login_required
 def custom_logout(request):
-    """Log out and clear company session data."""
+    """Log out and clear company session data. POST-only to prevent logout CSRF."""
     request.session.pop('company_id', None)
     logout(request)
     messages.success(request, 'You have been successfully logged out.')
@@ -399,8 +406,7 @@ def set_language(request):
     if lang in allowed:
         User.objects.filter(pk=request.user.pk).update(language=lang)
         request.user.language = lang
-    next_url = request.POST.get('next') or request.META.get('HTTP_REFERER') or '/'
-    return redirect(next_url)
+    return redirect(safe_next_url(request, default_url='/'))
 
 
 def _record_login_ip(request, user: User) -> None:

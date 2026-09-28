@@ -12,7 +12,7 @@ User = get_user_model()
 
 class FinanceModelTests(TestCase):
     def setUp(self):
-        self.company = Company.objects.create(name='TestCo', domain='testco')
+        self.company = Company.objects.create(name='TestCo', domain='testco', contact_email='testco@example.com')
         # create user with required fields using custom manager
         self.user = User.objects.create_user(
             email='user1@example.com',
@@ -60,8 +60,8 @@ class FinanceModelTests(TestCase):
 
 class MarketplaceFinanceSettingsModelTests(TestCase):
     def setUp(self):
-        self.company = Company.objects.create(name='SettingsCo', domain='settingsco')
-        self.other_company = Company.objects.create(name='OtherCo', domain='otherco')
+        self.company = Company.objects.create(name='SettingsCo', domain='settingsco', contact_email='settingsco@example.com')
+        self.other_company = Company.objects.create(name='OtherCo', domain='otherco', contact_email='otherco@example.com')
         self.sales_journal = Journal.objects.create(company=self.company, name='Sales Journal', journal_type='sales')
         self.receivable_account = Account.objects.create(
             company=self.company,
@@ -103,8 +103,8 @@ class MarketplaceFinanceSettingsModelTests(TestCase):
 
 class MarketplaceFinanceSettingsFormTests(TestCase):
     def setUp(self):
-        self.company = Company.objects.create(name='FormCo', domain='formco')
-        self.other_company = Company.objects.create(name='Elsewhere', domain='elsewhere')
+        self.company = Company.objects.create(name='FormCo', domain='formco', contact_email='formco@example.com')
+        self.other_company = Company.objects.create(name='Elsewhere', domain='elsewhere', contact_email='elsewhere@example.com')
         self.sales_journal = Journal.objects.create(company=self.company, name='Sales Journal', journal_type='sales')
         self.general_journal = Journal.objects.create(company=self.company, name='General Journal', journal_type='general')
         self.other_journal = Journal.objects.create(company=self.other_company, name='Other Journal', journal_type='sales')
@@ -130,7 +130,7 @@ class MarketplaceFinanceSettingsFormTests(TestCase):
 )
 class MarketplaceFinanceSettingsViewTests(TestCase):
     def setUp(self):
-        self.company = Company.objects.create(name='ViewCo', domain='viewco')
+        self.company = Company.objects.create(name='ViewCo', domain='viewco', contact_email='viewco@example.com')
         self.user = User.objects.create_user(
             email='accountant@example.com',
             password='password',
@@ -178,7 +178,7 @@ class MarketplaceFinanceSettingsViewTests(TestCase):
 
 class ClientInvoicePrintViewTests(TestCase):
     def setUp(self):
-        self.company = Company.objects.create(name='PrintCo', domain='printco')
+        self.company = Company.objects.create(name='PrintCo', domain='printco', contact_email='printco@example.com')
         self.user = User.objects.create_user(
             email='finance_user@example.com',
             password='password',

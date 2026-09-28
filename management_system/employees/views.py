@@ -134,14 +134,14 @@ def employee_detail(request, pk):
 def employee_create(request):
     company = request.user.company
     if request.method == 'POST':
-        form = EmployeeForm(request.POST, request.FILES, company=company)
+        form = EmployeeForm(request.POST, request.FILES, company=company, requester=request.user)
         if form.is_valid():
             employee = form.save()
             messages.success(request, f'Employee {employee.employee_id} created successfully.')
             logger.info('Employee created: %s (company: %s)', employee.employee_id, company)
             return redirect('employees:employee_detail', pk=employee.pk)
     else:
-        form = EmployeeForm(company=company)
+        form = EmployeeForm(company=company, requester=request.user)
     return render(request, 'employees/employee_form.html', {'form': form, 'title': 'Add Employee'})
 
 
@@ -151,13 +151,13 @@ def employee_edit(request, pk):
     company = request.user.company
     employee = get_object_or_404(Employee, pk=pk, company=company)
     if request.method == 'POST':
-        form = EmployeeForm(request.POST, request.FILES, instance=employee, company=company)
+        form = EmployeeForm(request.POST, request.FILES, instance=employee, company=company, requester=request.user)
         if form.is_valid():
             form.save()
             messages.success(request, f'Employee {employee.employee_id} updated.')
             return redirect('employees:employee_detail', pk=employee.pk)
     else:
-        form = EmployeeForm(instance=employee, company=company)
+        form = EmployeeForm(instance=employee, company=company, requester=request.user)
     return render(request, 'employees/employee_form.html', {
         'form': form,
         'employee': employee,
@@ -356,23 +356,24 @@ def employee_import(request):
                     continue
 
                 with transaction.atomic():
-                    user, _ = User.objects.get_or_create(
-                        email=email,
-                        defaults={
-                            'first_name': first_name,
-                            'last_name': last_name,
-                            'company': company,
-                        },
-                    )
-                    # If user already existed, update name fields
-                    if not _:
+                    existing_user = User.objects.filter(email=email).first()
+                    if existing_user:
+                        if existing_user.company_id != company.id:
+                            errors.append(f'Row {row_num}: Email "{email}" belongs to another company.')
+                            continue
+                        user = existing_user
                         user.first_name = first_name
                         user.last_name = last_name
                         user.save(update_fields=['first_name', 'last_name'])
-
-                    if hasattr(user, 'employee_profile'):
-                        errors.append(f'Row {row_num}: User {email} already has an employee profile.')
-                        continue
+                    else:
+                        user = User.objects.create_user(
+                            email=email,
+                            first_name=first_name,
+                            last_name=last_name,
+                            company=company,
+                        )
+                        user.set_unusable_password()
+                        user.save(update_fields=['password'])
 
                     if 'Phone' in df.columns and pd.notna(row.get('Phone')):
                         user.phone = str(row['Phone']).strip()
@@ -402,16 +403,17 @@ def employee_import(request):
                         except Exception:
                             pass
 
-                    emp = Employee(
-                        company=company,
-                        user=user,
-                        employee_id=emp_id,
-                        department=department,
-                        role=role,
-                        status=status,
-                        date_joined=date_joined,
-                        salary=salary,
-                    )
+                    emp = getattr(user, 'employee_profile', None)
+                    if not emp:
+                        emp = Employee(company=company, user=user)
+
+                    emp.company = company
+                    emp.employee_id = emp_id
+                    emp.department = department
+                    emp.role = role
+                    emp.status = status
+                    emp.date_joined = date_joined
+                    emp.salary = salary
 
                     if 'Date of Birth' in df.columns and pd.notna(row.get('Date of Birth')):
                         try:

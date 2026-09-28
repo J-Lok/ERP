@@ -9,6 +9,7 @@ from urllib.parse import quote
 from .models import Order, Client, OrderItem
 from .forms import QuickOrderForm
 from inventory.models import StockTransaction
+from inventory.services import adjust_stock
 from .services import (
     MarketplaceFinancePostingError,
     mark_order_finance_sync_failed,
@@ -68,12 +69,14 @@ def admin_order_quick_create(request):
                     if not (cd.get('first_name') and cd.get('phone')):
                         messages.error(request, 'First name and phone are required for a walk-in customer.')
                         return render(request, 'marketplace/admin/order_quick_create.html', {'form': form})
+                    import uuid
+                    walkin_email = cd.get('email') or f"walkin-{uuid.uuid4().hex[:8]}@local.invalid"
                     client, _ = Client.objects.get_or_create(
                         phone=cd['phone'],
                         defaults={
                             'first_name': cd.get('first_name', ''),
                             'last_name': cd.get('last_name', ''),
-                            'email': cd.get('email', f"walkin-{cd['phone']}@local.store"),
+                            'email': walkin_email,
                         },
                     )
 
@@ -114,7 +117,7 @@ def admin_order_quick_create(request):
                         subtotal=unit_price * qty,
                     )
                     
-                    Stock.objects.filter(pk=stock.pk).update(quantity=F('quantity') - qty)
+                    adjust_stock(stock.pk, -qty)
                     
                     StockTransaction.objects.create(
                         company=company,
@@ -260,8 +263,7 @@ def admin_order_quick_create(request):
                             subtotal=stock.selling_price * quantity,
                         )
 
-                        stock.quantity = F('quantity') - quantity
-                        stock.save()
+                        adjust_stock(stock.pk, -quantity)
 
                         StockTransaction.objects.create(
                             company=stock.company,
@@ -442,9 +444,7 @@ def admin_order_cancel(request, pk):
                 # Restore stock quantities for this company's products only
                 restored_items = 0
                 for item in order.items.select_related('stock'):
-                    stock = item.stock
-                    stock.quantity = F('quantity') + item.quantity
-                    stock.save()
+                    stock = adjust_stock(item.stock.pk, item.quantity)
                     
                     # Create reversal transaction
                     StockTransaction.objects.create(

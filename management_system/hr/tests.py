@@ -7,7 +7,7 @@ from .models import Position, LeaveRequest
 
 class HRModelTests(TestCase):
     def setUp(self):
-        self.company = Company.objects.create(name='Org', domain='org')
+        self.company = Company.objects.create(name='Org', domain='org', contact_email='org@example.com')
         # create a user and employee via signal if needed
         # create user; employee profile created automatically by signal
         from accounts.models import User as AuthUser

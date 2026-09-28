@@ -42,6 +42,9 @@ class CompanyCreationForm(forms.ModelForm):
             'address': forms.Textarea(attrs={'rows': 3}),
         }
 
+    def clean_contact_email(self):
+        return self.cleaned_data['contact_email'].lower().strip()
+
     def clean_domain(self):
         domain = self.cleaned_data['domain'].lower().strip()
         if Company.objects.filter(domain=domain).exists():
@@ -55,11 +58,17 @@ class CompanyCreationForm(forms.ModelForm):
         return email
 
     def clean(self):
+        from django.contrib.auth.password_validation import validate_password
         cleaned_data = super().clean()
         admin_pw = cleaned_data.get('admin_password')
         confirm_admin = cleaned_data.get('confirm_admin_password')
         if admin_pw and confirm_admin and admin_pw != confirm_admin:
             self.add_error('confirm_admin_password', 'Admin passwords do not match.')
+        if admin_pw:
+            try:
+                validate_password(admin_pw)
+            except ValidationError as error:
+                self.add_error('admin_password', error)
         return cleaned_data
 
     def save(self, commit=True):

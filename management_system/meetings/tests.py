@@ -16,7 +16,7 @@ class MeetingModelTestCase(TestCase):
     """Test cases for Meeting model."""
     
     def setUp(self):
-        self.company = Company.objects.create(name='Test Company', domain='test-company')
+        self.company = Company.objects.create(name='Test Company', domain='test-company', contact_email='testcompany@example.com')
         User = get_user_model()
         self.user = User.objects.create_user(
             email='testuser@example.com',
@@ -60,7 +60,7 @@ class ActionItemModelTestCase(TestCase):
     """Test cases for ActionItem model."""
     
     def setUp(self):
-        self.company = Company.objects.create(name='Test Company', domain='test-company')
+        self.company = Company.objects.create(name='Test Company', domain='test-company', contact_email='testcompany@example.com')
         User = get_user_model()
         self.user = User.objects.create_user(
             email='testuser@example.com',
@@ -117,7 +117,7 @@ class MeetingNoteModelTestCase(TestCase):
     """Test cases for MeetingNote model."""
     
     def setUp(self):
-        self.company = Company.objects.create(name='Test Company', domain='test-company')
+        self.company = Company.objects.create(name='Test Company', domain='test-company', contact_email='testcompany@example.com')
         User = get_user_model()
         self.user = User.objects.create_user(
             email='testuser@example.com',

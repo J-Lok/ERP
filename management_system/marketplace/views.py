@@ -2,7 +2,7 @@ import os
 import io
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
-from django.http import HttpResponse, HttpResponsePermanentRedirect
+from django.http import HttpResponse, HttpResponsePermanentRedirect, HttpResponseForbidden
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -16,7 +16,9 @@ from functools import wraps
 from .models import Client, Cart, CartItem, Order, OrderItem, Wishlist, WishlistItem, ProductReview, ReturnRequest, CompanyPaymentSettings
 from .forms import ClientRegistrationForm, ClientLoginForm, ClientProfileForm, CheckoutForm, AddToCartForm
 from inventory.models import Stock, StockCategory, StockTransaction
+from inventory.services import adjust_stock, marketplace_visible_stocks
 from accounts.models import Company
+from accounts.utils import safe_next_url
 from .services import reverse_order_payment_in_finance, post_order_payment_to_finance, MarketplaceFinancePostingError
 
 
@@ -59,7 +61,8 @@ def client_login(request):
             client = form.cleaned_data['client']
             request.session['client_id'] = client.id
             messages.success(request, f'Welcome back, {client.first_name}!')
-            return redirect('marketplace:shop')
+            next_url = safe_next_url(request, default_url='marketplace:shop')
+            return redirect(next_url)
     else:
         form = ClientLoginForm()
     
@@ -151,9 +154,15 @@ def _render_shop_for_company(request, company=None):
             Q(item_code__icontains=query)
         )
 
-    category_id = request.GET.get('category')
-    if category_id:
-        stocks = stocks.filter(category_id=category_id)
+    raw_category = request.GET.get('category')
+    selected_category = None
+    if raw_category:
+        try:
+            category_id = int(raw_category)
+            stocks = stocks.filter(category_id=category_id)
+            selected_category = category_id
+        except (ValueError, TypeError):
+            pass
 
     categories = StockCategory.objects.filter(company=company).order_by('name')
 
@@ -167,7 +176,7 @@ def _render_shop_for_company(request, company=None):
         'categories': categories,
         'company': company,
         'query': query,
-        'selected_category': category_id,
+        'selected_category': selected_category,
         'cart_count': cart_count,
         'is_logged_in': client is not None,
     }
@@ -233,10 +242,13 @@ def product_detail(request, pk):
     return render(request, 'marketplace/product_detail.html', context)
 
 
-@client_login_required
 def shop_by_category(request, category_id):
-    """Filter products by category"""
-    return redirect('marketplace:shop' + f'?category={category_id}')
+    """Filter products by category."""
+    try:
+        cat_id = int(category_id)
+        return redirect(f"{reverse('marketplace:shop')}?category={cat_id}")
+    except (ValueError, TypeError):
+        return redirect('marketplace:shop')
 
 
 # Cart Views
@@ -388,7 +400,7 @@ def add_to_wishlist(request, stock_id):
         else:
             messages.info(request, f'{stock.name} is already in your wishlist')
         
-        return redirect(request.META.get('HTTP_REFERER', 'marketplace:shop'))
+        return redirect(safe_next_url(request, default_url='marketplace:shop', url_to_check=request.META.get('HTTP_REFERER')))
     
     return redirect('marketplace:shop')
 
@@ -465,10 +477,9 @@ def checkout(request):
                             subtotal=cart_item.subtotal
                         )
                         
-                        # Update stock quantity
+                        # Update stock quantity atomically
+                        adjust_stock(cart_item.stock.pk, -cart_item.quantity)
                         stock = cart_item.stock
-                        stock.quantity = F('quantity') - cart_item.quantity
-                        stock.save()
                         
                         # Create stock transaction
                         StockTransaction.objects.create(
@@ -579,9 +590,7 @@ def cancel_order(request, pk):
             with db_transaction.atomic():
                 restored_items = 0
                 for item in order.items.select_related('stock'):
-                    stock = item.stock
-                    stock.quantity = F('quantity') + item.quantity
-                    stock.save()
+                    stock = adjust_stock(item.stock.pk, item.quantity)
 
                     StockTransaction.objects.create(
                         company=stock.company,
@@ -760,242 +769,6 @@ def request_return(request, order_id):
     return redirect('marketplace:order_detail', pk=order.pk)
 
 
-# Stripe Helper Functions using urllib
-import urllib.request
-import urllib.parse
-import json
-
-def create_stripe_checkout_session(order, secret_key, success_url, cancel_url):
-    """Create a Stripe Checkout Session using urllib.request."""
-    url = "https://api.stripe.com/v1/checkout/sessions"
-    currency = 'xof'  # Zero-decimal currency for West African CFA Franc
-    
-    params = [
-        ('mode', 'payment'),
-        ('success_url', success_url),
-        ('cancel_url', cancel_url),
-        ('payment_method_types[0]', 'card'),
-        ('metadata[order_id]', str(order.pk)),
-    ]
-    
-    index = 0
-    for item in order.items.all():
-        params.extend([
-            (f'line_items[{index}][price_data][currency]', currency),
-            (f'line_items[{index}][price_data][product_data][name]', item.item_name),
-            (f'line_items[{index}][price_data][unit_amount]', str(int(item.unit_price))),
-            (f'line_items[{index}][quantity]', str(item.quantity)),
-        ])
-        index += 1
-        
-    if order.shipping and order.shipping > 0:
-        params.extend([
-            (f'line_items[{index}][price_data][currency]', currency),
-            (f'line_items[{index}][price_data][product_data][name]', 'Shipping & Handling'),
-            (f'line_items[{index}][price_data][unit_amount]', str(int(order.shipping))),
-            (f'line_items[{index}][quantity]', '1'),
-        ])
-        index += 1
-        
-    if order.tax and order.tax > 0:
-        params.extend([
-            (f'line_items[{index}][price_data][currency]', currency),
-            (f'line_items[{index}][price_data][product_data][name]', 'Sales Tax'),
-            (f'line_items[{index}][price_data][unit_amount]', str(int(order.tax))),
-            (f'line_items[{index}][quantity]', '1'),
-        ])
-        index += 1
-
-    data = urllib.parse.urlencode(params).encode('utf-8')
-    
-    req = urllib.request.Request(
-        url,
-        data=data,
-        headers={
-            'Authorization': f'Bearer {secret_key}',
-            'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        method='POST'
-    )
-    
-    with urllib.request.urlopen(req) as response:
-        return json.loads(response.read().decode('utf-8'))
-
-
-def retrieve_stripe_checkout_session(session_id, secret_key):
-    """Retrieve a Stripe Checkout Session status by ID."""
-    url = f"https://api.stripe.com/v1/checkout/sessions/{session_id}"
-    
-    req = urllib.request.Request(
-        url,
-        headers={
-            'Authorization': f'Bearer {secret_key}',
-        },
-        method='GET'
-    )
-    
-    with urllib.request.urlopen(req) as response:
-        return json.loads(response.read().decode('utf-8'))
-
-
-@client_login_required
-def payment_success(request, pk):
-    """Handle successful Stripe Checkout redirects and verify payments."""
-    client = request.client
-    order = get_object_or_404(Order, pk=pk, client=client)
-    session_id = request.GET.get('session_id')
-
-    if not session_id:
-        messages.error(request, 'Payment session ID missing.')
-        return redirect('marketplace:payment_gateway', pk=order.pk)
-
-    try:
-        payment_settings, _ = CompanyPaymentSettings.objects.get_or_create(company=order.company)
-        secret_key = payment_settings.stripe_secret_key or os.environ.get('STRIPE_SECRET_KEY', '')
-        
-        session = retrieve_stripe_checkout_session(session_id, secret_key)
-        
-        if session.get('payment_status') == 'paid':
-            # Mark as paid and confirmed
-            with db_transaction.atomic():
-                order.payment_status = 'paid'
-                order.status = 'confirmed'
-                order.save(update_fields=['payment_status', 'status', 'updated_at'])
-                
-                try:
-                    post_order_payment_to_finance(order, user=None)
-                    messages.success(
-                        request,
-                        f'Stripe payment confirmed! Order #{order.order_number} has been processed.'
-                    )
-                except MarketplaceFinancePostingError as exc:
-                    messages.warning(
-                        request,
-                        f'Stripe payment confirmed! Order #{order.order_number} is processed. Note: Finance ledger posting pending: {exc}'
-                    )
-            return redirect('marketplace:order_list')
-        else:
-            messages.error(request, 'Payment has not been completed yet.')
-            return redirect('marketplace:payment_gateway', pk=order.pk)
-            
-    except Exception as e:
-        messages.error(request, f'Verification error: {e}')
-        return redirect('marketplace:payment_gateway', pk=order.pk)
-
-
-@client_login_required
-def payment_cancelled(request, pk):
-    """Handle cancelled Stripe Checkout payments."""
-    client = request.client
-    order = get_object_or_404(Order, pk=pk, client=client)
-    messages.info(request, 'Payment transaction cancelled. You can retry paying now.')
-    return redirect('marketplace:payment_gateway', pk=order.pk)
-
-
-def create_flutterwave_checkout_session(order, secret_key, redirect_url):
-    """Create a Flutterwave Checkout Session using urllib.request."""
-    url = "https://api.flutterwave.com/v3/payments"
-    
-    payload = {
-        "tx_ref": f"ORD-{order.order_number}-{order.pk}",
-        "amount": str(int(order.total)),
-        "currency": "XAF",
-        "redirect_url": redirect_url,
-        "payment_options": "mobilemoneyfranco,card",
-        "customer": {
-            "email": order.client.email,
-            "phonenumber": order.client.phone or "000000000",
-            "name": order.client.get_full_name()
-        },
-        "customizations": {
-            "title": order.company.name,
-            "description": f"Payment for Order #{order.order_number}"
-        }
-    }
-    
-    data = json.dumps(payload).encode('utf-8')
-    
-    req = urllib.request.Request(
-        url,
-        data=data,
-        headers={
-            'Authorization': f'Bearer {secret_key}',
-            'Content-Type': 'application/json',
-        },
-        method='POST'
-    )
-    
-    with urllib.request.urlopen(req) as response:
-        return json.loads(response.read().decode('utf-8'))
-
-
-def verify_flutterwave_payment(transaction_id, secret_key):
-    """Verify a Flutterwave transaction status."""
-    url = f"https://api.flutterwave.com/v3/transactions/{transaction_id}/verify"
-    
-    req = urllib.request.Request(
-        url,
-        headers={
-            'Authorization': f'Bearer {secret_key}',
-            'Content-Type': 'application/json',
-        },
-        method='GET'
-    )
-    
-    with urllib.request.urlopen(req) as response:
-        return json.loads(response.read().decode('utf-8'))
-
-
-@client_login_required
-def flutterwave_verify(request, pk):
-    """Verify Flutterwave Mobile Money transaction callback."""
-    client = request.client
-    order = get_object_or_404(Order, pk=pk, client=client)
-    
-    status = request.GET.get('status')
-    tx_ref = request.GET.get('tx_ref')
-    transaction_id = request.GET.get('transaction_id')
-
-    if status != 'successful' or not transaction_id:
-        messages.error(request, 'Mobile Money payment was not successful or was cancelled.')
-        return redirect('marketplace:payment_gateway', pk=order.pk)
-
-    try:
-        payment_settings, _ = CompanyPaymentSettings.objects.get_or_create(company=order.company)
-        secret_key = payment_settings.flutterwave_secret_key or os.environ.get('FLUTTERWAVE_SECRET_KEY', '')
-        
-        verification = verify_flutterwave_payment(transaction_id, secret_key)
-        
-        if (verification.get('status') == 'success' and 
-            verification.get('data', {}).get('status') == 'successful' and 
-            int(float(verification['data']['amount'])) >= int(order.total)):
-            
-            with db_transaction.atomic():
-                order.payment_status = 'paid'
-                order.status = 'confirmed'
-                order.save(update_fields=['payment_status', 'status', 'updated_at'])
-                
-                try:
-                    post_order_payment_to_finance(order, user=None)
-                    messages.success(
-                        request,
-                        f'Mobile Money payment verified successfully via Flutterwave! Order #{order.order_number} is confirmed.'
-                    )
-                except MarketplaceFinancePostingError as exc:
-                    messages.warning(
-                        request,
-                        f'Mobile Money payment verified! Order #{order.order_number} is confirmed. Note: Finance ledger posting pending: {exc}'
-                    )
-            return redirect('marketplace:order_list')
-        else:
-            messages.error(request, 'Payment verification failed at gateway.')
-            return redirect('marketplace:payment_gateway', pk=order.pk)
-            
-    except Exception as e:
-        messages.error(request, f'Verification error: {e}')
-        return redirect('marketplace:payment_gateway', pk=order.pk)
-
-
 def generate_order_pdf_bytes(order):
     """Generate a clean server-side PDF invoice for an order using ReportLab."""
     buffer = io.BytesIO()
@@ -1079,6 +852,9 @@ def order_pdf(request, pk):
 def admin_order_pdf(request, pk):
     """Download server-side generated PDF invoice for staff/company admins."""
     company = request.user.company
+    user_role = getattr(request.user, 'role', '')
+    if not (request.user.is_superuser or request.user.is_company_admin or user_role in ('admin', 'accountant', 'manager', 'stock_manager')):
+        return HttpResponseForbidden("You do not have permission to access this order PDF.")
     order = get_object_or_404(Order, pk=pk, company=company)
     
     pdf_bytes = generate_order_pdf_bytes(order)

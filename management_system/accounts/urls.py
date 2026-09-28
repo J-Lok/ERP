@@ -9,7 +9,8 @@ urlpatterns = [
     # Login/Logout
     path('', views.company_login, name='company_login'),
     path('login/', views.company_login, name='company_login'),
-    path('logout/', views.custom_logout, name='logout'),
+    path('logout/', views.logout_confirm, name='logout'),
+    path('logout/confirm/', views.custom_logout, name='company_logout'),
 
     # Company registration
     path('register/company/', views.company_register, name='company_register'),

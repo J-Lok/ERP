@@ -66,6 +66,9 @@ class CartItem(models.Model):
     
     class Meta:
         unique_together = ['cart', 'stock']
+        constraints = [
+            models.CheckConstraint(condition=models.Q(quantity__gte=1), name='cart_item_quantity_gte_1'),
+        ]
     
     def __str__(self):
         return f"{self.quantity} x {self.stock.name}"
@@ -173,12 +176,17 @@ class Order(models.Model):
 class OrderItem(models.Model):
     """Items in an order"""
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='items')
-    stock = models.ForeignKey(Stock, on_delete=models.CASCADE)
+    stock = models.ForeignKey(Stock, on_delete=models.SET_NULL, null=True, blank=True)
     item_name = models.CharField(max_length=200)  # Store name at time of order
     item_code = models.CharField(max_length=50)
     quantity = models.IntegerField(validators=[MinValueValidator(1)])
     unit_price = models.DecimalField(max_digits=10, decimal_places=2)
     subtotal = models.DecimalField(max_digits=10, decimal_places=2)
+    
+    class Meta:
+        constraints = [
+            models.CheckConstraint(condition=models.Q(quantity__gte=1), name='order_item_quantity_gte_1'),
+        ]
     
     def __str__(self):
         return f"{self.quantity} x {self.item_name}"

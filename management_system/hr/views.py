@@ -572,6 +572,7 @@ def payroll_period_detail(request, pk):
 
 
 @role_required(*HR_ROLES)
+@require_POST
 def payroll_period_add_entries(request, pk):
     """Add payroll entries to a period for all active employees."""
     company = request.user.company
@@ -602,6 +603,7 @@ def payroll_period_add_entries(request, pk):
 
 
 @role_required(*HR_ROLES)
+@require_POST
 def payroll_period_lock(request, pk):
     """Lock a payroll period to prevent further edits."""
     company = request.user.company
@@ -617,6 +619,7 @@ def payroll_period_lock(request, pk):
 
 
 @role_required(*HR_ROLES)
+@require_POST
 def payroll_period_process(request, pk):
     """Process payroll and generate payslips."""
     company = request.user.company
@@ -644,6 +647,10 @@ def payroll_entry_edit(request, pk):
     """Edit a payroll entry and manage components."""
     company = request.user.company
     entry = get_object_or_404(PayrollEntry, pk=pk, payroll_period__company=company)
+
+    if entry.payroll_period.status != 'draft':
+        messages.error(request, 'Cannot modify entries in a locked or processed payroll period.')
+        return redirect('hr:payroll_period_detail', pk=entry.payroll_period.pk)
 
     if request.method == 'POST':
         form = PayrollEntryForm(request.POST, instance=entry, company=company, payroll_period=entry.payroll_period)
@@ -674,6 +681,10 @@ def payroll_entry_delete(request, pk):
     company = request.user.company
     entry = get_object_or_404(PayrollEntry, pk=pk, payroll_period__company=company)
     period_pk = entry.payroll_period.pk
+
+    if entry.payroll_period.status != 'draft':
+        messages.error(request, 'Cannot delete entries in a locked or processed payroll period.')
+        return redirect('hr:payroll_period_detail', pk=period_pk)
 
     if request.method == 'POST':
         entry.delete()

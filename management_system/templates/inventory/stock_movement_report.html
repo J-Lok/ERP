@@ -174,11 +174,12 @@
 
 {% block extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{{ daily_trend|json_script:"daily-trend-data" }}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     {% if daily_trend %}
     // Prepare data for chart
-    const dailyData = {{ daily_trend|safe }};
+    const dailyData = JSON.parse(document.getElementById('daily-trend-data').textContent);
     const dates = [...new Set(dailyData.map(item => item.day))].sort();
     
     const inData = dates.map(date => {

@@ -70,22 +70,35 @@ class Transaction(models.Model):
             is_new = self.pk is None
             previous_amount = None
             previous_type = None
+            previous_account = None
             if not is_new:
                 old = Transaction.objects.select_for_update().get(pk=self.pk)
                 previous_amount = old.amount
                 previous_type = old.transaction_type
+                previous_account = old.account
             super().save(*args, **kwargs)
             # compute balance delta
             if is_new:
                 delta = self.amount if self.transaction_type == 'credit' else -self.amount
+                acct = self.account
+                acct.balance = models.F('balance') + delta
+                acct.save(update_fields=['balance'])
             else:
                 prev_delta = previous_amount if previous_type == 'credit' else -previous_amount
                 curr_delta = self.amount if self.transaction_type == 'credit' else -self.amount
-                delta = curr_delta - prev_delta
-            # use select_for_update on account as well
-            acct = self.account
-            acct.balance = models.F('balance') + delta
-            acct.save(update_fields=['balance'])
+                if previous_account and previous_account.pk != self.account.pk:
+                    # Revert previous delta on old account
+                    previous_account.balance = models.F('balance') - prev_delta
+                    previous_account.save(update_fields=['balance'])
+                    # Apply full new delta on new account
+                    acct = self.account
+                    acct.balance = models.F('balance') + curr_delta
+                    acct.save(update_fields=['balance'])
+                else:
+                    delta = curr_delta - prev_delta
+                    acct = self.account
+                    acct.balance = models.F('balance') + delta
+                    acct.save(update_fields=['balance'])
 
     def delete(self, *args, **kwargs):
         with db_transaction.atomic():

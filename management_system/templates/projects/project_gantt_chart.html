@@ -132,6 +132,7 @@
 
 {% block extra_js %}
 <script src="https://cdn.dhtmlx.com/gantt/edge/dhtmlxgantt.js"></script>
+{{ gantt_data|json_script:"gantt-data" }}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     gantt.config.date_format = "%d-%m-%Y";
@@ -195,7 +196,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     gantt.init("gantt_here");
 
-    const ganttData = {{ gantt_data|safe }};
+    const ganttData = JSON.parse(document.getElementById('gantt-data').textContent);
     gantt.parse({data: ganttData});
 
     function resizeGantt() {

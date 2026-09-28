@@ -53,6 +53,9 @@ class Stock(models.Model):
     class Meta:
         unique_together = ['company', 'item_code']
         ordering = ['-created_at']
+        constraints = [
+            models.CheckConstraint(condition=models.Q(quantity__gte=0), name='stock_quantity_gte_0'),
+        ]
     
     @property
     def total_value(self):

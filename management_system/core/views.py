@@ -43,6 +43,8 @@ def dashboard(request):
     is_super = request.user.is_superuser
 
     if company is None:
+        if is_super:
+            return redirect('core:platform_dashboard')
         logger.warning('User %s has no company on dashboard access.', request.user.email)
         return redirect('accounts:company_register')
 

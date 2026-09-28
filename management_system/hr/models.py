@@ -439,7 +439,7 @@ class Payslip(models.Model):
             period = self.payroll_entry.payroll_period
             emp_id = self.payroll_entry.employee.employee_id
             year_month = period.end_date.strftime('%Y%m')
-            self.payslip_number = f'PS-{year_month}-{emp_id}'
+            self.payslip_number = f'PS-{period.company_id}-{year_month}-{emp_id}'
         super().save(*args, **kwargs)
 
     def mark_email_sent(self) -> None:

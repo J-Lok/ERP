@@ -146,10 +146,11 @@
 
 {% block extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+{{ calendar_events|json_script:"calendar-events-data" }}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const calendarEl = document.getElementById('calendar');
-    const events = {{ calendar_events|safe }};
+    const events = JSON.parse(document.getElementById('calendar-events-data').textContent);
     
     const calendar = new FullCalendar.Calendar(calendarEl, {
         // Initial View Settings

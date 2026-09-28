@@ -553,6 +553,9 @@ def client_invoice_print(request, pk):
 def client_invoice_edit(request, pk):
     company = request.user.company
     invoice = get_object_or_404(ClientInvoice, pk=pk, company=company)
+    if invoice.status != 'draft':
+        messages.error(request, f'Cannot edit invoice "{invoice.invoice_number}" because it is already {invoice.get_status_display().lower()}. Only draft invoices can be edited.')
+        return redirect('finance:client_invoice_detail', pk=invoice.pk)
     if request.method == 'POST':
         form = ClientInvoiceForm(request.POST, instance=invoice, company=company)
         formset = ClientInvoiceLineFormSet(request.POST, instance=invoice, company=company)
@@ -577,6 +580,9 @@ def client_invoice_edit(request, pk):
 def client_invoice_delete(request, pk):
     company = request.user.company
     invoice = get_object_or_404(ClientInvoice, pk=pk, company=company)
+    if invoice.status != 'draft':
+        messages.error(request, f'Cannot delete invoice "{invoice.invoice_number}" because it is already {invoice.get_status_display().lower()}. Only draft invoices can be deleted.')
+        return redirect('finance:client_invoice_detail', pk=invoice.pk)
     if request.method == 'POST':
         number = invoice.invoice_number
         invoice.delete()
@@ -660,6 +666,9 @@ def supplier_invoice_detail(request, pk):
 def supplier_invoice_edit(request, pk):
     company = request.user.company
     invoice = get_object_or_404(SupplierInvoice, pk=pk, company=company)
+    if invoice.status != 'draft':
+        messages.error(request, f'Cannot edit invoice "{invoice.invoice_number}" because it is already {invoice.get_status_display().lower()}. Only draft invoices can be edited.')
+        return redirect('finance:supplier_invoice_detail', pk=invoice.pk)
     if request.method == 'POST':
         form = SupplierInvoiceForm(request.POST, instance=invoice, company=company)
         formset = SupplierInvoiceLineFormSet(request.POST, instance=invoice, company=company)
@@ -684,6 +693,9 @@ def supplier_invoice_edit(request, pk):
 def supplier_invoice_delete(request, pk):
     company = request.user.company
     invoice = get_object_or_404(SupplierInvoice, pk=pk, company=company)
+    if invoice.status != 'draft':
+        messages.error(request, f'Cannot delete invoice "{invoice.invoice_number}" because it is already {invoice.get_status_display().lower()}. Only draft invoices can be deleted.')
+        return redirect('finance:supplier_invoice_detail', pk=invoice.pk)
     if request.method == 'POST':
         number = invoice.invoice_number
         invoice.delete()

@@ -69,8 +69,9 @@ class EmployeeForm(forms.ModelForm):
             'position': 'HR job position / grade (optional — created in the HR module).',
         }
 
-    def __init__(self, *args, company=None, **kwargs):
+    def __init__(self, *args, company=None, requester=None, **kwargs):
         self.company = company
+        self._requester = requester
         super().__init__(*args, **kwargs)
 
         if company:
@@ -185,16 +186,38 @@ class EmployeeForm(forms.ModelForm):
     }
 
     def _sync_user_role(self, user, employee_role: str) -> None:
-        """Update User.role to match the Employee.role, then save."""
+        """Update User.role to match the Employee.role, then save.
+
+        Safety rules:
+        - Never demote a company_admin (is_company_admin=True).
+        - Never demote users with admin/manager roles to a lower tier
+          unless the form's requesting user is a company admin.
+        - Never let a user elevate their own role.
+        """
+        # Never touch company admin flag holders.
+        if user.is_company_admin:
+            return
+
         new_user_role = self.EMPLOYEE_ROLE_TO_USER_ROLE.get(employee_role, 'employee')
+
+        # Requester context (may be None if called outside a request, e.g. import).
+        requester = getattr(self, '_requester', None)
+
+        # Prevent self-escalation.
+        if requester and requester.pk == user.pk:
+            return
+
+        # Only company admins can grant privileged roles.
+        PRIVILEGED_ROLES = {'admin', 'manager', 'hr_manager', 'accountant', 'stock_manager', 'secretary'}
+        if new_user_role in PRIVILEGED_ROLES:
+            if requester and not requester.is_company_admin:
+                return  # silently skip — unprivileged user cannot grant privilege
+
         if user.role != new_user_role:
             user.role = new_user_role
             user.save(update_fields=['role'])
 
     def save(self, commit=True):
-        employee = super().save(commit=False)
-        employee.company = self.company
-
         if self.cleaned_data.get('create_user_account'):
             user = User.objects.create_user(
                 email=self.cleaned_data['user_email'],
@@ -204,12 +227,18 @@ class EmployeeForm(forms.ModelForm):
                 phone=self.cleaned_data.get('phone', '').strip(),
                 company=self.company,
             )
+            self._sync_user_role(user, self.cleaned_data.get('role', 'other'))
+            auto_employee = getattr(user, 'employee_profile', None)
+            if auto_employee:
+                self.instance = auto_employee
+            employee = super().save(commit=False)
+            employee.company = self.company
             employee.user = user
-            self._sync_user_role(user, employee.role)
         else:
+            employee = super().save(commit=False)
+            employee.company = self.company
             existing_user = self.cleaned_data.get('existing_user')
             if existing_user:
-                # Sync name/phone edits back to the linked user
                 existing_user.first_name = self.cleaned_data.get('first_name', existing_user.first_name).strip()
                 existing_user.last_name = self.cleaned_data.get('last_name', existing_user.last_name).strip()
                 phone = self.cleaned_data.get('phone', '').strip()
@@ -235,8 +264,9 @@ class DepartmentForm(forms.ModelForm):
         fields = ['name', 'description', 'is_active']
         widgets = {'description': forms.Textarea(attrs={'rows': 3})}
 
-    def __init__(self, *args, company=None, **kwargs):
+    def __init__(self, *args, company=None, requester=None, **kwargs):
         self.company = company
+        self._requester = requester
         super().__init__(*args, **kwargs)
 
     def clean_name(self):

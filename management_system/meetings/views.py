@@ -10,7 +10,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
 from django.db.models import Q, Count
-from django.http import HttpResponse, JsonResponse
+from django.http import HttpResponse, JsonResponse, FileResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views.decorators.http import require_http_methods
@@ -561,9 +561,11 @@ def attachment_download(request, pk):
         messages.error(request, 'Unauthorized access.')
         return redirect('core:dashboard')
     
-    response = HttpResponse(attachment.file.read(), content_type='application/octet-stream')
-    response['Content-Disposition'] = f'attachment; filename="{attachment.file.name}"'
-    return response
+    return FileResponse(
+        attachment.file.open('rb'),
+        as_attachment=True,
+        filename=os.path.basename(attachment.file.name)
+    )
 
 
 @login_required

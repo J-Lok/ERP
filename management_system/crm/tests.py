@@ -5,7 +5,7 @@ from .models import Contact, Opportunity
 
 class CRMModelTests(TestCase):
     def setUp(self):
-        self.company = Company.objects.create(name='CRMCo', domain='crmco')
+        self.company = Company.objects.create(name='CRMCo', domain='crmco', contact_email='crmco@example.com')
         self.contact = Contact.objects.create(company=self.company, name='Alice', email='alice@example.com')
 
     def test_opportunity_str(self):

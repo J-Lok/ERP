@@ -20,7 +20,14 @@ class ClientRegistrationForm(forms.ModelForm):
         for field_name, field in self.fields.items():
             field.widget.attrs['class'] = 'form-control'
 
+    def clean_email(self):
+        email = self.cleaned_data['email'].lower().strip()
+        if Client.objects.filter(email__iexact=email).exists():
+            raise ValidationError('An account with this email already exists.')
+        return email
+
     def clean(self):
+        from django.contrib.auth.password_validation import validate_password
         cleaned_data = super().clean()
         password = cleaned_data.get('password')
         confirm_password = cleaned_data.get('confirm_password')
@@ -29,15 +36,17 @@ class ClientRegistrationForm(forms.ModelForm):
         if password and confirm_password and password != confirm_password:
             self.add_error('confirm_password', 'Passwords do not match.')
 
-        # Check if email already exists platform-wide
-        email = cleaned_data.get('email')
-        if email and Client.objects.filter(email=email).exists():
-            self.add_error('email', 'An account with this email already exists.')
+        if password:
+            try:
+                validate_password(password)
+            except ValidationError as error:
+                self.add_error('password', error)
 
         return cleaned_data
 
     def save(self, commit=True):
         client = super().save(commit=False)
+        client.email = self.cleaned_data['email']
         client.set_password(self.cleaned_data['password'])
 
         if commit:
@@ -59,6 +68,9 @@ class ClientLoginForm(forms.Form):
         for field_name, field in self.fields.items():
             field.widget.attrs['class'] = 'form-control'
 
+    def clean_email(self):
+        return self.cleaned_data['email'].lower().strip()
+
     def clean(self):
         cleaned_data = super().clean()
         email = cleaned_data.get('email')
@@ -66,7 +78,7 @@ class ClientLoginForm(forms.Form):
 
         if email and password:
             try:
-                client = Client.objects.get(email=email, is_active=True)
+                client = Client.objects.get(email__iexact=email, is_active=True)
                 if not client.check_password(password):
                     raise ValidationError('Invalid email or password.')
                 cleaned_data['client'] = client
@@ -106,6 +118,12 @@ class CheckoutForm(forms.ModelForm):
 class AddToCartForm(forms.Form):
     quantity = forms.IntegerField(min_value=1, initial=1)
 
+    def clean_quantity(self):
+        quantity = self.cleaned_data.get('quantity')
+        if quantity is None or quantity < 1:
+            raise ValidationError('Quantity must be at least 1.')
+        return quantity
+
 
 class QuickOrderForm(forms.Form):
     PAYMENT_METHOD_CHOICES = [
@@ -136,12 +154,16 @@ class QuickOrderForm(forms.Form):
         super().__init__(*args, **kwargs)
         self.company = company
         if company is not None:
-            self.fields['client'].queryset = Client.objects.filter(is_active=True).order_by('first_name', 'last_name')
+            self.fields['client'].queryset = Client.objects.filter(
+                orders__company=company,
+                is_active=True,
+            ).distinct().order_by('first_name', 'last_name')
             self.stock_queryset = Stock.objects.filter(
                 company=company,
                 quantity__gt=0,
             ).order_by('name')
         else:
+            self.fields['client'].queryset = Client.objects.none()
             self.stock_queryset = Stock.objects.none()
 
         for field_name, field in self.fields.items():

@@ -11,6 +11,7 @@ import math
 from datetime import datetime, timedelta
 
 from .models import Stock, StockTransaction, StockCategory
+from .services import adjust_stock, InsufficientStockError
 from .forms import StockForm, StockTransactionForm, StockCategoryForm
 from accounts.permissions import (
     INVENTORY_VIEW_ROLES,
@@ -195,13 +196,13 @@ def stock_transaction(request, pk):
                 with transaction.atomic():
                     # Update stock quantity
                     if transaction_obj.transaction_type == 'in':
-                        stock.quantity = F('quantity') + transaction_obj.quantity
+                        adjust_stock(stock.pk, transaction_obj.quantity)
                         message = f'Added {transaction_obj.quantity} units to stock.'
                     elif transaction_obj.transaction_type == 'out':
-                        if stock.quantity >= transaction_obj.quantity:
-                            stock.quantity = F('quantity') - transaction_obj.quantity
+                        try:
+                            adjust_stock(stock.pk, -transaction_obj.quantity)
                             message = f'Removed {transaction_obj.quantity} units from stock.'
-                        else:
+                        except InsufficientStockError:
                             messages.error(request, 'Insufficient stock for this transaction!')
                             return render(request, 'inventory/stock_transaction.html', {
                                 'form': form,
@@ -209,10 +210,10 @@ def stock_transaction(request, pk):
                             })
                     else:  # adjustment
                         stock.quantity = transaction_obj.quantity
+                        stock.save()
                         message = f'Stock quantity adjusted to {transaction_obj.quantity} units.'
                     
-                    # Save stock and transaction
-                    stock.save()
+                    transaction_obj.save()
                     stock.refresh_from_db()
                     transaction_obj.save()
                     
@@ -765,12 +766,9 @@ def stock_bulk_remove(request):
                             error_count += 1
                             continue
                         
-                        # Check stock availability
-                        if stock.quantity >= quantity:
-                            # Update stock quantity
-                            stock.quantity = F('quantity') - quantity
-                            stock.save()
-                            stock.refresh_from_db()
+                        # Check stock availability & update atomically
+                        try:
+                            adjust_stock(stock.pk, -quantity)
                             
                             # Create transaction
                             StockTransaction.objects.create(
@@ -783,7 +781,7 @@ def stock_bulk_remove(request):
                             )
                             
                             success_count += 1
-                        else:
+                        except InsufficientStockError:
                             insufficient_stock_items.append({
                                 'item_code': item_code,
                                 'name': stock.name,
