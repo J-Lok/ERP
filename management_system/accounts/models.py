@@ -72,7 +72,11 @@ class Company(models.Model):
             raise ValidationError({'domain': f"Domain '{domain}' is reserved and cannot be used."})
 
     def save(self, *args, **kwargs):
-        self.full_clean()
+        # Only enforce the reserved-domain rule here, not the whole model:
+        # full_clean() would also require contact_email etc. on every save,
+        # breaking any caller (scripts, admin, partial updates) that only sets
+        # a subset of fields. Forms still run full validation via is_valid().
+        self.clean()
         return super().save(*args, **kwargs)
 
     def __str__(self):

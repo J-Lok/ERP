@@ -6,6 +6,7 @@ from django.db.models import Q, Count, Sum, F
 from django.urls import reverse
 from django.utils import timezone
 from urllib.parse import quote
+from accounts.permissions import role_required, MARKETPLACE_ADMIN_ROLES
 from .models import Order, Client, OrderItem
 from .forms import QuickOrderForm
 from inventory.models import StockTransaction
@@ -20,21 +21,12 @@ from .services import (
 )
 
 
-def company_admin_required(view_func):
-    """Decorator to require user to be company admin"""
-    from functools import wraps
-    @wraps(view_func)
-    def wrapper(request, *args, **kwargs):
-        if not request.user.is_authenticated:
-            return redirect('accounts:company_login')
-        
-        user_role = getattr(request.user, 'role', '')
-        if not (request.user.is_superuser or request.user.is_company_admin or user_role in ('admin', 'manager', 'stock_manager')):
-            messages.error(request, 'You do not have permission to manage orders.')
-            return redirect('core:dashboard')
-        
-        return view_func(request, *args, **kwargs)
-    return wrapper
+# Order/client management uses the central RBAC roles from accounts/permissions.py
+# (MARKETPLACE_ADMIN_ROLES = admin, manager, stock_manager). Founders always have
+# role='admin', so they are covered. This replaces a local company_admin_required()
+# that shared its name with accounts.permissions.company_admin_required but had
+# different (broader) logic.
+company_admin_required = role_required(*MARKETPLACE_ADMIN_ROLES, redirect_url='core:dashboard')
 
 
 def _company_shop_url(request, company):
