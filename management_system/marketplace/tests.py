@@ -163,6 +163,13 @@ class CompanyShopRoutingTests(TestCase):
         self.assertContains(response, self.company.name)
         self.assertContains(response, self.stock.name)
 
+    def test_root_company_domain_without_trailing_slash_remains_public(self):
+        response = self.client.get(f'/{self.company.domain}', follow=True)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, self.company.name)
+        self.assertContains(response, self.stock.name)
+
 
 @override_settings(
     ALLOWED_HOSTS=['testserver', 'localhost', '127.0.0.1'],

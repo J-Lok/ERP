@@ -54,29 +54,41 @@ class RequireLoginMiddleware(MiddlewareMixin):
         path = request.path
 
         public_prefixes = (
-            '/admin/',
-            '/marketplace/',
-            '/static/',
-            '/media/',
-            '/password-reset/',
-            '/reset/',
-            '/register/',
-            '/invite/accept/',
+            '/admin',
+            '/marketplace',
+            '/static',
+            '/media',
+            '/password-reset',
+            '/reset',
+            '/register',
+            '/invite/accept',
         )
         public_exact_paths = (
             '/',
+            '/login',
             '/login/',
         )
 
-        if path in public_exact_paths or path.startswith(public_prefixes):
+        if path in public_exact_paths or any(
+            path == prefix or path.startswith(f'{prefix}/')
+            for prefix in public_prefixes
+        ):
             return None
 
         # Public company shop links such as /<company_domain>/ (the "Share Marketplace" URL)
-        try:
-            if resolve(path).url_name == 'company_shop':
-                return None
-        except Resolver404:
-            pass
+        # Some generated links may be missing the trailing slash, and Django will later
+        # redirect them to the canonical URL. The middleware must allow both forms before
+        # enforcing the ERP login redirect.
+        candidate_paths = {path}
+        if path and not path.endswith('/'):
+            candidate_paths.add(f'{path}/')
+
+        for candidate in candidate_paths:
+            try:
+                if resolve(candidate).url_name == 'company_shop':
+                    return None
+            except Resolver404:
+                pass
 
         login_url = reverse('accounts:company_login')
         return redirect(f'{login_url}?next={request.get_full_path()}')
