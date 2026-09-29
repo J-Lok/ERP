@@ -1,9 +1,13 @@
+import logging
 from datetime import timedelta
+from typing import ClassVar
 
+from django.shortcuts import redirect
+from django.urls import Resolver404, resolve, reverse
 from django.utils import timezone, translation
 from django.utils.deprecation import MiddlewareMixin
-from django.shortcuts import redirect
-from django.urls import reverse, resolve, Resolver404
+
+logger = logging.getLogger(__name__)
 
 
 class CompanyContextMiddleware(MiddlewareMixin):
@@ -36,7 +40,7 @@ class CompanyContextMiddleware(MiddlewareMixin):
                 type(user).objects.filter(pk=user.pk).update(last_seen=now)
                 user.last_seen = now
         except Exception:
-            pass
+            logger.warning("Failed to update last_seen for user %s", user.pk, exc_info=True)
 
 
 class RequireLoginMiddleware(MiddlewareMixin):
@@ -46,7 +50,7 @@ class RequireLoginMiddleware(MiddlewareMixin):
     Public endpoints (login/register/reset, public marketplace/shop, static/media)
     remain accessible without Django user authentication.
     """
-    PUBLIC_URL_NAMES = {
+    PUBLIC_URL_NAMES: ClassVar[set[str]] = {
         'company_login',
         'accept_invitation',
         'password_reset',

@@ -1,0 +1,14 @@
+[tool.ruff]
+target-version = "py311"
+
+[tool.ruff.lint]
+# Scoped to genuine correctness issues (undefined names, unused imports,
+# bare excepts, redefinitions, syntax-level bugs) so CI catches real
+# regressions without blocking on the pre-existing stylistic backlog.
+# Revisit and tighten this once that backlog has been cleaned up.
+select = ["F", "E", "S"]
+ignore = [
+    "RUF012",  # Mutable class attributes: mostly Django Meta classes,
+               # which ruff doesn't recognize as framework-safe.
+    "E501",    # Line length.
+]
