@@ -3,7 +3,7 @@ from datetime import timedelta
 from django.utils import timezone, translation
 from django.utils.deprecation import MiddlewareMixin
 from django.shortcuts import redirect
-from django.urls import Resolver404, resolve, reverse
+from django.urls import reverse, resolve, Resolver404
 
 
 class CompanyContextMiddleware(MiddlewareMixin):
@@ -43,9 +43,54 @@ class RequireLoginMiddleware(MiddlewareMixin):
     """
     Enforce authentication for private ERP routes.
 
-    Public endpoints (login/register/reset, marketplace, admin auth, static/media)
+    Public endpoints (login/register/reset, public marketplace/shop, static/media)
     remain accessible without Django user authentication.
     """
+    PUBLIC_URL_NAMES = {
+        'company_login',
+        'accept_invitation',
+        'password_reset',
+        'password_reset_done',
+        'password_reset_confirm',
+        'password_reset_complete',
+        'shop',
+        'company_shop',
+        'product_detail',
+        'shop_by_category',
+        'view_cart',
+        'add_to_cart',
+        'update_cart_item',
+        'remove_from_cart',
+        'clear_cart',
+        'view_wishlist',
+        'add_to_wishlist',
+        'remove_from_wishlist',
+        'checkout',
+        'order_list',
+        'order_detail',
+        'order_pdf',
+        'order_print',
+        'cancel_order',
+        'payment_gateway',
+        'request_return',
+        'add_product_review',
+        'client_login',
+        'client_register',
+        'client_logout',
+        'client_profile',
+        'edit_client_profile',
+    }
+
+    PUBLIC_PREFIXES = (
+        '/admin/',
+        '/static/',
+        '/media/products/',
+    )
+
+    PUBLIC_EXACT_PATHS = (
+        '/',
+        '/login/',
+    )
 
     def process_request(self, request):
         if request.user.is_authenticated:
@@ -53,42 +98,25 @@ class RequireLoginMiddleware(MiddlewareMixin):
 
         path = request.path
 
-        public_prefixes = (
-            '/admin',
-            '/marketplace',
-            '/static',
-            '/media',
-            '/password-reset',
-            '/reset',
-            '/register',
-            '/invite/accept',
-        )
-        public_exact_paths = (
-            '/',
-            '/login',
-            '/login/',
-        )
-
-        if path in public_exact_paths or any(
-            path == prefix or path.startswith(f'{prefix}/')
-            for prefix in public_prefixes
-        ):
+        if path in self.PUBLIC_EXACT_PATHS or path.startswith(self.PUBLIC_PREFIXES):
             return None
 
-        # Public company shop links such as /<company_domain>/ (the "Share Marketplace" URL)
-        # Some generated links may be missing the trailing slash, and Django will later
-        # redirect them to the canonical URL. The middleware must allow both forms before
-        # enforcing the ERP login redirect.
-        candidate_paths = {path}
-        if path and not path.endswith('/'):
-            candidate_paths.add(f'{path}/')
-
-        for candidate in candidate_paths:
+        # Try the path as given, then with a trailing slash appended — a
+        # request for /le-paquebot (no slash, as people naturally type or
+        # share it) doesn't resolve to any view on its own; only
+        # /le-paquebot/ does. Without this, such requests skip straight to
+        # the login redirect below instead of ever reaching Django's own
+        # APPEND_SLASH handling (CommonMiddleware), which runs later and
+        # would otherwise 301 them to the slashed URL.
+        candidates = (path,) if path.endswith('/') else (path, path + '/')
+        for candidate in candidates:
             try:
-                if resolve(candidate).url_name == 'company_shop':
-                    return None
+                match = resolve(candidate)
             except Resolver404:
-                pass
+                continue
+            if match.url_name in self.PUBLIC_URL_NAMES and not candidate.startswith('/marketplace/admin/'):
+                return None
+            break
 
         login_url = reverse('accounts:company_login')
         return redirect(f'{login_url}?next={request.get_full_path()}')
