@@ -1,9 +1,11 @@
 from django import forms
 from .models import Stock, StockTransaction, StockCategory
 from django.core.exceptions import ValidationError
-from accounts.utils import generate_company_code
+from accounts.utils import generate_company_code, CurrencyFieldsMixin
 
-class StockForm(forms.ModelForm):
+class StockForm(CurrencyFieldsMixin, forms.ModelForm):
+    currency_fields = ('cost_price', 'selling_price')
+
     class Meta:
         model = Stock
         fields = ['item_code', 'name', 'category', 'description','image', 'quantity',
@@ -56,6 +58,8 @@ class StockForm(forms.ModelForm):
         self.fields['category'].required = False
         self.fields['supplier'].required = False
 
+        self._convert_currency_fields_to_display()
+
     def clean(self):
         cleaned_data = super().clean()
         # item_code is read-only and server-generated — never trust a
@@ -66,6 +70,7 @@ class StockForm(forms.ModelForm):
                 cleaned_data['item_code'] = generate_company_code(self.company, Stock, 'item_code', 'ITM')
             else:
                 cleaned_data['item_code'] = self.instance.item_code
+        cleaned_data = self._convert_currency_fields_to_usd(cleaned_data)
         return cleaned_data
 
 class StockTransactionForm(forms.ModelForm):

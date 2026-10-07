@@ -9,11 +9,12 @@ from django.utils import timezone
 from django.utils.crypto import get_random_string
 
 from accounts.models import User
+from accounts.utils import CurrencyFieldsMixin
 from hr.models import Position
 from .models import Department, Employee, JobRole, generate_employee_id
 
 
-class EmployeeForm(forms.ModelForm):
+class EmployeeForm(CurrencyFieldsMixin, forms.ModelForm):
     """
     Create or edit an employee.
 
@@ -28,6 +29,8 @@ class EmployeeForm(forms.ModelForm):
     server-side (never typed by the admin) and emailed to the new employee —
     see ``self.generated_password`` after a successful ``save()``.
     """
+
+    currency_fields = ('salary',)
 
     # ---- User-creation fields ----
     create_user_account = forms.BooleanField(
@@ -116,6 +119,8 @@ class EmployeeForm(forms.ModelForm):
             self.fields['phone'].initial = user.phone
             self.fields['existing_user_email'].initial = user.email
 
+        self._convert_currency_fields_to_display()
+
     # ------------------------------------------------------------------
     # Validation
     # ------------------------------------------------------------------
@@ -189,7 +194,7 @@ class EmployeeForm(forms.ModelForm):
             if qs.exists():
                 self.add_error('employee_id', f'Employee ID "{employee_id}" is already in use.')
 
-        return cleaned_data
+        return self._convert_currency_fields_to_usd(cleaned_data)
 
     # ------------------------------------------------------------------
     # Save

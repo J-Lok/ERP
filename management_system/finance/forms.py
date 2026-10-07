@@ -5,11 +5,13 @@ from django import forms
 from django.core.exceptions import ValidationError
 from django.forms import BaseInlineFormSet, inlineformset_factory
 
-from accounts.utils import generate_company_code
+from accounts.utils import generate_company_code, CurrencyFieldsMixin
 from .models import Account, JournalEntry, JournalEntryLine, Journal, Transaction, ClientInvoice, SupplierInvoice, InvoiceLine, BankAccount, BankStatement, BankTransaction, Reconciliation, FinancialReport, ReportLine, MarketplaceFinanceSettings
 
 
-class AccountForm(forms.ModelForm):
+class AccountForm(CurrencyFieldsMixin, forms.ModelForm):
+    currency_fields = ('balance',)
+
     class Meta:
         model = Account
         fields = ['code', 'parent', 'name', 'account_type', 'balance']
@@ -32,6 +34,8 @@ class AccountForm(forms.ModelForm):
             self.fields['parent'].queryset = Account.objects.filter(company=self.company).order_by('code', 'name')
             self.fields['parent'].required = False
 
+        self._convert_currency_fields_to_display()
+
     def clean_name(self):
         name = self.cleaned_data['name'].strip()
         if self.company:
@@ -42,8 +46,14 @@ class AccountForm(forms.ModelForm):
                 raise forms.ValidationError(f'An account named "{name}" already exists.')
         return name
 
+    def clean(self):
+        cleaned_data = super().clean()
+        return self._convert_currency_fields_to_usd(cleaned_data)
 
-class TransactionForm(forms.ModelForm):
+
+class TransactionForm(CurrencyFieldsMixin, forms.ModelForm):
+    currency_fields = ('amount',)
+
     class Meta:
         model = Transaction
         fields = ['account', 'transaction_type', 'amount', 'description', 'date']
@@ -56,13 +66,18 @@ class TransactionForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
-        company = kwargs.pop('company', None)
+        self.company = kwargs.pop('company', None)
         super().__init__(*args, **kwargs)
-        if company:
+        if self.company:
             self.fields['account'].queryset = Account.objects.filter(
-                company=company
+                company=self.company
             ).order_by('code', 'name')
         self.fields['description'].required = False
+        self._convert_currency_fields_to_display()
+
+    def clean(self):
+        cleaned_data = super().clean()
+        return self._convert_currency_fields_to_usd(cleaned_data)
 
 
 class JournalForm(forms.ModelForm):
@@ -121,8 +136,10 @@ class JournalEntryForm(forms.ModelForm):
         self.fields['description'].required = False
 
 
-class JournalEntryLineForm(forms.ModelForm):
+class JournalEntryLineForm(CurrencyFieldsMixin, forms.ModelForm):
     """Form for individual lines within a journal entry."""
+
+    currency_fields = ('debit', 'credit')
 
     class Meta:
         model = JournalEntryLine
@@ -149,6 +166,8 @@ class JournalEntryLineForm(forms.ModelForm):
             if not self.data and not self.instance.pk:
                 self.initial[field] = 0
 
+        self._convert_currency_fields_to_display()
+
     def clean(self):
         cleaned_data = super().clean()
         debit = cleaned_data.get('debit') or Decimal('0')
@@ -159,7 +178,7 @@ class JournalEntryLineForm(forms.ModelForm):
         if debit > 0 and credit > 0:
             raise ValidationError('A line cannot have both debit and credit.')
 
-        return cleaned_data
+        return self._convert_currency_fields_to_usd(cleaned_data)
 
 
 class BaseJournalEntryLineFormSet(BaseInlineFormSet):
@@ -336,8 +355,10 @@ class SupplierInvoiceForm(_AutoInvoiceNumberMixin, forms.ModelForm):
         return self._clean_invoice_number(super().clean())
 
 
-class InvoiceLineForm(forms.ModelForm):
+class InvoiceLineForm(CurrencyFieldsMixin, forms.ModelForm):
     """Form for invoice line items."""
+
+    currency_fields = ('unit_price',)
 
     class Meta:
         model = InvoiceLine
@@ -357,6 +378,12 @@ class InvoiceLineForm(forms.ModelForm):
             self.fields['account'].queryset = Account.objects.filter(
                 company=self.company
             ).order_by('code', 'name')
+
+        self._convert_currency_fields_to_display()
+
+    def clean(self):
+        cleaned_data = super().clean()
+        return self._convert_currency_fields_to_usd(cleaned_data)
 
 
 class BaseInvoiceLineFormSet(BaseInlineFormSet):

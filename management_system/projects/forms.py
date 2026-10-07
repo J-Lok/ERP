@@ -5,11 +5,14 @@ projects/forms.py
 from django import forms
 from django.core.exceptions import ValidationError
 
+from accounts.utils import CurrencyFieldsMixin
 from employees.models import Employee
 from .models import CommentaireTache, Project, SousTache
 
 
-class ProjectForm(forms.ModelForm):
+class ProjectForm(CurrencyFieldsMixin, forms.ModelForm):
+    currency_fields = ('budget',)
+
     class Meta:
         model = Project
         fields = [
@@ -45,6 +48,7 @@ class ProjectForm(forms.ModelForm):
             ).select_related('user').order_by('user__first_name', 'user__last_name')
             self.fields['manager'].queryset = employees
             self.fields['team_members'].queryset = employees
+        self._convert_currency_fields_to_display()
 
     def clean_name(self):
         return self.cleaned_data['name'].strip()
@@ -55,7 +59,7 @@ class ProjectForm(forms.ModelForm):
         end_date = cleaned_data.get('end_date')
         if start_date and end_date and start_date > end_date:
             self.add_error('end_date', 'End date must be after start date.')
-        return cleaned_data
+        return self._convert_currency_fields_to_usd(cleaned_data)
 
 
 class SousTacheForm(forms.ModelForm):
