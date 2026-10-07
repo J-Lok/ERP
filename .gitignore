@@ -38,3 +38,5 @@ deploy/media/*
 # OS
 .DS_Store
 Thumbs.db
+
+.infisical.json
