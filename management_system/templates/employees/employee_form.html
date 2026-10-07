@@ -32,11 +32,31 @@
                     </h5>
                     <div class="row g-3 mb-4">
                         <div class="col-md-6">{{ form.employee_id|as_crispy_field }}</div>
-                        <div class="col-md-6">{{ form.department|as_crispy_field }}</div>
-                        <div class="col-md-6">{{ form.role|as_crispy_field }}</div>
-                        <div class="col-md-6">{{ form.position|as_crispy_field }}</div>
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-end gap-2">
+                                <div class="flex-grow-1">{{ form.department|as_crispy_field }}</div>
+                                <button type="button" class="btn btn-outline-secondary mb-3" data-bs-toggle="modal" data-bs-target="#quickCreateDepartmentModal" title="{% trans 'Add new department' %}">
+                                    <i class="fas fa-plus" aria-hidden="true"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-end gap-2">
+                                <div class="flex-grow-1">{{ form.role|as_crispy_field }}</div>
+                                <button type="button" class="btn btn-outline-secondary mb-3" data-bs-toggle="modal" data-bs-target="#quickCreateRoleModal" title="{% trans 'Add new role' %}">
+                                    <i class="fas fa-plus" aria-hidden="true"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-end gap-2">
+                                <div class="flex-grow-1">{{ form.position|as_crispy_field }}</div>
+                                <button type="button" class="btn btn-outline-secondary mb-3" data-bs-toggle="modal" data-bs-target="#quickCreatePositionModal" title="{% trans 'Add new position' %}">
+                                    <i class="fas fa-plus" aria-hidden="true"></i>
+                                </button>
+                            </div>
+                        </div>
                         <div class="col-md-6">{{ form.status|as_crispy_field }}</div>
-                        <div class="col-md-6">{{ form.date_joined|as_crispy_field }}</div>
                         <div class="col-md-6">{{ form.date_of_birth|as_crispy_field }}</div>
                         <div class="col-md-6">{{ form.salary|as_crispy_field }}</div>
                         <div class="col-md-6">{{ form.photo|as_crispy_field }}</div>
@@ -55,8 +75,11 @@
                         <div class="col-md-6">{{ form.first_name|as_crispy_field }}</div>
                         <div class="col-md-6">{{ form.last_name|as_crispy_field }}</div>
                         <div class="col-md-6">{{ form.user_email|as_crispy_field }}</div>
-                        <div class="col-md-6">{{ form.user_password|as_crispy_field }}</div>
                         <div class="col-md-6">{{ form.phone|as_crispy_field }}</div>
+                    </div>
+                    <div id="new-user-password-note" class="alert alert-info d-flex align-items-start" role="note">
+                        <i class="fas fa-key me-2 mt-1 flex-shrink-0" aria-hidden="true"></i>
+                        <div>{% trans "A random password will be generated automatically and emailed to the employee — you will not see it." %}</div>
                     </div>
 
                     {# Existing user field — shown when create_user_account is unchecked #}
@@ -67,8 +90,7 @@
                     <div class="alert alert-info d-flex align-items-start mt-2" role="note">
                         <i class="fas fa-info-circle me-2 mt-1 flex-shrink-0" aria-hidden="true"></i>
                         <div>
-                            {% trans "Employee ID must be unique within your company.
-                            The ID placeholder is pre-filled based on your company domain." %}
+                            {% trans "Employee ID is generated automatically from your company domain and cannot be edited." %}
                         </div>
                     </div>
 
@@ -96,15 +118,91 @@
 </div>
 {% endblock %}
 
+{% block modals %}
+{# ---- Quick-create: Department ---- #}
+<div class="modal fade" id="quickCreateDepartmentModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">{% trans "Add New Department" %}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-danger d-none" id="quickDepartmentError"></div>
+                <div class="mb-3">
+                    <label class="form-label" for="quickDepartmentName">{% trans "Name" %}</label>
+                    <input type="text" id="quickDepartmentName" class="form-control" required>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">{% trans "Cancel" %}</button>
+                <button type="button" class="btn btn-primary" id="quickDepartmentSave">{% trans "Create" %}</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{# ---- Quick-create: Job Role ---- #}
+<div class="modal fade" id="quickCreateRoleModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">{% trans "Add New Role" %}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-danger d-none" id="quickRoleError"></div>
+                <div class="mb-3">
+                    <label class="form-label" for="quickRoleName">{% trans "Name" %}</label>
+                    <input type="text" id="quickRoleName" class="form-control" required>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">{% trans "Cancel" %}</button>
+                <button type="button" class="btn btn-primary" id="quickRoleSave">{% trans "Create" %}</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{# ---- Quick-create: HR Position ---- #}
+<div class="modal fade" id="quickCreatePositionModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">{% trans "Add New Position" %}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-danger d-none" id="quickPositionError"></div>
+                <div class="mb-3">
+                    <label class="form-label" for="quickPositionTitle">{% trans "Title" %}</label>
+                    <input type="text" id="quickPositionTitle" class="form-control" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label" for="quickPositionGrade">{% trans "Salary Grade" %}</label>
+                    <input type="number" id="quickPositionGrade" class="form-control" min="0" required>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">{% trans "Cancel" %}</button>
+                <button type="button" class="btn btn-primary" id="quickPositionSave">{% trans "Create" %}</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
 {% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     const checkbox      = document.getElementById('id_create_user_account');
     const newFields     = document.getElementById('new-user-fields');
     const existingField = document.getElementById('existing-user-fields');
+    const passwordNote  = document.getElementById('new-user-password-note');
 
     // Required fields inside each panel
-    const newRequired = ['id_first_name', 'id_last_name', 'id_user_email', 'id_user_password'];
+    const newRequired = ['id_first_name', 'id_last_name', 'id_user_email'];
     const existingRequired = ['id_existing_user_email'];
 
     function setRequired(ids, required) {
@@ -117,6 +215,7 @@ document.addEventListener('DOMContentLoaded', function () {
     function toggle() {
         const creating = checkbox.checked;
         newFields.hidden      = !creating;
+        passwordNote.hidden   = !creating;
         existingField.hidden  = creating;
         setRequired(newRequired, creating);
         setRequired(existingRequired, !creating);
@@ -125,12 +224,37 @@ document.addEventListener('DOMContentLoaded', function () {
     toggle();  // initialise on page load
     checkbox.addEventListener('change', toggle);
 
-    // Employee ID placeholder
-    const idField = document.getElementById('id_employee_id');
-    if (idField && !idField.value) {
-        const prefix = '{{ company.domain|slice:":3"|upper }}';
-        idField.placeholder = prefix + '-001';
-    }
+    zentralQuickCreate({
+        url: '{% url "employees:department_quick_create" %}',
+        fields: [{ id: 'quickDepartmentName', name: 'name', required: true }],
+        extraFields: { is_active: 'on' },
+        errorId: 'quickDepartmentError',
+        selectId: 'id_department',
+        modalId: 'quickCreateDepartmentModal',
+        saveId: 'quickDepartmentSave',
+    });
+
+    zentralQuickCreate({
+        url: '{% url "employees:job_role_quick_create" %}',
+        fields: [{ id: 'quickRoleName', name: 'name', required: true }],
+        extraFields: { is_active: 'on' },
+        errorId: 'quickRoleError',
+        selectId: 'id_role',
+        modalId: 'quickCreateRoleModal',
+        saveId: 'quickRoleSave',
+    });
+
+    zentralQuickCreate({
+        url: '{% url "employees:position_quick_create" %}',
+        fields: [
+            { id: 'quickPositionTitle', name: 'title', required: true },
+            { id: 'quickPositionGrade', name: 'salary_grade', required: true },
+        ],
+        errorId: 'quickPositionError',
+        selectId: 'id_position',
+        modalId: 'quickCreatePositionModal',
+        saveId: 'quickPositionSave',
+    });
 });
 </script>
 {% endblock %}

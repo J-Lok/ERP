@@ -56,7 +56,7 @@
                         <ul class="list-group list-group-flush text-start small">
                             <li class="list-group-item px-0">
                                 <span class="text-muted">{% trans "Role" %}</span><br>
-                                <strong>{{ employee.get_role_display }}</strong>
+                                <strong>{{ employee.role.name|default:"—" }}</strong>
                             </li>
                             <li class="list-group-item px-0">
                                 <span class="text-muted">{% trans "Date Joined" %}</span><br>
@@ -65,7 +65,7 @@
                             {% if can_see_salary %}
                             <li class="list-group-item px-0">
                                 <span class="text-muted">{% trans "Salary" %}</span><br>
-                                <strong>${{ employee.salary|floatformat:2 }}</strong>
+                                <strong>{{ company.currency_symbol }} {{ employee.salary|floatformat:2 }}</strong>
                             </li>
                             {% endif %}
                         </ul>
@@ -110,7 +110,7 @@
                                     </dd>
 
                                     <dt class="col-5 text-muted fw-normal">{% trans "Role" %}</dt>
-                                    <dd class="col-7">{{ employee.get_role_display }}</dd>
+                                    <dd class="col-7">{{ employee.role.name|default:"—" }}</dd>
 
                                     <dt class="col-5 text-muted fw-normal">{% trans "Status" %}</dt>
                                     <dd class="col-7">
@@ -133,7 +133,7 @@
 
                                     {% if can_see_salary %}
                                     <dt class="col-5 text-muted fw-normal">{% trans "Salary" %}</dt>
-                                    <dd class="col-7">${{ employee.salary|floatformat:2 }}</dd>
+                                    <dd class="col-7">{{ company.currency_symbol }} {{ employee.salary|floatformat:2 }}</dd>
                                     {% endif %}
 
                                     <dt class="col-5 text-muted fw-normal">{% trans "Record Created" %}</dt>

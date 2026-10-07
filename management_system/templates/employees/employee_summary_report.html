@@ -96,12 +96,7 @@
                         <tbody>
                             {% for item in role_distribution %}
                             <tr>
-                                <td>
-                                    {# Resolve role code to display name from ROLE_CHOICES #}
-                                    {% for code, label in ROLE_CHOICES %}
-                                        {% if code == item.role %}{{ label }}{% endif %}
-                                    {% endfor %}
-                                </td>
+                                <td>{{ item.role }}</td>
                                 <td class="text-center">
                                     {{ item.count }}
                                     <span class="text-muted small">({{ item.percentage|floatformat:1 }}%)</span>
@@ -180,19 +175,19 @@
         <div class="row g-3 text-center">
             <div class="col-sm-6 col-md-3">
                 <p class="text-muted small mb-1">{% trans "Average" %}</p>
-                <h4 class="fw-bold mb-0">${{ salary_stats.avg_salary|floatformat:2|default:"0.00" }}</h4>
+                <h4 class="fw-bold mb-0">{{ company.currency_symbol }} {{ salary_stats.avg_salary|floatformat:2|default:"0.00" }}</h4>
             </div>
             <div class="col-sm-6 col-md-3">
                 <p class="text-muted small mb-1">{% trans "Total Payroll" %}</p>
-                <h4 class="fw-bold mb-0">${{ salary_stats.total_salary|floatformat:2|default:"0.00" }}</h4>
+                <h4 class="fw-bold mb-0">{{ company.currency_symbol }} {{ salary_stats.total_salary|floatformat:2|default:"0.00" }}</h4>
             </div>
             <div class="col-sm-6 col-md-3">
                 <p class="text-muted small mb-1">{% trans "Minimum" %}</p>
-                <h4 class="fw-bold mb-0">${{ salary_stats.min_salary|floatformat:2|default:"0.00" }}</h4>
+                <h4 class="fw-bold mb-0">{{ company.currency_symbol }} {{ salary_stats.min_salary|floatformat:2|default:"0.00" }}</h4>
             </div>
             <div class="col-sm-6 col-md-3">
                 <p class="text-muted small mb-1">{% trans "Maximum" %}</p>
-                <h4 class="fw-bold mb-0">${{ salary_stats.max_salary|floatformat:2|default:"0.00" }}</h4>
+                <h4 class="fw-bold mb-0">{{ company.currency_symbol }} {{ salary_stats.max_salary|floatformat:2|default:"0.00" }}</h4>
             </div>
         </div>
     </div>
@@ -227,7 +222,7 @@
                         </td>
                         <td>{{ emp.department.name|default:"—" }}</td>
                         <td>
-                            <span class="badge bg-secondary">{{ emp.get_role_display }}</span>
+                            <span class="badge bg-secondary">{{ emp.role.name|default:"—" }}</span>
                         </td>
                         <td>{{ emp.date_joined|date:"M j, Y" }}</td>
                     </tr>

@@ -14,9 +14,14 @@ urlpatterns = [
     # Department management
     path('departments/', views.department_list, name='department_list'),
     path('departments/create/', views.department_create, name='department_create'),
+    path('departments/quick-create/', views.department_quick_create, name='department_quick_create'),
     path('departments/<int:pk>/edit/', views.department_edit, name='department_edit'),
     path('departments/<int:pk>/delete/', views.department_delete, name='department_delete'),
-    
+
+    # Job role / position quick-create (inline from the employee form)
+    path('job-roles/quick-create/', views.job_role_quick_create, name='job_role_quick_create'),
+    path('positions/quick-create/', views.position_quick_create, name='position_quick_create'),
+
     # Bulk operations
     path('export/', views.employee_export, name='employee_export'),
     path('import/', views.employee_import, name='employee_import'),

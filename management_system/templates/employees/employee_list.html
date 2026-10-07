@@ -125,9 +125,9 @@
                 <label for="role" class="form-label visually-hidden">{% trans "Role" %}</label>
                 <select id="role" name="role" class="form-select">
                     <option value="">{% trans "All Roles" %}</option>
-                    {% for code, label in ROLE_CHOICES %}
-                    <option value="{{ code }}" {% if selected_role == code %}selected{% endif %}>
-                        {{ label }}
+                    {% for job_role in job_roles %}
+                    <option value="{{ job_role.id }}" {% if selected_role == job_role.id|stringformat:"s" %}selected{% endif %}>
+                        {{ job_role.name }}
                     </option>
                     {% endfor %}
                 </select>
@@ -196,7 +196,7 @@
                             {% endif %}
                         </td>
                         <td>
-                            <span class="badge bg-secondary">{{ employee.get_role_display }}</span>
+                            <span class="badge bg-secondary">{{ employee.role.name|default:"—" }}</span>
                         </td>
                         <td>
                             <span class="badge
@@ -207,7 +207,7 @@
                                 {{ employee.get_status_display }}
                             </span>
                         </td>
-                        <td>${{ employee.salary|floatformat:2 }}</td>
+                        <td>{{ company.currency_symbol }} {{ employee.salary|floatformat:2 }}</td>
                         <td>{{ employee.date_joined|date:"M j, Y" }}</td>
                         <td class="text-end">
                             <div class="btn-group btn-group-sm" role="group"

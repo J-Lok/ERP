@@ -43,22 +43,46 @@ class Department(models.Model):
         return self.employees.filter(status='active').count()
 
 
-class Employee(models.Model):
-    ROLE_CHOICES = [
-        ('manager', 'Manager'),
-        ('developer', 'Developer'),
-        ('designer', 'Designer'),
-        ('analyst', 'Analyst'),
-        ('engineer', 'Engineer'),
-        ('intern', 'Intern'),
-        ('hr', 'Human Resource'),
-        ('accountant', 'Accountant'),
-        ('secretary', 'Secretary'),
-        ('project_manager', 'Project Manager'),
-        ('stock_manager', 'Stock Manager'),
-        ('other', 'Other'),
-    ]
+# Seeded into every new company so the role picker isn't empty on day one.
+# Purely a starting point — companies can rename, deactivate or add their own
+# roles at any time via JobRole.
+DEFAULT_JOB_ROLE_NAMES = [
+    'Manager', 'Developer', 'Designer', 'Analyst', 'Engineer', 'Intern',
+    'Human Resource', 'Accountant', 'Secretary', 'Project Manager',
+    'Stock Manager', 'Other',
+]
 
+
+class JobRole(models.Model):
+    """A job role/title for employees (e.g. Developer, Manager).
+
+    Company-scoped and freely extensible — unlike Django model choices,
+    new roles can be created at any time from the employee form.
+    """
+
+    company = models.ForeignKey(
+        'accounts.Company',
+        on_delete=models.CASCADE,
+        related_name='job_roles',
+    )
+    name = models.CharField(max_length=100)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = [('company', 'name')]
+        ordering = ['name']
+
+    def __str__(self) -> str:
+        return self.name
+
+    @property
+    def slug(self) -> str:
+        """Normalised key used to map this role to a User access level."""
+        return self.name.strip().lower().replace(' ', '_')
+
+
+class Employee(models.Model):
     STATUS_CHOICES = [
         ('active', 'Active'),
         ('inactive', 'Inactive'),
@@ -84,7 +108,13 @@ class Employee(models.Model):
         blank=True,
         related_name='employees',
     )
-    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='other', db_index=True)
+    role = models.ForeignKey(
+        JobRole,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='employees',
+    )
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='active', db_index=True)
     position = models.ForeignKey(
         'hr.Position',
@@ -111,7 +141,7 @@ class Employee(models.Model):
         ordering = ['-created_at']
         indexes = [
             models.Index(fields=['company', 'status']),
-            models.Index(fields=['company', 'role']),
+            models.Index(fields=['company', 'role'], name='employees_company_role_idx'),
             models.Index(fields=['company', 'department']),
         ]
 
@@ -156,6 +186,49 @@ class Employee(models.Model):
         self.user.__class__.objects.filter(pk=self.user.pk).update(is_active=True)
 
 
+def generate_employee_id(company) -> str:
+    """Next sequential employee ID for a company, e.g. 'ACM-0004'.
+
+    Shared by the auto-create signal below and EmployeeForm, so the ID shown
+    (read-only) on the create form is the exact one that will be saved.
+    """
+    prefix = company.domain.upper()[:3]
+
+    last = (
+        Employee.objects
+        .filter(company=company)
+        .order_by('-id')
+        .values_list('employee_id', flat=True)
+        .first()
+    )
+    if last:
+        try:
+            next_num = int(last.split('-')[-1]) + 1
+        except (ValueError, IndexError):
+            next_num = Employee.objects.filter(company=company).count() + 1
+    else:
+        next_num = 1
+
+    return f'{prefix}-{next_num:04d}'
+
+
+def seed_default_job_roles(company) -> None:
+    """Ensure the starter set of JobRoles exists for a company.
+
+    Idempotent and additive: only creates whichever default role names are
+    still missing, so it's safe to re-run on every deploy (via the
+    seed_job_roles management command) without touching roles a company has
+    since renamed, deactivated, or added on its own.
+    """
+    existing = set(
+        JobRole.objects.filter(company=company, name__in=DEFAULT_JOB_ROLE_NAMES)
+        .values_list('name', flat=True)
+    )
+    missing = [name for name in DEFAULT_JOB_ROLE_NAMES if name not in existing]
+    if missing:
+        JobRole.objects.bulk_create([JobRole(company=company, name=name) for name in missing])
+
+
 # ---------------------------------------------------------------------------
 # Signal: auto-create Employee profile on new User creation
 # ---------------------------------------------------------------------------
@@ -179,25 +252,8 @@ def create_employee_profile(sender, instance, created, **kwargs):
 
     try:
         company = instance.company
-        prefix = company.domain.upper()[:3]
-
-        # Determine next sequential ID safely
-        last = (
-            Employee.objects
-            .filter(company=company)
-            .order_by('-id')
-            .values_list('employee_id', flat=True)
-            .first()
-        )
-        if last:
-            try:
-                next_num = int(last.split('-')[-1]) + 1
-            except (ValueError, IndexError):
-                next_num = Employee.objects.filter(company=company).count() + 1
-        else:
-            next_num = 1
-
-        employee_id = f'{prefix}-{next_num:04d}'
+        seed_default_job_roles(company)
+        employee_id = generate_employee_id(company)
 
         Employee.objects.create(
             company=company,
