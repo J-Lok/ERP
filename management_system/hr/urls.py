@@ -77,6 +77,7 @@ urlpatterns = [
 
     path('training/skills/', views.skill_list, name='skill_list'),
     path('training/skills/new/', views.skill_create, name='skill_create'),
+    path('training/skills/quick-create/', views.skill_quick_create, name='skill_quick_create'),
     path('training/skills/<int:pk>/edit/', views.skill_edit, name='skill_edit'),
     path('training/skills/<int:pk>/delete/', views.skill_delete, name='skill_delete'),
 

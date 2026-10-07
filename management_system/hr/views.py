@@ -18,7 +18,7 @@ from calendar import monthrange
 from django.contrib import messages
 from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
 from django.db.models import Count, Q, Sum
-from django.http import HttpResponseForbidden
+from django.http import HttpResponseForbidden, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views.decorators.http import require_POST
@@ -1355,6 +1355,21 @@ def skill_create(request):
         'form': form,
         'title': 'New Skill',
     })
+
+
+@role_required(*HR_ROLES)
+def skill_quick_create(request):
+    """AJAX endpoint — create a skill inline from the employee-skill form."""
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'errors': {}}, status=405)
+    company = request.user.company
+    form = SkillForm(request.POST)
+    if form.is_valid():
+        skill = form.save(commit=False)
+        skill.company = company
+        skill.save()
+        return JsonResponse({'success': True, 'id': skill.id, 'name': skill.name})
+    return JsonResponse({'success': False, 'errors': form.errors}, status=400)
 
 
 @role_required(*HR_ROLES)
