@@ -1,0 +1,174 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}{% trans "Kanban" %} — {{ project.name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .kanban-board {
+        display: flex;
+        align-items: flex-start;
+        gap: 1rem;
+        overflow-x: auto;
+        overflow-y: visible;
+        padding-bottom: 1.25rem;
+        min-height: min(70vh, 900px);
+        -webkit-overflow-scrolling: touch;
+    }
+    .kanban-column {
+        flex: 0 0 clamp(240px, 24vw, 300px);
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 15px;
+        min-height: 400px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+        transition: background-color 0.15s;
+    }
+    .kanban-column.drag-over {
+        background: var(--surface2);
+    }
+    .kanban-column-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+    }
+    .kanban-column-header h6 { color: var(--text); }
+    .kanban-card {
+        background: var(--surface2);
+        border-radius: 8px;
+        padding: 12px;
+        margin-bottom: 10px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+        cursor: grab;
+        transition: all 0.2s;
+        border-left: 4px solid var(--border);
+        color: var(--text);
+    }
+    .kanban-card:hover {
+        box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        transform: translateY(-2px);
+        background: var(--surface3);
+    }
+    .kanban-card h6 { color: var(--text); }
+    .kanban-card.priorite-urgente { border-left-color: #dc3545; }
+    .kanban-card.priorite-elevee  { border-left-color: #fd7e14; }
+    .kanban-card.priorite-moyenne { border-left-color: #ffc107; }
+    .kanban-card.priorite-faible  { border-left-color: #198754; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <div>
+            <h1 class="h3 mb-0"><i class="fas fa-columns me-2"></i>{{ project.name }}</h1>
+            <p class="text-muted mb-0">{% trans "Drag and drop tasks to change their status" %}</p>
+        </div>
+        <div>
+            <a href="{% url 'projects:project_detail' project.pk %}" class="btn btn-outline-secondary me-2">
+                <i class="fas fa-arrow-left me-2"></i>{% trans "Project" %}
+            </a>
+            <a href="{% url 'projects:sous_tache_create' project.pk %}" class="btn btn-primary">
+                <i class="fas fa-plus me-2"></i>{% trans "New Task" %}
+            </a>
+        </div>
+    </div>
+
+    <div class="kanban-board">
+        {% for column in columns %}
+        <div class="kanban-column" data-status="{{ column.code }}">
+            <div class="kanban-column-header">
+                <h6 class="mb-0">{{ column.label }}</h6>
+                <span class="badge bg-secondary">{{ column.tasks|length }}</span>
+            </div>
+
+            {% for task in column.tasks %}
+            <div class="kanban-card priorite-{{ task.priorite }}" data-task-id="{{ task.id }}" draggable="true">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <h6 class="mb-0">{{ task.titre }}</h6>
+                </div>
+                {% if task.assigne_a %}
+                <div class="small text-muted mb-1">
+                    <i class="fas fa-user me-1"></i>{{ task.assigne_a.full_name }}
+                </div>
+                {% endif %}
+                {% if task.date_echeance %}
+                <div class="small text-muted mb-2">
+                    <i class="fas fa-calendar me-1"></i>{{ task.date_echeance|date:"M d" }}
+                </div>
+                {% endif %}
+                <div class="progress mb-2" style="height: 5px;">
+                    <div class="progress-bar" style="width: {{ task.completion_percentage }}%"></div>
+                </div>
+                <a href="{% url 'projects:sous_tache_detail' task.pk %}" class="btn btn-sm btn-outline-primary">
+                    <i class="fas fa-eye"></i>
+                </a>
+            </div>
+            {% empty %}
+            <div class="text-center py-4 text-muted">
+                <i class="fas fa-inbox fa-2x mb-2"></i>
+                <p class="mb-0 small">{% trans "No tasks" %}</p>
+            </div>
+            {% endfor %}
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let draggedCard = null;
+
+document.querySelectorAll('.kanban-card').forEach(card => {
+    card.addEventListener('dragstart', function () {
+        draggedCard = this;
+        this.style.opacity = '0.5';
+    });
+    card.addEventListener('dragend', function () {
+        this.style.opacity = '1';
+    });
+});
+
+document.querySelectorAll('.kanban-column').forEach(column => {
+    column.addEventListener('dragover', function (e) {
+        e.preventDefault();
+        this.classList.add('drag-over');
+    });
+    column.addEventListener('dragleave', function () {
+        this.classList.remove('drag-over');
+    });
+    column.addEventListener('drop', function (e) {
+        e.preventDefault();
+        this.classList.remove('drag-over');
+        if (draggedCard) {
+            updateTaskStatus(draggedCard.dataset.taskId, this.dataset.status);
+        }
+    });
+});
+
+function updateTaskStatus(taskId, newStatus) {
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value || '{{ csrf_token }}';
+    const url = "{% url 'projects:sous_tache_update_status_ajax' 999999999 %}".replace('999999999', String(taskId));
+
+    fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
+        credentials: 'same-origin',
+        body: JSON.stringify({ status: newStatus }),
+    })
+    .then(async (response) => {
+        let data = {};
+        try { data = await response.json(); } catch (e) { throw new Error('Server returned an invalid response'); }
+        if (!response.ok || !data.success) throw new Error(data.error || ('HTTP ' + response.status));
+        location.reload();
+    })
+    .catch((error) => {
+        console.error('Error:', error);
+        alert(error.message || 'An error occurred while updating the task');
+    });
+}
+</script>
+{% endblock %}

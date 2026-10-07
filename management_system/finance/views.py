@@ -15,6 +15,7 @@ from datetime import date, timedelta
 from django.contrib import messages
 from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
 from django.db.models import Q, Sum
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 
 from accounts.decorators import role_required
@@ -183,6 +184,21 @@ def account_create(request):
 
 
 @role_required(*FINANCE_ROLES)
+def account_quick_create(request):
+    """AJAX endpoint — create an account inline from a journal/invoice line."""
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'errors': {}}, status=405)
+    company = request.user.company
+    form = AccountForm(request.POST, company=company)
+    if form.is_valid():
+        acct = form.save(commit=False)
+        acct.company = company
+        acct.save()
+        return JsonResponse({'success': True, 'id': acct.id, 'name': str(acct)})
+    return JsonResponse({'success': False, 'errors': form.errors}, status=400)
+
+
+@role_required(*FINANCE_ROLES)
 def account_edit(request, pk):
     company = request.user.company
     acct = get_object_or_404(Account, pk=pk, company=company)
@@ -343,6 +359,21 @@ def journal_create(request):
     else:
         form = JournalForm(company=company)
     return render(request, 'finance/journal_form.html', {'form': form, 'title': 'New Journal'})
+
+
+@role_required(*FINANCE_ROLES)
+def journal_quick_create(request):
+    """AJAX endpoint — create a journal inline from the journal entry form."""
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'errors': {}}, status=405)
+    company = request.user.company
+    form = JournalForm(request.POST, company=company)
+    if form.is_valid():
+        journal = form.save(commit=False)
+        journal.company = company
+        journal.save()
+        return JsonResponse({'success': True, 'id': journal.id, 'name': str(journal)})
+    return JsonResponse({'success': False, 'errors': form.errors}, status=400)
 
 
 @role_required(*FINANCE_ROLES)
@@ -657,6 +688,17 @@ def supplier_invoice_detail(request, pk):
     invoice = get_object_or_404(SupplierInvoice, pk=pk, company=company)
     lines = invoice.lines.all().select_related('account')
     return render(request, 'finance/supplier_invoice_detail.html', {
+        'invoice': invoice,
+        'lines': lines,
+    })
+
+
+@role_required(*FINANCE_ROLES)
+def supplier_invoice_print(request, pk):
+    company = request.user.company
+    invoice = get_object_or_404(SupplierInvoice, pk=pk, company=company)
+    lines = invoice.lines.all().select_related('account')
+    return render(request, 'finance/supplier_invoice_print.html', {
         'invoice': invoice,
         'lines': lines,
     })

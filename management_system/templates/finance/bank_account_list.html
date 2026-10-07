@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
 
 {% load i18n %}
+{% load currency_tags %}
 {% block title %}Bank Accounts{% endblock %}
 
 {% block content %}
@@ -36,7 +37,7 @@
                                         <td>{{ bank_account.account_number }}</td>
                                         <td>{{ bank_account.bank_name }}</td>
                                         <td>{{ bank_account.account.code }} - {{ bank_account.account.name }}</td>
-                                        <td class="text-end">{{ bank_account.opening_balance|floatformat:2 }}</td>
+                                        <td class="text-end">{{ bank_account.opening_balance|currency:company }}</td>
                                         <td>
                                             <a href="{% url 'finance:bank_account_edit' bank_account.pk %}" class="btn btn-sm btn-outline-primary">
                                                 <i class="fas fa-edit"></i> {% trans "Edit" %}

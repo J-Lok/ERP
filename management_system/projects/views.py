@@ -624,6 +624,45 @@ def project_kanban(request):
 
 
 @role_required(*PROJECT_VIEW_ROLES)
+def project_task_kanban(request, pk):
+    """Per-project Kanban board — cards are this project's tasks, grouped by task status."""
+    company = request.user.company
+    project = get_object_or_404(Project, pk=pk, company=company)
+    tasks = project.sous_taches.select_related('assigne_a__user')
+
+    columns = [
+        {'code': code, 'label': label, 'tasks': [t for t in tasks if t.status == code]}
+        for code, label in SousTache.STATUS_CHOICES
+    ]
+
+    return render(request, 'projects/project_task_kanban.html', {
+        'project': project,
+        'columns': columns,
+    })
+
+
+@role_required(*TASK_WRITE_ROLES)
+@require_http_methods(['POST'])
+def sous_tache_update_status_ajax(request, pk):
+    """JSON endpoint for the per-project task Kanban's drag-and-drop."""
+    company = request.user.company
+    tache = get_object_or_404(SousTache, pk=pk, company=company)
+
+    try:
+        payload = json.loads(request.body.decode('utf-8'))
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        return JsonResponse({'success': False, 'error': 'Invalid JSON'}, status=400)
+
+    new_status = payload.get('status')
+    try:
+        tache.change_status(new_status)
+    except Exception as exc:
+        return JsonResponse({'success': False, 'error': str(exc)}, status=400)
+
+    return JsonResponse({'success': True, 'status': tache.status})
+
+
+@role_required(*PROJECT_VIEW_ROLES)
 def project_calendar(request):
     company = request.user.company
     projects = (

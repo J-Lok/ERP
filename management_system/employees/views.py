@@ -13,7 +13,7 @@ from django.contrib import messages
 from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
 from django.db import transaction
 from django.db.models import Avg, Count, Max, Min, Q, Sum
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views.decorators.http import require_http_methods
@@ -28,8 +28,10 @@ from accounts.permissions import (
     EMPLOYEE_WRITE_ROLES,
     role_required,
 )
-from .forms import DepartmentForm, EmployeeForm
-from .models import Department, Employee
+from hr.forms import PositionForm
+
+from .forms import DepartmentForm, EmployeeForm, JobRoleForm
+from .models import Department, Employee, JobRole
 
 logger = logging.getLogger(__name__)
 
@@ -75,8 +77,8 @@ def employee_list(request):
         qs = qs.filter(status=status)
 
     role = request.GET.get('role', '')
-    if role in dict(Employee.ROLE_CHOICES):
-        qs = qs.filter(role=role)
+    if role.isdigit():
+        qs = qs.filter(role_id=role)
 
     # Stats are computed on the *unfiltered* company queryset so the counts
     # always reflect company totals, not the current search result.
@@ -102,7 +104,7 @@ def employee_list(request):
         'total_employees': stats['total'],
         'active_employees': stats['active'],
         'on_leave_employees': stats['on_leave'],
-        'ROLE_CHOICES': Employee.ROLE_CHOICES,
+        'job_roles': JobRole.objects.filter(company=company, is_active=True).order_by('name'),
         'STATUS_CHOICES': Employee.STATUS_CHOICES,
     }
     return render(request, 'employees/employee_list.html', context)
@@ -139,10 +141,45 @@ def employee_create(request):
             employee = form.save()
             messages.success(request, f'Employee {employee.employee_id} created successfully.')
             logger.info('Employee created: %s (company: %s)', employee.employee_id, company)
+
+            if form.generated_password:
+                _send_employee_welcome_email(request, company, employee, form.generated_password)
+
             return redirect('employees:employee_detail', pk=employee.pk)
     else:
         form = EmployeeForm(company=company, requester=request.user)
     return render(request, 'employees/employee_form.html', {'form': form, 'title': 'Add Employee'})
+
+
+def _send_employee_welcome_email(request, company, employee, password):
+    """Email a newly-created employee their login + auto-generated password."""
+    from django.template.loader import render_to_string
+    from django.urls import reverse
+
+    from accounts.views import send_company_email
+
+    user = employee.user
+    login_url = request.build_absolute_uri(reverse('accounts:company_login'))
+    body = render_to_string('employees/welcome_email.html', {
+        'company': company,
+        'first_name': user.first_name,
+        'login_url': login_url,
+        'email': user.email,
+        'password': password,
+    })
+
+    try:
+        send_company_email(
+            company, f'Your {company.name} account is ready', body, [user.email],
+        )
+        logger.info('Welcome email sent to %s for company %s', user.email, company.name)
+    except Exception as e:
+        logger.error('Failed to send welcome email to %s: %s', user.email, e)
+        messages.warning(
+            request,
+            f'Employee created but the welcome email could not be sent ({type(e).__name__}). '
+            f'Temporary password for {user.email}: {password}',
+        )
 
 
 @role_required(*EMPLOYEE_WRITE_ROLES)
@@ -245,6 +282,44 @@ def department_delete(request, pk):
     return render(request, 'employees/department_confirm_delete.html', {'department': department})
 
 
+@role_required(*DEPARTMENT_WRITE_ROLES)
+@require_http_methods(['POST'])
+def department_quick_create(request):
+    """AJAX endpoint — create a department inline from the employee form."""
+    company = request.user.company
+    form = DepartmentForm(request.POST, company=company)
+    if form.is_valid():
+        dept = form.save()
+        return JsonResponse({'success': True, 'id': dept.id, 'name': dept.name})
+    return JsonResponse({'success': False, 'errors': form.errors}, status=400)
+
+
+@role_required(*EMPLOYEE_WRITE_ROLES)
+@require_http_methods(['POST'])
+def job_role_quick_create(request):
+    """AJAX endpoint — create a job role inline from the employee form."""
+    company = request.user.company
+    form = JobRoleForm(request.POST, company=company)
+    if form.is_valid():
+        role = form.save()
+        return JsonResponse({'success': True, 'id': role.id, 'name': role.name})
+    return JsonResponse({'success': False, 'errors': form.errors}, status=400)
+
+
+@role_required(*EMPLOYEE_WRITE_ROLES)
+@require_http_methods(['POST'])
+def position_quick_create(request):
+    """AJAX endpoint — create an HR position inline from the employee form."""
+    company = request.user.company
+    form = PositionForm(request.POST)
+    if form.is_valid():
+        position = form.save(commit=False)
+        position.company = company
+        position.save()
+        return JsonResponse({'success': True, 'id': position.id, 'name': str(position)})
+    return JsonResponse({'success': False, 'errors': form.errors}, status=400)
+
+
 # ---------------------------------------------------------------------------
 # Import / Export
 # ---------------------------------------------------------------------------
@@ -270,7 +345,7 @@ def employee_export(request):
             'Email': emp.user.email,
             'Phone': emp.user.phone,
             'Department': emp.department.name if emp.department else '',
-            'Role': emp.get_role_display(),
+            'Role': emp.role.name if emp.role else '',
             'Status': emp.get_status_display(),
             'Date Joined': emp.date_joined.strftime('%Y-%m-%d') if emp.date_joined else '',
             'Salary': float(emp.salary or 0),
@@ -388,9 +463,13 @@ def employee_import(request):
                             defaults={'description': ''},
                         )
 
-                    role = str(row.get('Role', 'other')).strip().lower()
-                    if role not in dict(Employee.ROLE_CHOICES):
-                        role = 'other'
+                    role = None
+                    if 'Role' in df.columns and pd.notna(row.get('Role')):
+                        role_name = str(row['Role']).strip().title()
+                        if role_name:
+                            role, _ = JobRole.objects.get_or_create(
+                                company=company, name=role_name,
+                            )
 
                     status = str(row.get('Status', 'active')).strip().lower()
                     if status not in dict(Employee.STATUS_CHOICES):
@@ -509,11 +588,11 @@ def employee_summary_report(request):
 
     role_distribution = [
         {
-            'role': rc['role'],
+            'role': rc['role__name'] or 'Unassigned',
             'count': rc['count'],
             'percentage': round(rc['count'] / total * 100, 1) if total else 0,
         }
-        for rc in employees.values('role').annotate(count=Count('id')).order_by('-count')
+        for rc in employees.values('role__name').annotate(count=Count('id')).order_by('-count')
     ]
 
     dept_distribution = [

@@ -9,6 +9,7 @@ urlpatterns = [
     # Accounts
     path('accounts/', views.account_list, name='account_list'),
     path('accounts/new/', views.account_create, name='account_create'),
+    path('accounts/quick-create/', views.account_quick_create, name='account_quick_create'),
     path('accounts/<int:pk>/', views.account_detail, name='account_detail'),
     path('accounts/<int:pk>/edit/', views.account_edit, name='account_edit'),
     path('accounts/<int:pk>/delete/', views.account_delete, name='account_delete'),
@@ -22,6 +23,7 @@ urlpatterns = [
     # Journals
     path('journals/', views.journal_list, name='journal_list'),
     path('journals/new/', views.journal_create, name='journal_create'),
+    path('journals/quick-create/', views.journal_quick_create, name='journal_quick_create'),
     path('journals/<int:pk>/', views.journal_detail, name='journal_detail'),
     path('journals/<int:pk>/edit/', views.journal_edit, name='journal_edit'),
     path('journals/<int:pk>/delete/', views.journal_delete, name='journal_delete'),
@@ -47,6 +49,7 @@ urlpatterns = [
     path('supplier-invoices/<int:pk>/', views.supplier_invoice_detail, name='supplier_invoice_detail'),
     path('supplier-invoices/<int:pk>/edit/', views.supplier_invoice_edit, name='supplier_invoice_edit'),
     path('supplier-invoices/<int:pk>/delete/', views.supplier_invoice_delete, name='supplier_invoice_delete'),
+    path('supplier-invoices/<int:pk>/print/', views.supplier_invoice_print, name='supplier_invoice_print'),
 
     # Bank accounts
     path('bank-accounts/', views.bank_account_list, name='bank_account_list'),

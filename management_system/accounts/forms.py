@@ -89,6 +89,14 @@ class InvitationForm(forms.Form):
         label='Email address',
         widget=forms.EmailInput(attrs={'placeholder': 'colleague@example.com'}),
     )
+    # 'admin' is deliberately excluded — there is exactly one admin per
+    # company (the founder), and invitations can't create a second one.
+    role = forms.ChoiceField(
+        choices=User.INVITABLE_ROLE_CHOICES,
+        initial='employee',
+        label='Role',
+        help_text='Determines what this person can see and do once they join.',
+    )
 
     def __init__(self, company, *args, **kwargs):
         self.company = company
@@ -167,9 +175,10 @@ class UserProfileForm(forms.ModelForm):
 
     class Meta:
         model = User
-        fields = ['first_name', 'last_name', 'email', 'phone', 'department', 'position']
+        fields = ['first_name', 'last_name', 'email', 'phone', 'department', 'position', 'profile_picture']
         widgets = {
             'email': forms.EmailInput(attrs={'readonly': True}),
+            'profile_picture': forms.ClearableFileInput(attrs={'accept': 'image/*'}),
         }
 
     def clean_email(self):
@@ -196,9 +205,9 @@ class CompanyProfileForm(forms.ModelForm):
     class Meta:
         model = Company
         fields = [
-            'name', 'domain', 'contact_email', 'contact_phone', 
+            'name', 'domain', 'contact_email', 'contact_phone',
             'whatsapp_number', 'orange_money_number', 'mtn_momo_number',
-            'address', 'subscription_plan', 'is_active'
+            'address', 'currency', 'subscription_plan', 'is_active'
         ]
         widgets = {
             'domain': forms.TextInput(attrs={'readonly': True}),

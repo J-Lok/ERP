@@ -28,25 +28,47 @@
 
           <div class="mb-3">
             <label for="{{ form.sales_journal.id_for_label }}" class="form-label fw-semibold">{% trans "Sales Journal" %}</label>
-            {{ form.sales_journal }}
+            <div class="d-flex align-items-start gap-2">
+              <div class="flex-grow-1">{{ form.sales_journal }}</div>
+              <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#quickCreateJournalModal" title="{% trans 'Add new journal' %}">
+                <i class="fas fa-plus" aria-hidden="true"></i>
+              </button>
+            </div>
             {% if form.sales_journal.errors %}<div class="text-danger small mt-1">{{ form.sales_journal.errors.0 }}</div>{% endif %}
           </div>
 
           <div class="mb-3">
             <label for="{{ form.receivable_account.id_for_label }}" class="form-label fw-semibold">{% trans "Marketplace Receivable Account" %}</label>
-            {{ form.receivable_account }}
+            <div class="d-flex align-items-start gap-2">
+              <div class="flex-grow-1">{{ form.receivable_account }}</div>
+              <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#quickCreateAccountModal" title="{% trans 'Add new account' %}">
+                <i class="fas fa-plus" aria-hidden="true"></i>
+              </button>
+            </div>
+            <div class="form-text">{% trans "An asset account, e.g. 'Marketplace Receivable'." %}</div>
             {% if form.receivable_account.errors %}<div class="text-danger small mt-1">{{ form.receivable_account.errors.0 }}</div>{% endif %}
           </div>
 
           <div class="mb-3">
             <label for="{{ form.revenue_account.id_for_label }}" class="form-label fw-semibold">{% trans "Marketplace Revenue Account" %}</label>
-            {{ form.revenue_account }}
+            <div class="d-flex align-items-start gap-2">
+              <div class="flex-grow-1">{{ form.revenue_account }}</div>
+              <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#quickCreateAccountModal" title="{% trans 'Add new account' %}">
+                <i class="fas fa-plus" aria-hidden="true"></i>
+              </button>
+            </div>
+            <div class="form-text">{% trans "A revenue account, e.g. 'Marketplace Sales'." %}</div>
             {% if form.revenue_account.errors %}<div class="text-danger small mt-1">{{ form.revenue_account.errors.0 }}</div>{% endif %}
           </div>
 
           <div class="mb-3">
             <label for="{{ form.tax_account.id_for_label }}" class="form-label fw-semibold">{% trans "Tax Account" %}</label>
-            {{ form.tax_account }}
+            <div class="d-flex align-items-start gap-2">
+              <div class="flex-grow-1">{{ form.tax_account }}</div>
+              <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#quickCreateAccountModal" title="{% trans 'Add new account' %}">
+                <i class="fas fa-plus" aria-hidden="true"></i>
+              </button>
+            </div>
             <div class="form-text">{% trans "Optional. Leave blank if marketplace orders are posted without a separate tax line." %}</div>
             {% if form.tax_account.errors %}<div class="text-danger small mt-1">{{ form.tax_account.errors.0 }}</div>{% endif %}
           </div>
@@ -98,4 +120,103 @@
     {% endif %}
   </div>
 </div>
+{% endblock %}
+
+{% block modals %}
+<div class="modal fade" id="quickCreateJournalModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">{% trans "Add New Journal" %}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-danger d-none" id="quickJournalError"></div>
+                <div class="mb-3">
+                    <label class="form-label" for="quickJournalName">{% trans "Name" %}</label>
+                    <input type="text" id="quickJournalName" class="form-control" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label" for="quickJournalType">{% trans "Type" %}</label>
+                    <select id="quickJournalType" class="form-select no-search-select">
+                        <option value="sales" selected>{% trans "Sales" %}</option>
+                        <option value="purchases">{% trans "Purchases" %}</option>
+                        <option value="bank">{% trans "Bank" %}</option>
+                        <option value="cash">{% trans "Cash" %}</option>
+                        <option value="general">{% trans "General" %}</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">{% trans "Cancel" %}</button>
+                <button type="button" class="btn btn-primary" id="quickJournalSave">{% trans "Create" %}</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="quickCreateAccountModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">{% trans "Add New Account" %}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-danger d-none" id="quickAccountError"></div>
+                <div class="mb-3">
+                    <label class="form-label" for="quickAccountName">{% trans "Name" %}</label>
+                    <input type="text" id="quickAccountName" class="form-control" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label" for="quickAccountType">{% trans "Type" %}</label>
+                    <select id="quickAccountType" class="form-select no-search-select">
+                        <option value="asset">{% trans "Asset" %}</option>
+                        <option value="liability">{% trans "Liability" %}</option>
+                        <option value="equity">{% trans "Equity" %}</option>
+                        <option value="revenue">{% trans "Revenue" %}</option>
+                        <option value="expense">{% trans "Expense" %}</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">{% trans "Cancel" %}</button>
+                <button type="button" class="btn btn-primary" id="quickAccountSave">{% trans "Create" %}</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    zentralQuickCreate({
+        url: '{% url "finance:journal_quick_create" %}',
+        fields: [
+            { id: 'quickJournalName', name: 'name', required: true },
+            { id: 'quickJournalType', name: 'journal_type', required: true },
+        ],
+        errorId: 'quickJournalError',
+        selectId: '{{ form.sales_journal.id_for_label }}',
+        modalId: 'quickCreateJournalModal',
+        saveId: 'quickJournalSave',
+    });
+
+    zentralQuickCreate({
+        url: '{% url "finance:account_quick_create" %}',
+        fields: [
+            { id: 'quickAccountName', name: 'name', required: true },
+            { id: 'quickAccountType', name: 'account_type', required: true },
+        ],
+        extraFields: { balance: '0' },
+        errorId: 'quickAccountError',
+        // receivable_account, revenue_account and tax_account all draw from
+        // the same company-wide chart of accounts — update all three selects.
+        selectId: 'select[id$="_account"]',
+        modalId: 'quickCreateAccountModal',
+        saveId: 'quickAccountSave',
+    });
+});
+</script>
 {% endblock %}

@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load i18n %}
+{% load currency_tags %}
 {% block title %}Delete Journal Entry — Finance{% endblock %}
 {% block content %}
 <div class="card shadow-sm border-danger" style="max-width: 520px; margin: 2rem auto;">
@@ -18,9 +19,9 @@
       <dt class="col-sm-4">{% trans "Lines" %}</dt>
       <dd class="col-sm-8">{{ entry.lines.count }}</dd>
       <dt class="col-sm-4">{% trans "Total Debit" %}</dt>
-      <dd class="col-sm-8 text-success fw-semibold">{{ entry.total_debits|floatformat:2 }}</dd>
+      <dd class="col-sm-8 text-success fw-semibold">{{ entry.total_debits|currency:company }}</dd>
       <dt class="col-sm-4">{% trans "Total Credit" %}</dt>
-      <dd class="col-sm-8 text-danger fw-semibold">{{ entry.total_credits|floatformat:2 }}</dd>
+      <dd class="col-sm-8 text-danger fw-semibold">{{ entry.total_credits|currency:company }}</dd>
     </dl>
     <div class="alert alert-warning mt-3 mb-0 small">
       <i class="fas fa-exclamation-circle me-1"></i>

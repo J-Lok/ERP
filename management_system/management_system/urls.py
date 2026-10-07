@@ -28,6 +28,7 @@ urlpatterns = [
     path('employees/', include('employees.urls')),
     path('projects/', include('projects.urls')),
     path('inventory/', include('inventory.urls')),
+    path('suppliers/', include('suppliers.urls')),
     path('marketplace/', include('marketplace.urls')), 
     
     # finance app endpoints

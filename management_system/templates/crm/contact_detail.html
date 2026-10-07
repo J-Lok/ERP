@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load i18n %}
+{% load currency_tags %}
 
 {% block title %}{{ contact.name }} — CRM{% endblock %}
 
@@ -112,7 +113,7 @@
                 {% elif opp.stage == 'qualified' %}<span class="badge bg-info text-dark">{% trans "Qualified" %}</span>
                 {% else %}<span class="badge bg-secondary">{% trans "Prospect" %}</span>{% endif %}
               </td>
-              <td>FCFA {{ opp.value|floatformat:0 }}</td>
+              <td>{{ opp.value|currency:company }}</td>
               <td>
                 {% if opp.follow_up_date %}
                   {% if opp.is_overdue_followup %}

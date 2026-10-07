@@ -1,7 +1,9 @@
 import uuid
 from datetime import timedelta
+from decimal import Decimal
 
 from django.conf import settings
+from django.core.cache import cache
 from django.db import models
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.core.exceptions import ValidationError
@@ -21,6 +23,18 @@ class Company(models.Model):
         ('basic', 'Basic'),
         ('premium', 'Premium'),
         ('enterprise', 'Enterprise'),
+    ]
+
+    CURRENCY_CHOICES = [
+        ('XAF', 'FCFA — Central Africa (XAF)'),
+        ('XOF', 'FCFA — West Africa (XOF)'),
+        ('USD', 'US Dollar ($)'),
+        ('EUR', 'Euro (€)'),
+        ('GBP', 'British Pound (£)'),
+        ('NGN', 'Nigerian Naira (₦)'),
+        ('GHS', 'Ghanaian Cedi (₵)'),
+        ('ZAR', 'South African Rand (R)'),
+        ('CAD', 'Canadian Dollar (CA$)'),
     ]
 
     company_id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
@@ -48,6 +62,12 @@ class Company(models.Model):
         help_text='MTN Mobile Money transaction number for client payments',
     )
     address = models.TextField(blank=True)
+    currency = models.CharField(
+        max_length=3,
+        choices=CURRENCY_CHOICES,
+        default='XAF',
+        help_text='Currency used for all prices displayed across the application.',
+    )
     subscription_plan = models.CharField(
         max_length=20,
         choices=PLAN_CHOICES,
@@ -82,6 +102,42 @@ class Company(models.Model):
     def __str__(self):
         return self.name
 
+    CURRENCY_SYMBOLS = {
+        'XAF': 'FCFA',
+        'XOF': 'FCFA',
+        'USD': '$',
+        'EUR': '€',
+        'GBP': '£',
+        'NGN': '₦',
+        'GHS': '₵',
+        'ZAR': 'R',
+        'CAD': 'CA$',
+    }
+
+    @property
+    def currency_symbol(self) -> str:
+        """Display symbol for this company's currency, e.g. 'XAF' -> 'FCFA'."""
+        return self.CURRENCY_SYMBOLS.get(self.currency, self.currency)
+
+    def to_display_currency(self, usd_amount):
+        """Convert a USD amount (as stored in the database) to this
+        company's selected display currency, using the shared ExchangeRate
+        table. Every monetary field in the app is stored in USD — this is
+        the one place that conversion happens, at display time."""
+        if usd_amount is None:
+            return None
+        return usd_amount * get_exchange_rates().get(self.currency, Decimal('1'))
+
+    def from_display_currency(self, display_amount):
+        """Inverse of to_display_currency() — convert a value typed by a
+        user in this company's display currency back to USD for storage."""
+        if display_amount is None:
+            return None
+        rate = get_exchange_rates().get(self.currency, Decimal('1'))
+        if not rate:
+            return display_amount
+        return display_amount / rate
+
     @property
     def active_user_count(self) -> int:
         return self.users.filter(is_active=True).count()
@@ -89,6 +145,58 @@ class Company(models.Model):
     @property
     def pending_invitations_count(self) -> int:
         return self.invitations.filter(accepted_at__isnull=True, expires_at__gt=timezone.now()).count()
+
+
+EXCHANGE_RATES_CACHE_KEY = 'accounts:exchange_rates_usd'
+EXCHANGE_RATES_CACHE_TTL = 300  # seconds — also cleared explicitly whenever rates are saved
+
+
+def get_exchange_rates() -> dict:
+    """{currency_code: Decimal rate}, one entry per currently supported
+    currency. Read on virtually every page render (every converted amount),
+    so it's cached briefly rather than hitting the DB each time."""
+    rates = cache.get(EXCHANGE_RATES_CACHE_KEY)
+    if rates is None:
+        rates = {row.currency: row.rate for row in ExchangeRate.objects.all()}
+        cache.set(EXCHANGE_RATES_CACHE_KEY, rates, EXCHANGE_RATES_CACHE_TTL)
+    return rates
+
+
+class ExchangeRate(models.Model):
+    """
+    Platform-wide USD exchange rate for one of Company.CURRENCY_CHOICES.
+
+    Shared by every company — a company only picks *which* currency it
+    displays in (Company.currency); the rate itself is a market fact, not a
+    per-tenant setting. Either set manually or refreshed in bulk from a free
+    FX API via the "Update rates" action.
+    """
+    currency = models.CharField(max_length=3, choices=Company.CURRENCY_CHOICES, unique=True)
+    rate = models.DecimalField(
+        max_digits=18,
+        decimal_places=6,
+        default=1,
+        help_text='Units of this currency equal to 1 USD.',
+    )
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['currency']
+
+    def __str__(self):
+        return f'{self.currency} = {self.rate} USD'
+
+    @property
+    def symbol(self) -> str:
+        return Company.CURRENCY_SYMBOLS.get(self.currency, self.currency)
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        cache.delete(EXCHANGE_RATES_CACHE_KEY)
+
+    def delete(self, *args, **kwargs):
+        super().delete(*args, **kwargs)
+        cache.delete(EXCHANGE_RATES_CACHE_KEY)
 
 
 class CustomUserManager(BaseUserManager):
@@ -127,8 +235,14 @@ class User(AbstractUser):
         ('employee', 'Employee'),
     ]
 
+    # Roles a company admin can hand out via invitation. 'admin' is excluded
+    # on purpose — there is exactly one admin per company (the founder, set
+    # at company_register time), and no UI promotes anyone else to it.
+    INVITABLE_ROLE_CHOICES = [c for c in ROLE_CHOICES if c[0] != 'admin']
+
     username = None  # replaced by email
     email = models.EmailField(unique=True, db_index=True)
+    profile_picture = models.ImageField(upload_to='profile_pictures/', blank=True, null=True)
     company = models.ForeignKey(
         Company,
         on_delete=models.CASCADE,
@@ -196,6 +310,12 @@ class Invitation(models.Model):
     token = models.UUIDField(default=uuid.uuid4, unique=True, db_index=True, editable=False)
     company = models.ForeignKey(Company, on_delete=models.CASCADE, related_name='invitations')
     email = models.EmailField()
+    role = models.CharField(
+        max_length=20,
+        choices=User.INVITABLE_ROLE_CHOICES,
+        default='employee',
+        help_text='Access level the invitee will have once they accept.',
+    )
     invited_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
@@ -226,12 +346,13 @@ class Invitation(models.Model):
         return self.accepted_at is None and not self.is_expired
 
     @classmethod
-    def create_for(cls, company, email: str, invited_by) -> 'Invitation':
+    def create_for(cls, company, email: str, invited_by, role: str = 'employee') -> 'Invitation':
         """Create (or reset) an invitation for a given email+company."""
         cls.objects.filter(company=company, email=email, accepted_at__isnull=True).delete()
         return cls.objects.create(
             company=company,
             email=email,
+            role=role,
             invited_by=invited_by,
             expires_at=timezone.now() + timedelta(days=7),
         )

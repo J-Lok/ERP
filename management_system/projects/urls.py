@@ -18,6 +18,7 @@ urlpatterns = [
     path('task/<int:pk>/edit/', views.sous_tache_edit, name='sous_tache_edit'),
     path('task/<int:pk>/delete/', views.sous_tache_delete, name='sous_tache_delete'),
     path('task/<int:pk>/change-status/', views.sous_tache_change_status, name='sous_tache_change_status'),
+    path('task/<int:pk>/update-status-ajax/', views.sous_tache_update_status_ajax, name='sous_tache_update_status_ajax'),
     path('task/<int:pk>/toggle-complete/', views.toggle_subtask_completion, name='toggle_subtask_completion'),
     path('task/<int:pk>/detail/', views.sous_tache_detail, name='sous_tache_detail'),
     
@@ -30,8 +31,9 @@ urlpatterns = [
     path('reports/summary/', views.project_summary_report, name='project_summary_report'),
     path('reports/gantt/', views.project_gantt_chart, name='project_gantt_chart'),
     
-    # Kanban board view
+    # Kanban board views
     path('kanban/', views.project_kanban, name='project_kanban'),
+    path('<int:pk>/kanban/', views.project_task_kanban, name='project_task_kanban'),
     
     # Calendar view
     path('calendar/', views.project_calendar, name='project_calendar'),

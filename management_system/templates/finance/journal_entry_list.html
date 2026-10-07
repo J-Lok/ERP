@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load i18n %}
+{% load currency_tags %}
 {% block title %}Journal Entries — Finance{% endblock %}
 
 {% block content %}
@@ -32,8 +33,8 @@
             <td class="text-muted">{{ entry.date|date:'d M Y' }}</td>
             <td>{{ entry.journal.name }}</td>
             <td>{{ entry.reference|default:'—' }}</td>
-            <td class="text-end text-success">{{ entry.total_debits|floatformat:2 }}</td>
-            <td class="text-end text-danger">{{ entry.total_credits|floatformat:2 }}</td>
+            <td class="text-end text-success">{{ entry.total_debits|currency:company }}</td>
+            <td class="text-end text-danger">{{ entry.total_credits|currency:company }}</td>
             <td class="text-end">
               {% if entry.is_balanced %}
               <span class="badge bg-success">{% trans "Yes" %}</span>

@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load i18n %}
+{% load currency_tags %}
 {% block title %}{{ account.name }} — Finance{% endblock %}
 
 {% block content %}
@@ -33,7 +34,7 @@
         </div>
         <div>
           <p class="text-muted small mb-0">{% trans "Current Balance" %}</p>
-          <h4 class="mb-0 fw-bold text-primary">{{ account.balance|floatformat:2 }}</h4>
+          <h4 class="mb-0 fw-bold text-primary">{{ account.balance|currency:company }}</h4>
         </div>
       </div>
     </div>
@@ -46,7 +47,7 @@
         </div>
         <div>
           <p class="text-muted small mb-0">{% trans "Total Credits" %}</p>
-          <h4 class="mb-0 fw-bold text-success">{{ credits|floatformat:2 }}</h4>
+          <h4 class="mb-0 fw-bold text-success">{{ credits|currency:company }}</h4>
         </div>
       </div>
     </div>
@@ -59,7 +60,7 @@
         </div>
         <div>
           <p class="text-muted small mb-0">{% trans "Total Debits" %}</p>
-          <h4 class="mb-0 fw-bold text-danger">{{ debits|floatformat:2 }}</h4>
+          <h4 class="mb-0 fw-bold text-danger">{{ debits|currency:company }}</h4>
         </div>
       </div>
     </div>
@@ -122,10 +123,10 @@
           </td>
           <td class="small text-muted">{{ txn.description|default:"—" }}</td>
           <td class="text-end text-success fw-semibold">
-            {% if txn.transaction_type == 'credit' %}{{ txn.amount|floatformat:2 }}{% endif %}
+            {% if txn.transaction_type == 'credit' %}{{ txn.amount|currency:company }}{% endif %}
           </td>
           <td class="text-end text-danger fw-semibold">
-            {% if txn.transaction_type == 'debit' %}{{ txn.amount|floatformat:2 }}{% endif %}
+            {% if txn.transaction_type == 'debit' %}{{ txn.amount|currency:company }}{% endif %}
           </td>
           <td class="small text-muted">{{ txn.entered_by.get_full_name|default:"—" }}</td>
           <td class="text-end">

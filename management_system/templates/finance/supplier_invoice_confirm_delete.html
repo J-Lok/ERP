@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load i18n %}
+{% load currency_tags %}
 {% block title %}Delete Supplier Invoice — Finance{% endblock %}
 {% block content %}
 <div class="card shadow-sm border-danger" style="max-width: 520px; margin: 2rem auto;">
@@ -14,7 +15,7 @@
       <dt class="col-sm-4">{% trans "Date" %}</dt>
       <dd class="col-sm-8">{{ invoice.date|date:"d M Y" }}</dd>
       <dt class="col-sm-4">{% trans "Total" %}</dt>
-      <dd class="col-sm-8 text-primary fw-semibold">{{ invoice.total|floatformat:2 }}</dd>
+      <dd class="col-sm-8 text-primary fw-semibold">{{ invoice.total|currency:company }}</dd>
       <dt class="col-sm-4">{% trans "Status" %}</dt>
       <dd class="col-sm-8">{{ invoice.get_status_display }}</dd>
     </dl>

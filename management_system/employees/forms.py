@@ -4,14 +4,17 @@ employees/forms.py
 
 from django import forms
 from django.core.exceptions import ValidationError
+from django.forms.models import construct_instance
 from django.utils import timezone
+from django.utils.crypto import get_random_string
 
 from accounts.models import User
+from accounts.utils import CurrencyFieldsMixin
 from hr.models import Position
-from .models import Department, Employee
+from .models import Department, Employee, JobRole, generate_employee_id
 
 
-class EmployeeForm(forms.ModelForm):
+class EmployeeForm(CurrencyFieldsMixin, forms.ModelForm):
     """
     Create or edit an employee.
 
@@ -21,7 +24,13 @@ class EmployeeForm(forms.ModelForm):
 
     Pass ``company=<Company>`` as a keyword argument so the department
     queryset is scoped to the correct tenant.
+
+    When creating a new user account, a random password is generated
+    server-side (never typed by the admin) and emailed to the new employee —
+    see ``self.generated_password`` after a successful ``save()``.
     """
+
+    currency_fields = ('salary',)
 
     # ---- User-creation fields ----
     create_user_account = forms.BooleanField(
@@ -34,12 +43,6 @@ class EmployeeForm(forms.ModelForm):
         required=False,
         label='Email',
         widget=forms.EmailInput(attrs={'autocomplete': 'email'}),
-    )
-    user_password = forms.CharField(
-        required=False,
-        widget=forms.PasswordInput(attrs={'autocomplete': 'new-password'}),
-        label='Password',
-        min_length=8,
     )
     first_name = forms.CharField(max_length=30, required=False)
     last_name = forms.CharField(max_length=30, required=False)
@@ -56,23 +59,33 @@ class EmployeeForm(forms.ModelForm):
         model = Employee
         fields = [
             'employee_id', 'department', 'role', 'position', 'status',
-            'date_of_birth', 'date_joined', 'salary', 'photo',
+            'date_of_birth', 'salary', 'photo',
         ]
         widgets = {
             'date_of_birth': forms.DateInput(attrs={'type': 'date'}),
-            'date_joined': forms.DateInput(attrs={'type': 'date'}),
             'salary': forms.NumberInput(attrs={'step': '0.01', 'min': '0'}),
+            'employee_id': forms.TextInput(attrs={'readonly': True}),
         }
         help_texts = {
-            'employee_id': 'Unique employee ID within your company (e.g. EMP-001).',
+            'employee_id': 'Auto-generated from your company domain — cannot be edited.',
             'salary': 'Annual gross salary.',
             'position': 'HR job position / grade (optional — created in the HR module).',
         }
+
+    # Generated plaintext password for a newly-created user account. Only
+    # ever held in memory for the lifetime of this form instance, never
+    # persisted — the view uses it to send the welcome email, then it's gone.
+    generated_password = None
 
     def __init__(self, *args, company=None, requester=None, **kwargs):
         self.company = company
         self._requester = requester
         super().__init__(*args, **kwargs)
+
+        is_create = not (self.instance and self.instance.pk)
+
+        # Read-only and always server-generated — never require a client-submitted value.
+        self.fields['employee_id'].required = False
 
         if company:
             self.fields['department'].queryset = (
@@ -80,12 +93,21 @@ class EmployeeForm(forms.ModelForm):
                 .filter(company=company, is_active=True)
                 .order_by('name')
             )
+            self.fields['role'].queryset = (
+                JobRole.objects
+                .filter(company=company, is_active=True)
+                .order_by('name')
+            )
+            self.fields['role'].empty_label = '— No role assigned —'
             self.fields['position'].queryset = (
                 Position.objects
                 .filter(company=company)
                 .order_by('title')
             )
             self.fields['position'].empty_label = '— No position assigned —'
+
+            if is_create:
+                self.fields['employee_id'].initial = generate_employee_id(company)
 
         # Editing mode: pre-populate user fields, disable account creation toggle
         if self.instance and self.instance.pk and hasattr(self.instance, 'user') and self.instance.user_id:
@@ -97,6 +119,8 @@ class EmployeeForm(forms.ModelForm):
             self.fields['phone'].initial = user.phone
             self.fields['existing_user_email'].initial = user.email
 
+        self._convert_currency_fields_to_display()
+
     # ------------------------------------------------------------------
     # Validation
     # ------------------------------------------------------------------
@@ -105,25 +129,19 @@ class EmployeeForm(forms.ModelForm):
         email = self.cleaned_data.get('user_email', '').strip().lower()
         return email
 
-    def clean_date_joined(self):
-        date_joined = self.cleaned_data.get('date_joined')
-        if date_joined and date_joined > timezone.localdate():
-            raise ValidationError('Date joined cannot be in the future.')
-        return date_joined
-
     def clean(self):
         cleaned_data = super().clean()
         create_user = cleaned_data.get('create_user_account')
+        is_create = not (self.instance and self.instance.pk)
 
         if create_user:
             email = cleaned_data.get('user_email')
-            password = cleaned_data.get('user_password')
             first_name = cleaned_data.get('first_name', '').strip()
             last_name = cleaned_data.get('last_name', '').strip()
 
-            if not all([email, password, first_name, last_name]):
+            if not all([email, first_name, last_name]):
                 raise ValidationError(
-                    'First name, last name, email and password are all required '
+                    'First name, last name and email are all required '
                     'when creating a new user account.'
                 )
             if User.objects.filter(email=email).exists():
@@ -158,6 +176,15 @@ class EmployeeForm(forms.ModelForm):
             elif not is_edit:
                 raise ValidationError('Please provide an existing user email to link.')
 
+        # employee_id is shown read-only and generated server-side — never
+        # trust a client-submitted value for it. Regenerate on create so a
+        # tampered field can't collide with another employee; on edit, it
+        # can never change, so always fall back to the existing value.
+        if is_create and self.company:
+            cleaned_data['employee_id'] = generate_employee_id(self.company)
+        elif not is_create:
+            cleaned_data['employee_id'] = self.instance.employee_id
+
         # Validate unique employee_id within the company
         employee_id = cleaned_data.get('employee_id', '').strip()
         if employee_id and self.company:
@@ -167,7 +194,7 @@ class EmployeeForm(forms.ModelForm):
             if qs.exists():
                 self.add_error('employee_id', f'Employee ID "{employee_id}" is already in use.')
 
-        return cleaned_data
+        return self._convert_currency_fields_to_usd(cleaned_data)
 
     # ------------------------------------------------------------------
     # Save
@@ -185,8 +212,13 @@ class EmployeeForm(forms.ModelForm):
         # developer, designer, analyst, engineer, intern, other → standard employee access
     }
 
-    def _sync_user_role(self, user, employee_role: str) -> None:
+    def _sync_user_role(self, user, employee_role) -> None:
         """Update User.role to match the Employee.role, then save.
+
+        ``employee_role`` is a JobRole instance (or None) — matched to a User
+        access level via its slug (e.g. "Project Manager" -> "project_manager").
+        Any role with no matching slug (including every custom role a company
+        creates) falls back to standard 'employee' access.
 
         Safety rules:
         - Never demote a company_admin (is_company_admin=True).
@@ -198,7 +230,8 @@ class EmployeeForm(forms.ModelForm):
         if user.is_company_admin:
             return
 
-        new_user_role = self.EMPLOYEE_ROLE_TO_USER_ROLE.get(employee_role, 'employee')
+        role_slug = employee_role.slug if employee_role else None
+        new_user_role = self.EMPLOYEE_ROLE_TO_USER_ROLE.get(role_slug, 'employee')
 
         # Requester context (may be None if called outside a request, e.g. import).
         requester = getattr(self, '_requester', None)
@@ -219,18 +252,27 @@ class EmployeeForm(forms.ModelForm):
 
     def save(self, commit=True):
         if self.cleaned_data.get('create_user_account'):
+            self.generated_password = get_random_string(12)
             user = User.objects.create_user(
                 email=self.cleaned_data['user_email'],
-                password=self.cleaned_data['user_password'],
+                password=self.generated_password,
                 first_name=self.cleaned_data['first_name'].strip(),
                 last_name=self.cleaned_data['last_name'].strip(),
                 phone=self.cleaned_data.get('phone', '').strip(),
                 company=self.company,
             )
-            self._sync_user_role(user, self.cleaned_data.get('role', 'other'))
+            self._sync_user_role(user, self.cleaned_data.get('role'))
             auto_employee = getattr(user, 'employee_profile', None)
             if auto_employee:
+                # The post_save signal already created a bare Employee row
+                # (employee_id/date_joined/salary only). Swapping self.instance
+                # to it doesn't retroactively apply the form's cleaned_data —
+                # _post_clean() already ran construct_instance() against the
+                # original blank instance before this point — so re-run it
+                # against the real instance now, or department/role/position/
+                # status/salary/photo from this form would silently be lost.
                 self.instance = auto_employee
+                construct_instance(self, self.instance, self._meta.fields, self._meta.exclude)
             employee = super().save(commit=False)
             employee.company = self.company
             employee.user = user
@@ -250,6 +292,9 @@ class EmployeeForm(forms.ModelForm):
 
         if not employee.salary:
             employee.salary = 0
+
+        if not employee.pk:
+            employee.date_joined = timezone.now().date()
 
         if commit:
             employee.save()
@@ -286,3 +331,34 @@ class DepartmentForm(forms.ModelForm):
         if commit:
             department.save()
         return department
+
+
+class JobRoleForm(forms.ModelForm):
+    """Create or edit a job role. Pass ``company=<Company>`` as a kwarg."""
+
+    class Meta:
+        model = JobRole
+        fields = ['name', 'is_active']
+
+    def __init__(self, *args, company=None, requester=None, **kwargs):
+        self.company = company
+        self._requester = requester
+        super().__init__(*args, **kwargs)
+
+    def clean_name(self):
+        name = self.cleaned_data['name'].strip().title()
+        if self.company:
+            qs = JobRole.objects.filter(company=self.company, name=name)
+            if self.instance.pk:
+                qs = qs.exclude(pk=self.instance.pk)
+            if qs.exists():
+                raise ValidationError(f'Role "{name}" already exists in your company.')
+        return name
+
+    def save(self, commit=True):
+        role = super().save(commit=False)
+        if self.company:
+            role.company = self.company
+        if commit:
+            role.save()
+        return role

@@ -211,7 +211,7 @@ class ClientInvoice(models.Model):
     ]
 
     company = models.ForeignKey('accounts.Company', on_delete=models.CASCADE, related_name='client_invoices')
-    invoice_number = models.CharField(max_length=50, unique=True)
+    invoice_number = models.CharField(max_length=50)
     client_name = models.CharField(max_length=100)
     client_address = models.TextField(blank=True)
     client_email = models.EmailField(blank=True)
@@ -229,6 +229,7 @@ class ClientInvoice(models.Model):
 
     class Meta:
         ordering = ['-date', '-created_at']
+        unique_together = ['company', 'invoice_number']
 
     def __str__(self):
         return f"INV-{self.invoice_number} - {self.client_name}"
@@ -265,6 +266,15 @@ class SupplierInvoice(models.Model):
 
     company = models.ForeignKey('accounts.Company', on_delete=models.CASCADE, related_name='supplier_invoices')
     invoice_number = models.CharField(max_length=50)
+    supplier = models.ForeignKey(
+        'suppliers.Supplier',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='invoices',
+    )
+    # Snapshot of the supplier's name/address at invoice time — kept even if
+    # the Supplier record is later renamed, edited or deleted.
     supplier_name = models.CharField(max_length=100)
     supplier_address = models.TextField(blank=True)
     date = models.DateField()

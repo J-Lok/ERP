@@ -3,6 +3,7 @@ import datetime
 from django import forms
 from django.utils import timezone
 
+from accounts.utils import CurrencyFieldsMixin
 from .models import Contact, Note, Opportunity
 from employees.models import Employee
 from finance.models import Account
@@ -59,7 +60,9 @@ class NoteForm(forms.ModelForm):
         }
 
 
-class OpportunityForm(forms.ModelForm):
+class OpportunityForm(CurrencyFieldsMixin, forms.ModelForm):
+    currency_fields = ('value',)
+
     class Meta:
         model = Opportunity
         fields = ['contact', 'title', 'stage', 'value', 'assigned_to', 'follow_up_date', 'follow_up_note']
@@ -74,14 +77,19 @@ class OpportunityForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
-        company = kwargs.pop('company', None)
+        self.company = kwargs.pop('company', None)
         super().__init__(*args, **kwargs)
-        if company:
-            self.fields['contact'].queryset = Contact.objects.filter(company=company)
-            self.fields['assigned_to'].queryset = Employee.objects.filter(company=company, status='active')
+        if self.company:
+            self.fields['contact'].queryset = Contact.objects.filter(company=self.company)
+            self.fields['assigned_to'].queryset = Employee.objects.filter(company=self.company, status='active')
         self.fields['assigned_to'].required = False
         self.fields['follow_up_date'].required = False
         self.fields['follow_up_note'].required = False
+        self._convert_currency_fields_to_display()
+
+    def clean(self):
+        cleaned_data = super().clean()
+        return self._convert_currency_fields_to_usd(cleaned_data)
 
 
 class MarkPaidForm(forms.Form):

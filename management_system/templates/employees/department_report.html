@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
 
 {% load i18n %}
+{% load currency_tags %}
 {% block title %}Department Report — ERP System{% endblock %}
 
 {% block content %}
@@ -55,8 +56,8 @@
                         <td class="text-center">
                             <span class="badge bg-warning text-dark">{{ dept.on_leave_count|default:0 }}</span>
                         </td>
-                        <td class="text-end">${{ dept.avg_salary|floatformat:2|default:"0.00" }}</td>
-                        <td class="text-end">${{ dept.total_salary|floatformat:2|default:"0.00" }}</td>
+                        <td class="text-end">{{ dept.avg_salary|currency:company }}</td>
+                        <td class="text-end">{{ dept.total_salary|currency:company }}</td>
                         <td>
                             <div class="d-flex align-items-center gap-2">
                                 <div class="progress flex-grow-1" style="height:8px;">
@@ -80,8 +81,8 @@
                         <td class="text-center">{{ totals.total|default:0 }}</td>
                         <td class="text-center">{{ totals.active|default:0 }}</td>
                         <td class="text-center">{{ totals.on_leave|default:0 }}</td>
-                        <td class="text-end">${{ totals.avg_salary|floatformat:2|default:"0.00" }}</td>
-                        <td class="text-end">${{ totals.salary|floatformat:2|default:"0.00" }}</td>
+                        <td class="text-end">{{ totals.avg_salary|currency:company }}</td>
+                        <td class="text-end">{{ totals.salary|currency:company }}</td>
                         <td>100%</td>
                     </tr>
                 </tfoot>

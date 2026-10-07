@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load i18n %}
+{% load currency_tags %}
 {% block title %}Delete Transaction — Finance{% endblock %}
 {% block content %}
 <div class="card shadow-sm border-danger" style="max-width: 520px; margin: 2rem auto;">
@@ -20,7 +21,7 @@
         {% endif %}
       </dd>
       <dt class="col-sm-4">{% trans "Amount" %}</dt>
-      <dd class="col-sm-8 fw-bold">{{ transaction.amount|floatformat:2 }}</dd>
+      <dd class="col-sm-8 fw-bold">{{ transaction.amount|currency:company }}</dd>
       <dt class="col-sm-4">{% trans "Date" %}</dt>
       <dd class="col-sm-8">{{ transaction.date|date:"d M Y" }}</dd>
       {% if transaction.description %}

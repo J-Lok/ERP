@@ -141,6 +141,7 @@ class Project(models.Model):
     def sync_status_from_subtasks(self) -> None:
         """
         When every subtask is terminé, set project workflow status to completed.
+        When any subtask is en_cours, set project workflow status to in_progress.
         If any subtask is not done and the project was completed, set back to in progress.
         Skips projects with no subtasks or cancelled projects.
         """
@@ -150,9 +151,12 @@ class Project(models.Model):
         if not task_qs.exists():
             return
         any_open = task_qs.exclude(status='termine').exists()
+        any_in_progress = task_qs.filter(status='en_cours').exists()
         new_status = None
         if not any_open:
             new_status = 'completed'
+        elif any_in_progress:
+            new_status = 'in_progress'
         elif self.status == 'completed':
             new_status = 'in_progress'
         if new_status is not None and new_status != self.status:

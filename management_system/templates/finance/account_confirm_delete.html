@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load i18n %}
+{% load currency_tags %}
 {% block title %}Delete Account — Finance{% endblock %}
 {% block content %}
 <div class="card shadow-sm border-danger" style="max-width: 520px; margin: 2rem auto;">
@@ -10,7 +11,7 @@
     <p>{% trans "Are you sure you want to delete the account" %} <strong>{{ account.name }}</strong>?</p>
     <dl class="row mb-0">
       <dt class="col-sm-4">{% trans "Balance" %}</dt>
-      <dd class="col-sm-8">{{ account.balance|floatformat:0 }}</dd>
+      <dd class="col-sm-8">{{ account.balance|currency:company }}</dd>
       <dt class="col-sm-4">{% trans "Created" %}</dt>
       <dd class="col-sm-8">{{ account.created_at|date:"d M Y" }}</dd>
     </dl>

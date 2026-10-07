@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
 {% load i18n %}
 {% load crispy_forms_tags %}
+{% load currency_tags %}
 
 {% block title %}{% trans "Mark as Paid" %} — {{ opportunity.title }}{% endblock %}
 
@@ -18,7 +19,7 @@
         <div class="alert alert-info mb-4">
           <div class="fw-semibold">{{ opportunity.title }}</div>
           <div class="text-muted small">{{ opportunity.contact.name }}{% if opportunity.contact.organization %} · {{ opportunity.contact.organization }}{% endif %}</div>
-          <div class="mt-1 fs-5 fw-bold">FCFA {{ opportunity.value|floatformat:0 }}</div>
+          <div class="mt-1 fs-5 fw-bold">{{ opportunity.value|currency:company }}</div>
         </div>
 
         <form method="post">

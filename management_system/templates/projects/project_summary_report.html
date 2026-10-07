@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
 {% load i18n %}
 {% load static %}
+{% load currency_tags %}
 
 {% block title %}Project Summary Report - {{ block.super }}{% endblock %}
 
@@ -105,25 +106,25 @@
         <div class="row">
             <div class="col-md-3 mb-3">
                 <div class="text-center p-3 rounded-3" style="background:var(--surface2)">
-                    <h5 class="text-primary">${{ budget_stats.total_budget|default:0|floatformat:2 }}</h5>
+                    <h5 class="text-primary">{{ budget_stats.total_budget|currency:company }}</h5>
                     <small class="text-muted">{% trans "Total Budget" %}</small>
                 </div>
             </div>
             <div class="col-md-3 mb-3">
                 <div class="text-center p-3 rounded-3" style="background:var(--surface2)">
-                    <h5 class="text-info">${{ budget_stats.avg_budget|default:0|floatformat:2 }}</h5>
+                    <h5 class="text-info">{{ budget_stats.avg_budget|currency:company }}</h5>
                     <small class="text-muted">{% trans "Average Budget" %}</small>
                 </div>
             </div>
             <div class="col-md-3 mb-3">
                 <div class="text-center p-3 rounded-3" style="background:var(--surface2)">
-                    <h5 class="text-success">${{ budget_stats.min_budget|default:0|floatformat:2 }}</h5>
+                    <h5 class="text-success">{{ budget_stats.min_budget|currency:company }}</h5>
                     <small class="text-muted">{% trans "Minimum Budget" %}</small>
                 </div>
             </div>
             <div class="col-md-3 mb-3">
                 <div class="text-center p-3 rounded-3" style="background:var(--surface2)">
-                    <h5 class="text-danger">${{ budget_stats.max_budget|default:0|floatformat:2 }}</h5>
+                    <h5 class="text-danger">{{ budget_stats.max_budget|currency:company }}</h5>
                     <small class="text-muted">{% trans "Maximum Budget" %}</small>
                 </div>
             </div>

@@ -27,7 +27,12 @@
 
             <div class="col-12">
               <label for="{{ form.skill.id_for_label }}" class="form-label">{% trans "Skill *" %}</label>
-              {{ form.skill }}
+              <div class="d-flex align-items-start gap-2">
+                <div class="flex-grow-1">{{ form.skill }}</div>
+                <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#quickCreateSkillModal" title="{% trans 'Add new skill' %}">
+                  <i class="fas fa-plus" aria-hidden="true"></i>
+                </button>
+              </div>
               {% if form.skill.errors %}
               <div class="invalid-feedback d-block">{{ form.skill.errors.0 }}</div>
               {% endif %}
@@ -80,4 +85,51 @@
     </div>
   </div>
 </div>
+{% endblock %}
+
+{% block modals %}
+<div class="modal fade" id="quickCreateSkillModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">{% trans "Add New Skill" %}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-danger d-none" id="quickSkillError"></div>
+                <div class="mb-3">
+                    <label class="form-label" for="quickSkillName">{% trans "Name" %}</label>
+                    <input type="text" id="quickSkillName" class="form-control" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label" for="quickSkillCategory">{% trans "Category" %}</label>
+                    <input type="text" id="quickSkillCategory" class="form-control">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">{% trans "Cancel" %}</button>
+                <button type="button" class="btn btn-primary" id="quickSkillSave">{% trans "Create" %}</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    zentralQuickCreate({
+        url: '{% url "hr:skill_quick_create" %}',
+        fields: [
+            { id: 'quickSkillName', name: 'name', required: true },
+            { id: 'quickSkillCategory', name: 'category', required: false },
+        ],
+        extraFields: { is_active: 'on' },
+        errorId: 'quickSkillError',
+        selectId: '{{ form.skill.id_for_label }}',
+        modalId: 'quickCreateSkillModal',
+        saveId: 'quickSkillSave',
+    });
+});
+</script>
 {% endblock %}

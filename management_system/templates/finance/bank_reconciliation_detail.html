@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
 
 {% load i18n %}
+{% load currency_tags %}
 {% block title %}Bank Reconciliation Details{% endblock %}
 
 {% block content %}
@@ -17,7 +18,7 @@
                             <div class="card bg-light">
                                 <div class="card-body text-center">
                                     <h6>{% trans "Bank Balance" %}</h6>
-                                    <h4 class="text-primary">{{ reconciliation.bank_balance|floatformat:2 }}</h4>
+                                    <h4 class="text-primary">{{ reconciliation.bank_balance|currency:company }}</h4>
                                 </div>
                             </div>
                         </div>
@@ -25,7 +26,7 @@
                             <div class="card bg-light">
                                 <div class="card-body text-center">
                                     <h6>{% trans "Book Balance" %}</h6>
-                                    <h4 class="text-info">{{ reconciliation.book_balance|floatformat:2 }}</h4>
+                                    <h4 class="text-info">{{ reconciliation.book_balance|currency:company }}</h4>
                                 </div>
                             </div>
                         </div>
@@ -34,7 +35,7 @@
                                 <div class="card-body text-center">
                                     <h6>{% trans "Difference" %}</h6>
                                     <h4 class="{% if reconciliation.difference == 0 %}text-success{% else %}text-danger{% endif %}">
-                                        {{ reconciliation.difference|floatformat:2 }}
+                                        {{ reconciliation.difference|currency:company }}
                                     </h4>
                                 </div>
                             </div>
@@ -72,7 +73,7 @@
                                             <tr>
                                                 <td>{{ transaction.date|date:"M d" }}</td>
                                                 <td>{{ transaction.description|truncatechars:30 }}</td>
-                                                <td class="text-end">{{ transaction.amount|floatformat:2 }}</td>
+                                                <td class="text-end">{{ transaction.amount|currency:company }}</td>
                                                 <td>
                                                     <form method="post" class="d-inline">
                                                         {% csrf_token %}
@@ -82,7 +83,7 @@
                                                             {% for acct_trans in accounting_transactions %}
                                                                 {% if acct_trans.amount == transaction.amount %}
                                                                     <option value="{{ acct_trans.pk }}">
-                                                                        {{ acct_trans.date|date:"M d" }} - {{ acct_trans.description|truncatechars:20 }} ({{ acct_trans.amount|floatformat:2 }})
+                                                                        {{ acct_trans.date|date:"M d" }} - {{ acct_trans.description|truncatechars:20 }} ({{ acct_trans.amount|currency:company }})
                                                                     </option>
                                                                 {% endif %}
                                                             {% endfor %}
@@ -117,7 +118,7 @@
                                             <tr>
                                                 <td>{{ transaction.date|date:"M d" }}</td>
                                                 <td>{{ transaction.description|truncatechars:30 }}</td>
-                                                <td class="text-end">{{ transaction.amount|floatformat:2 }}</td>
+                                                <td class="text-end">{{ transaction.amount|currency:company }}</td>
                                             </tr>
                                             {% endfor %}
                                         </tbody>

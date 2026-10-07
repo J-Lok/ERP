@@ -53,6 +53,11 @@ INVENTORY_REPORT_ROLES  = ('admin', 'manager', 'accountant', 'stock_manager')
 # Finance app (defined here for completeness; also used in finance/views.py)
 FINANCE_ROLES = ('admin', 'accountant', 'manager')
 
+# Suppliers app — touches both stock (who supplies what) and invoicing (what's owed)
+SUPPLIER_VIEW_ROLES   = ('admin', 'manager', 'stock_manager', 'accountant')
+SUPPLIER_WRITE_ROLES  = ('admin', 'manager', 'stock_manager')
+SUPPLIER_DELETE_ROLES = ('admin', 'manager')
+
 # HR app
 HR_ROLES           = ('admin', 'hr_manager', 'manager')
 LEAVE_SUBMIT_ROLES = ('admin', 'hr_manager', 'manager', 'secretary', 'accountant', 'stock_manager', 'employee')

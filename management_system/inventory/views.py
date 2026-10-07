@@ -38,7 +38,7 @@ def stock_list(request):
             Q(item_code__icontains=query) |
             Q(name__icontains=query) |
             Q(description__icontains=query) |
-            Q(supplier_name__icontains=query)
+            Q(supplier__name__icontains=query)
         )
     
     # Apply category filter
@@ -454,8 +454,10 @@ def stock_import(request):
             error_count = 0
             errors = []
             
-            # Cache categories
+            # Cache categories and suppliers
             category_cache = {c.name: c for c in StockCategory.objects.filter(company=company)}
+            from suppliers.models import Supplier
+            supplier_cache = {s.name: s for s in Supplier.objects.filter(company=company)}
             
             with transaction.atomic():
                 for index, row in df.iterrows():
@@ -483,7 +485,20 @@ def stock_import(request):
                                         defaults={'description': f'Category for {category_name}'}
                                     )
                                     category_cache[category_name] = category
-                        
+
+                        # Get or create supplier
+                        supplier = None
+                        if 'supplier_name' in df.columns and pd.notna(row.get('supplier_name')):
+                            supplier_name = _safe_str(row.get('supplier_name'))
+                            if supplier_name:
+                                supplier = supplier_cache.get(supplier_name)
+                                if not supplier:
+                                    supplier, _ = Supplier.objects.get_or_create(
+                                        name=supplier_name,
+                                        company=company,
+                                    )
+                                    supplier_cache[supplier_name] = supplier
+
                         # Check if stock item exists
                         stock = Stock.objects.filter(company=company, item_code=item_code).first()
                         
@@ -497,8 +512,7 @@ def stock_import(request):
                             stock.cost_price = _safe_float(row.get('cost_price'), 0)
                             stock.selling_price = _safe_float(row.get('selling_price'), 0)
                             stock.reorder_level = _safe_int(row.get('reorder_level'), 0)
-                            stock.supplier_name = _safe_str(row.get('supplier_name'))
-                            stock.supplier_contact = _safe_str(row.get('supplier_contact'))
+                            stock.supplier = supplier
                             stock.location = _safe_str(row.get('location'))
                             
                             # Update is_marketplace_visible if provided
@@ -532,8 +546,7 @@ def stock_import(request):
                                 cost_price=_safe_float(row.get('cost_price'), 0),
                                 selling_price=_safe_float(row.get('selling_price'), 0),
                                 reorder_level=_safe_int(row.get('reorder_level'), 0),
-                                supplier_name=_safe_str(row.get('supplier_name')),
-                                supplier_contact=_safe_str(row.get('supplier_contact')),
+                                supplier=supplier,
                                 location=_safe_str(row.get('location')),
                                 is_marketplace_visible=is_visible,
                                 created_by=request.user,
@@ -572,7 +585,7 @@ def stock_import(request):
 def stock_export(request):
     """Export stock items to Excel"""
     company = request.user.company
-    stocks = Stock.objects.filter(company=company).select_related('category', 'created_by')
+    stocks = Stock.objects.filter(company=company).select_related('category', 'created_by', 'supplier')
     
     # Prepare data
     data = []
@@ -587,8 +600,7 @@ def stock_export(request):
             'Unit Price': float(stock.cost_price),
             'Total Value': float(stock.total_value),
             'Reorder Level': stock.reorder_level,
-            'Supplier Name': stock.supplier_name,
-            'Supplier Contact': stock.supplier_contact,
+            'Supplier Name': stock.supplier.name if stock.supplier else '',
             'Location': stock.location,
             'Last Restocked': stock.last_restocked.strftime('%Y-%m-%d') if stock.last_restocked else '',
             'Needs Reorder': 'Yes' if stock.needs_reorder else 'No',
@@ -642,7 +654,6 @@ def stock_download_template(request):
         'selling_price': 15.99,
         'reorder_level': 20,
         'supplier_name': 'Sample Supplier Inc.',
-        'supplier_contact': 'contact@supplier.com',
         'location': 'Warehouse A, Shelf B2',
         'is_marketplace_visible': True,
     }
@@ -665,7 +676,6 @@ def stock_download_template(request):
             'No',
             'No',
             'No',
-            'No',
         ],
         'Description': [
             'Unique item code',
@@ -677,8 +687,7 @@ def stock_download_template(request):
             'Cost price per unit (for inventory valuation)',
             'Selling price per unit (for marketplace)',
             'Reorder level',
-            'Supplier name',
-            'Supplier contact info',
+            'Supplier name (will be created if not exists)',
             'Storage location',
             'Show on marketplace (true/false)',
         ],
@@ -693,7 +702,6 @@ def stock_download_template(request):
             f"{sample_data['selling_price']:.2f}",
             str(sample_data['reorder_level']),
             sample_data['supplier_name'],
-            sample_data['supplier_contact'],
             sample_data['location'],
             'true',
         ]
@@ -896,6 +904,20 @@ def category_create(request):
         'form': form,
         'title': 'Add New Category'
     })
+
+@role_required(*INVENTORY_WRITE_ROLES)
+def category_quick_create(request):
+    """AJAX endpoint — create a stock category inline from the item form."""
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'errors': {}}, status=405)
+    company = request.user.company
+    form = StockCategoryForm(request.POST, company=company)
+    if form.is_valid():
+        category = form.save(commit=False)
+        category.company = company
+        category.save()
+        return JsonResponse({'success': True, 'id': category.id, 'name': category.name})
+    return JsonResponse({'success': False, 'errors': form.errors}, status=400)
 
 @role_required(*INVENTORY_WRITE_ROLES)
 def category_edit(request, pk):

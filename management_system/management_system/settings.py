@@ -74,6 +74,7 @@ INSTALLED_APPS = [
    
     'employees',
     'inventory',
+    'suppliers',
     'projects',
     'core',
     'marketplace',
@@ -198,13 +199,40 @@ _use_cloudinary = all([
     os.getenv('CLOUDINARY_API_SECRET'),
 ])
 
+# MinIO (S3-compatible) object storage. Backs every FileField/ImageField in the
+# project — profile pictures, employee photos, product images, meeting
+# documents, etc. — through Django's storage abstraction, with no per-model
+# wiring needed. Takes priority over Cloudinary when configured.
+MINIO_ENDPOINT = os.getenv('MINIO_ENDPOINT', '')
+MINIO_ACCESS_KEY = os.getenv('MINIO_ACCESS_KEY', '')
+MINIO_SECRET_KEY = os.getenv('MINIO_SECRET_KEY', '')
+MINIO_BUCKET_NAME = os.getenv('MINIO_BUCKET_NAME', 'erp-media')
+MINIO_USE_SSL = os.getenv('MINIO_USE_SSL', 'False') == 'True'
+
+_use_minio = all([MINIO_ENDPOINT, MINIO_ACCESS_KEY, MINIO_SECRET_KEY])
+
+if _use_minio:
+    AWS_ACCESS_KEY_ID = MINIO_ACCESS_KEY
+    AWS_SECRET_ACCESS_KEY = MINIO_SECRET_KEY
+    AWS_STORAGE_BUCKET_NAME = MINIO_BUCKET_NAME
+    AWS_S3_ENDPOINT_URL = MINIO_ENDPOINT
+    AWS_S3_USE_SSL = MINIO_USE_SSL
+    AWS_S3_ADDRESSING_STYLE = 'path'  # MinIO requires path-style URLs, not virtual-hosted
+    AWS_S3_FILE_OVERWRITE = False
+    AWS_DEFAULT_ACL = None  # bucket stays private
+    AWS_QUERYSTRING_AUTH = True  # serve files via signed, expiring URLs
+    AWS_QUERYSTRING_EXPIRE = 3600
+
+if _use_minio:
+    _default_storage_backend = 'storages.backends.s3.S3Storage'
+elif _use_cloudinary:
+    _default_storage_backend = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+else:
+    _default_storage_backend = 'django.core.files.storage.FileSystemStorage'
+
 STORAGES = {
     'default': {
-        'BACKEND': (
-            'cloudinary_storage.storage.MediaCloudinaryStorage'
-            if _use_cloudinary
-            else 'django.core.files.storage.FileSystemStorage'
-        ),
+        'BACKEND': _default_storage_backend,
     },
     'staticfiles': {
         'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage',
@@ -259,20 +287,22 @@ SESSION_SAVE_EVERY_REQUEST = True
 DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'no-reply@zentral.com')
 RESEND_API_KEY = os.getenv('RESEND_API_KEY', '')
 
-if DEBUG:
+if os.getenv('EMAIL_HOST'):
+    # Real SMTP server (e.g. Mailpit in local dev). Takes priority regardless
+    # of DEBUG so a dev container can opt into a visible mail catcher instead
+    # of the console backend.
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+    EMAIL_HOST = os.getenv('EMAIL_HOST')
+    EMAIL_PORT = int(os.getenv('EMAIL_PORT', '587'))
+    EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'True') == 'True'
+    EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')
+    EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
+elif DEBUG:
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 else:
-    if os.getenv('EMAIL_HOST'):
-        EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-        EMAIL_HOST = os.getenv('EMAIL_HOST')
-        EMAIL_PORT = int(os.getenv('EMAIL_PORT', '587'))
-        EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'True') == 'True'
-        EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
-        EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
-    else:
-        EMAIL_BACKEND = 'management_system.email_backends.ResendEmailBackend'
-        if not RESEND_API_KEY:
-            raise ImproperlyConfigured('RESEND_API_KEY environment variable is required when DEBUG=False and EMAIL_HOST is not set.')
+    EMAIL_BACKEND = 'management_system.email_backends.ResendEmailBackend'
+    if not RESEND_API_KEY:
+        raise ImproperlyConfigured('RESEND_API_KEY environment variable is required when DEBUG=False and EMAIL_HOST is not set.')
 
 if not DEBUG:
     SECURE_SSL_REDIRECT = env_bool('SECURE_SSL_REDIRECT', True)
