@@ -20,9 +20,10 @@ Fill in every value — at minimum: `SECRET_KEY`, `ALLOWED_HOSTS`,
 `CSRF_TRUSTED_ORIGINS` (your real domain), `POSTGRES_PASSWORD` / `DATABASE_URL`
 (keep them consistent), and `RESEND_API_KEY` for email.
 
-If you don't have Cloudinary credentials, leave those three blank — uploaded
+If you don't have MinIO or Cloudinary credentials, leave those blank — uploaded
 files persist in `./deploy/media` on the VPS instead, and the panel serves them
-directly (step 3).
+directly (step 3). See `.env.production.example` for both options — MinIO takes
+priority if both are filled in.
 
 ## 2. Check port 8010 is free, then start the stack
 
@@ -40,8 +41,9 @@ If something's already there, change the `8010` in `docker-compose.prod.yml`'s
 docker compose -f docker-compose.prod.yml up -d --build
 ```
 
-`web` runs `migrate` automatically on start (see `Dockerfile`); static files were
-already collected at image-build time and are served via whitenoise.
+`web` runs `migrate` and `seed_job_roles` automatically on start (see
+`Dockerfile`); static files were already collected at image-build time and are
+served via whitenoise.
 
 ## 3. Point aaPanel at it
 

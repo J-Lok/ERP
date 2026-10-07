@@ -22,4 +22,6 @@ whitenoise==6.9.0
 polib==1.2.0
 cloudinary==1.42.1
 django-cloudinary-storage==0.3.0
+django-storages==1.14.4
+boto3==1.35.74
 reportlab>=4.0.0

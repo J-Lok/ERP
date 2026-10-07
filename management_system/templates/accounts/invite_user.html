@@ -46,6 +46,7 @@
             <thead>
               <tr>
                 <th>{% trans "Email" %}</th>
+                <th>{% trans "Role" %}</th>
                 <th>{% trans "Sent" %}</th>
                 <th>{% trans "Status" %}</th>
               </tr>
@@ -54,6 +55,7 @@
               {% for inv in invitations %}
               <tr>
                 <td class="fw-semibold">{{ inv.email }}</td>
+                <td class="text-muted small">{{ inv.get_role_display }}</td>
                 <td class="text-muted small">{{ inv.created_at|date:"d M Y" }}</td>
                 <td>
                   {% if inv.accepted_at %}

@@ -20,7 +20,12 @@
                 <div class="row g-4">
                     {# ---- Avatar / summary column ---- #}
                     <div class="col-md-4 text-center border-end">
-                        <i class="fas fa-user-circle fa-5x text-primary mb-3" aria-hidden="true"></i>
+                        {% if profile_user.profile_picture %}
+                            <img src="{{ profile_user.profile_picture.url }}" alt="{{ profile_user.get_full_name }}"
+                                 class="rounded-circle mb-3" style="width:96px;height:96px;object-fit:cover;">
+                        {% else %}
+                            <i class="fas fa-user-circle fa-5x text-primary mb-3" aria-hidden="true"></i>
+                        {% endif %}
                         <h5 class="mb-1">{{ profile_user.get_full_name }}</h5>
                         <p class="text-muted small mb-2">{{ profile_user.email }}</p>
                         {% if profile_user.is_company_admin %}

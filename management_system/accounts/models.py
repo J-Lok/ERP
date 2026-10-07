@@ -23,6 +23,18 @@ class Company(models.Model):
         ('enterprise', 'Enterprise'),
     ]
 
+    CURRENCY_CHOICES = [
+        ('XAF', 'FCFA — Central Africa (XAF)'),
+        ('XOF', 'FCFA — West Africa (XOF)'),
+        ('USD', 'US Dollar ($)'),
+        ('EUR', 'Euro (€)'),
+        ('GBP', 'British Pound (£)'),
+        ('NGN', 'Nigerian Naira (₦)'),
+        ('GHS', 'Ghanaian Cedi (₵)'),
+        ('ZAR', 'South African Rand (R)'),
+        ('CAD', 'Canadian Dollar (CA$)'),
+    ]
+
     company_id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     name = models.CharField(max_length=200)
     domain = models.CharField(max_length=200, unique=True, db_index=True)
@@ -48,6 +60,12 @@ class Company(models.Model):
         help_text='MTN Mobile Money transaction number for client payments',
     )
     address = models.TextField(blank=True)
+    currency = models.CharField(
+        max_length=3,
+        choices=CURRENCY_CHOICES,
+        default='XAF',
+        help_text='Currency used for all prices displayed across the application.',
+    )
     subscription_plan = models.CharField(
         max_length=20,
         choices=PLAN_CHOICES,
@@ -81,6 +99,23 @@ class Company(models.Model):
 
     def __str__(self):
         return self.name
+
+    CURRENCY_SYMBOLS = {
+        'XAF': 'FCFA',
+        'XOF': 'FCFA',
+        'USD': '$',
+        'EUR': '€',
+        'GBP': '£',
+        'NGN': '₦',
+        'GHS': '₵',
+        'ZAR': 'R',
+        'CAD': 'CA$',
+    }
+
+    @property
+    def currency_symbol(self) -> str:
+        """Display symbol for this company's currency, e.g. 'XAF' -> 'FCFA'."""
+        return self.CURRENCY_SYMBOLS.get(self.currency, self.currency)
 
     @property
     def active_user_count(self) -> int:
@@ -127,8 +162,14 @@ class User(AbstractUser):
         ('employee', 'Employee'),
     ]
 
+    # Roles a company admin can hand out via invitation. 'admin' is excluded
+    # on purpose — there is exactly one admin per company (the founder, set
+    # at company_register time), and no UI promotes anyone else to it.
+    INVITABLE_ROLE_CHOICES = [c for c in ROLE_CHOICES if c[0] != 'admin']
+
     username = None  # replaced by email
     email = models.EmailField(unique=True, db_index=True)
+    profile_picture = models.ImageField(upload_to='profile_pictures/', blank=True, null=True)
     company = models.ForeignKey(
         Company,
         on_delete=models.CASCADE,
@@ -196,6 +237,12 @@ class Invitation(models.Model):
     token = models.UUIDField(default=uuid.uuid4, unique=True, db_index=True, editable=False)
     company = models.ForeignKey(Company, on_delete=models.CASCADE, related_name='invitations')
     email = models.EmailField()
+    role = models.CharField(
+        max_length=20,
+        choices=User.INVITABLE_ROLE_CHOICES,
+        default='employee',
+        help_text='Access level the invitee will have once they accept.',
+    )
     invited_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
@@ -226,12 +273,13 @@ class Invitation(models.Model):
         return self.accepted_at is None and not self.is_expired
 
     @classmethod
-    def create_for(cls, company, email: str, invited_by) -> 'Invitation':
+    def create_for(cls, company, email: str, invited_by, role: str = 'employee') -> 'Invitation':
         """Create (or reset) an invitation for a given email+company."""
         cls.objects.filter(company=company, email=email, accepted_at__isnull=True).delete()
         return cls.objects.create(
             company=company,
             email=email,
+            role=role,
             invited_by=invited_by,
             expires_at=timezone.now() + timedelta(days=7),
         )

@@ -175,7 +175,8 @@ def invite_user(request):
         form = InvitationForm(company, request.POST)
         if form.is_valid():
             email = form.cleaned_data['email']
-            invitation = Invitation.create_for(company, email, invited_by=request.user)
+            role = form.cleaned_data['role']
+            invitation = Invitation.create_for(company, email, invited_by=request.user, role=role)
 
             accept_url = request.build_absolute_uri(
                 reverse('accounts:accept_invitation', kwargs={'token': invitation.token})
@@ -186,6 +187,7 @@ def invite_user(request):
                 'invited_by': request.user,
                 'accept_url': accept_url,
                 'expiry_days': 7,
+                'role_label': invitation.get_role_display(),
             })
 
             try:
@@ -234,7 +236,7 @@ def accept_invitation(request, token):
             user = form.save(commit=False)
             user.email = invitation.email
             user.company = invitation.company
-            user.role = 'employee'
+            user.role = invitation.role
             user.save()
 
             from django.utils import timezone
@@ -365,7 +367,7 @@ def user_profile(request):
 def edit_profile(request):
     """Edit the current user's profile."""
     if request.method == 'POST':
-        form = UserProfileForm(request.POST, instance=request.user)
+        form = UserProfileForm(request.POST, request.FILES, instance=request.user)
         if form.is_valid():
             form.save()
             messages.success(request, 'Profile updated successfully!')

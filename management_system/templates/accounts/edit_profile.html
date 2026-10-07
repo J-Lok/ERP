@@ -15,7 +15,7 @@
             </div>
 
             <div class="card-body">
-                <form method="post" novalidate>
+                <form method="post" enctype="multipart/form-data" novalidate>
                     {% csrf_token %}
 
                     {% if form.non_field_errors %}
@@ -25,7 +25,17 @@
                     </div>
                     {% endif %}
 
+                    <div class="text-center mb-3">
+                        {% if form.instance.profile_picture %}
+                            <img src="{{ form.instance.profile_picture.url }}" alt=""
+                                 class="rounded-circle" style="width:96px;height:96px;object-fit:cover;">
+                        {% else %}
+                            <i class="fas fa-user-circle fa-5x text-primary" aria-hidden="true"></i>
+                        {% endif %}
+                    </div>
+
                     <div class="row g-3">
+                        <div class="col-md-6">{{ form.profile_picture|as_crispy_field }}</div>
                         <div class="col-md-6">{{ form.first_name|as_crispy_field }}</div>
                         <div class="col-md-6">{{ form.last_name|as_crispy_field }}</div>
                         <div class="col-md-6">{{ form.email|as_crispy_field }}</div>
