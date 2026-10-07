@@ -1,5 +1,8 @@
 import logging
+import time
+from decimal import Decimal, InvalidOperation
 
+import requests
 from django.contrib import messages
 from django.contrib.auth import login, logout, authenticate, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
@@ -24,7 +27,7 @@ from .forms import (
     CompanyEmailSettingsForm,
     CompanyPaymentSettingsForm,
 )
-from .models import Company, User, Invitation, CompanyEmailSettings
+from .models import Company, User, Invitation, CompanyEmailSettings, ExchangeRate
 from .utils import safe_next_url
 from marketplace.models import CompanyPaymentSettings
 
@@ -350,6 +353,95 @@ def company_payment_settings(request):
         'form': form,
         'company': company,
         'title': 'Company Payment Settings',
+    })
+
+
+@login_required
+@require_http_methods(['GET', 'POST'])
+def exchange_rates(request):
+    """
+    Platform-wide exchange rate table — one row per currency the app
+    supports. Shared by every company, since a rate is a market fact, not a
+    per-tenant setting; each company only picks which currency it displays
+    amounts in (Company.currency).
+    """
+    if not request.user.is_company_admin:
+        raise PermissionDenied('Only company administrators can access this page.')
+
+    # Make sure every supported currency has a row, even one added to
+    # CURRENCY_CHOICES after the table was first seeded.
+    existing_codes = set(ExchangeRate.objects.values_list('currency', flat=True))
+    missing = [code for code, _ in Company.CURRENCY_CHOICES if code not in existing_codes]
+    if missing:
+        ExchangeRate.objects.bulk_create([ExchangeRate(currency=code, rate=1) for code in missing])
+
+    if request.method == 'POST':
+        action = request.POST.get('action')
+
+        if action == 'fetch':
+            data = None
+            last_error = None
+            # Retry once — transient DNS/network blips (common on local Docker
+            # setups) shouldn't force the admin to click the button again.
+            for attempt in range(2):
+                try:
+                    response = requests.get('https://open.er-api.com/v6/latest/USD', timeout=15)
+                    response.raise_for_status()
+                    data = response.json()
+                    break
+                except requests.RequestException as exc:
+                    last_error = exc
+                    time.sleep(1)
+
+            if data is None:
+                logger.exception('Exchange rate fetch failed after retry', exc_info=last_error)
+                messages.error(request, 'Could not reach the exchange rate service. Please try again later.')
+                return redirect('accounts:exchange_rates')
+
+            if data.get('result') != 'success':
+                messages.error(request, 'The exchange rate service returned an error. Please try again later.')
+                return redirect('accounts:exchange_rates')
+
+            live_rates = data.get('rates', {})
+            updated, skipped = [], []
+            for rate_row in ExchangeRate.objects.all():
+                if rate_row.currency == 'USD':
+                    continue
+                live_rate = live_rates.get(rate_row.currency)
+                if live_rate is None:
+                    skipped.append(rate_row.currency)
+                    continue
+                rate_row.rate = Decimal(str(live_rate))
+                rate_row.save(update_fields=['rate', 'updated_at'])
+                updated.append(rate_row.currency)
+
+            if updated:
+                messages.success(request, f'Exchange rates updated: {", ".join(updated)}.')
+            if skipped:
+                messages.warning(request, f'No live rate available for: {", ".join(skipped)}.')
+
+        elif action == 'save':
+            for rate_row in ExchangeRate.objects.exclude(currency='USD'):
+                raw_value = request.POST.get(f'rate_{rate_row.currency}', '').strip()
+                try:
+                    value = Decimal(raw_value)
+                    if value <= 0:
+                        raise InvalidOperation
+                except InvalidOperation:
+                    messages.error(request, f'Invalid rate for {rate_row.currency} — must be a positive number.')
+                    continue
+                if value != rate_row.rate:
+                    rate_row.rate = value
+                    rate_row.save(update_fields=['rate', 'updated_at'])
+            messages.success(request, 'Exchange rates saved.')
+
+        return redirect('accounts:exchange_rates')
+
+    rates = ExchangeRate.objects.all()
+
+    return render(request, 'accounts/exchange_rates.html', {
+        'rates': rates,
+        'title': 'Exchange Rates',
     })
 
 

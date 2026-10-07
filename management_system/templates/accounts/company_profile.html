@@ -25,6 +25,9 @@
                     <a href="{% url 'accounts:company_payment_settings' %}" class="btn btn-outline-primary btn-sm">
                         <i class="fas fa-credit-card me-1"></i>{% trans "Payment Settings" %}
                     </a>
+                    <a href="{% url 'accounts:exchange_rates' %}" class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-money-bill-transfer me-1"></i>{% trans "Exchange Rates" %}
+                    </a>
                     <span class="badge bg-success">{% trans "Administrator View" %}</span>
                 </div>
             </div>
@@ -92,7 +95,13 @@
                         <div class="col-md-6">{{ form.contact_email|as_crispy_field }}</div>
                         <div class="col-md-6">{{ form.contact_phone|as_crispy_field }}</div>
                         <div class="col-12">{{ form.address|as_crispy_field }}</div>
-                        <div class="col-md-6">{{ form.currency|as_crispy_field }}</div>
+                        <div class="col-md-6">
+                            {{ form.currency|as_crispy_field }}
+                            <div class="form-text">
+                                {% trans "Exchange rates are shared across the application —" %}
+                                <a href="{% url 'accounts:exchange_rates' %}">{% trans "manage them here" %}</a>.
+                            </div>
+                        </div>
                         <div class="col-md-6">{{ form.subscription_plan|as_crispy_field }}</div>
                         <div class="col-md-6">{{ form.is_active|as_crispy_field }}</div>
                     </div>

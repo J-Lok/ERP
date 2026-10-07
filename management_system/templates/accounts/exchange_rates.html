@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% load l10n %}
+
+{% block title %}{% trans "Exchange Rates" %} — ERP System{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-10">
+        <div class="card shadow-sm">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h4 class="mb-0">
+                    <i class="fas fa-money-bill-transfer me-2 text-primary" aria-hidden="true"></i>{% trans "Exchange Rates" %}
+                </h4>
+                <a href="{% url 'accounts:company_profile' %}" class="btn btn-outline-secondary btn-sm">
+                    <i class="fas fa-arrow-left me-1"></i>{% trans "Back to Company Profile" %}
+                </a>
+            </div>
+
+            <div class="card-body">
+                <p class="text-muted">
+                    {% blocktrans %}
+                    Every amount in the application is stored in US Dollars (USD) and converted to each
+                    company's selected currency for display, using the rates below. These rates are shared
+                    across the whole application — not specific to your company.
+                    {% endblocktrans %}
+                </p>
+
+                <form method="post" class="d-inline mb-3" id="fetch-rates-form">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="fetch">
+                    <button type="submit" class="btn btn-primary" id="fetch-rates-btn">
+                        <i class="fas fa-rotate me-1" aria-hidden="true"></i>{% trans "Update rates now" %}
+                    </button>
+                    <span class="text-muted small ms-2">
+                        {% trans "Fetches live rates from a free exchange rate API (open.er-api.com)." %}
+                    </span>
+                </form>
+
+                <script>
+                    document.getElementById('fetch-rates-form').addEventListener('submit', function () {
+                        const btn = document.getElementById('fetch-rates-btn');
+                        btn.disabled = true;
+                        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>{% trans "Updating…" %}';
+                    });
+                </script>
+
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="save">
+                    <div class="table-responsive">
+                        <table class="table align-middle">
+                            <thead>
+                                <tr>
+                                    <th>{% trans "Currency" %}</th>
+                                    <th>{% trans "Symbol" %}</th>
+                                    <th>{% trans "1 USD =" %}</th>
+                                    <th>{% trans "Last updated" %}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for rate in rates %}
+                                <tr>
+                                    <td>{{ rate.get_currency_display }}</td>
+                                    <td>{{ rate.symbol }}</td>
+                                    <td style="max-width: 220px;">
+                                        {% if rate.currency == 'USD' %}
+                                            <input type="number" class="form-control" value="1" disabled>
+                                            <div class="form-text">{% trans "Reference currency — always 1." %}</div>
+                                        {% else %}
+                                            <div class="input-group">
+                                                <input type="number" step="0.000001" min="0.000001"
+                                                       name="rate_{{ rate.currency }}"
+                                                       value="{{ rate.rate|unlocalize }}" class="form-control">
+                                                <span class="input-group-text">{{ rate.currency }}</span>
+                                            </div>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-muted small">{{ rate.updated_at }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <button type="submit" class="btn btn-outline-primary">
+                        <i class="fas fa-save me-1" aria-hidden="true"></i>{% trans "Save rates manually" %}
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

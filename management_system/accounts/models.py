@@ -1,7 +1,9 @@
 import uuid
 from datetime import timedelta
+from decimal import Decimal
 
 from django.conf import settings
+from django.core.cache import cache
 from django.db import models
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.core.exceptions import ValidationError
@@ -117,6 +119,25 @@ class Company(models.Model):
         """Display symbol for this company's currency, e.g. 'XAF' -> 'FCFA'."""
         return self.CURRENCY_SYMBOLS.get(self.currency, self.currency)
 
+    def to_display_currency(self, usd_amount):
+        """Convert a USD amount (as stored in the database) to this
+        company's selected display currency, using the shared ExchangeRate
+        table. Every monetary field in the app is stored in USD — this is
+        the one place that conversion happens, at display time."""
+        if usd_amount is None:
+            return None
+        return usd_amount * get_exchange_rates().get(self.currency, Decimal('1'))
+
+    def from_display_currency(self, display_amount):
+        """Inverse of to_display_currency() — convert a value typed by a
+        user in this company's display currency back to USD for storage."""
+        if display_amount is None:
+            return None
+        rate = get_exchange_rates().get(self.currency, Decimal('1'))
+        if not rate:
+            return display_amount
+        return display_amount / rate
+
     @property
     def active_user_count(self) -> int:
         return self.users.filter(is_active=True).count()
@@ -124,6 +145,58 @@ class Company(models.Model):
     @property
     def pending_invitations_count(self) -> int:
         return self.invitations.filter(accepted_at__isnull=True, expires_at__gt=timezone.now()).count()
+
+
+EXCHANGE_RATES_CACHE_KEY = 'accounts:exchange_rates_usd'
+EXCHANGE_RATES_CACHE_TTL = 300  # seconds — also cleared explicitly whenever rates are saved
+
+
+def get_exchange_rates() -> dict:
+    """{currency_code: Decimal rate}, one entry per currently supported
+    currency. Read on virtually every page render (every converted amount),
+    so it's cached briefly rather than hitting the DB each time."""
+    rates = cache.get(EXCHANGE_RATES_CACHE_KEY)
+    if rates is None:
+        rates = {row.currency: row.rate for row in ExchangeRate.objects.all()}
+        cache.set(EXCHANGE_RATES_CACHE_KEY, rates, EXCHANGE_RATES_CACHE_TTL)
+    return rates
+
+
+class ExchangeRate(models.Model):
+    """
+    Platform-wide USD exchange rate for one of Company.CURRENCY_CHOICES.
+
+    Shared by every company — a company only picks *which* currency it
+    displays in (Company.currency); the rate itself is a market fact, not a
+    per-tenant setting. Either set manually or refreshed in bulk from a free
+    FX API via the "Update rates" action.
+    """
+    currency = models.CharField(max_length=3, choices=Company.CURRENCY_CHOICES, unique=True)
+    rate = models.DecimalField(
+        max_digits=18,
+        decimal_places=6,
+        default=1,
+        help_text='Units of this currency equal to 1 USD.',
+    )
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['currency']
+
+    def __str__(self):
+        return f'{self.currency} = {self.rate} USD'
+
+    @property
+    def symbol(self) -> str:
+        return Company.CURRENCY_SYMBOLS.get(self.currency, self.currency)
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        cache.delete(EXCHANGE_RATES_CACHE_KEY)
+
+    def delete(self, *args, **kwargs):
+        super().delete(*args, **kwargs)
+        cache.delete(EXCHANGE_RATES_CACHE_KEY)
 
 
 class CustomUserManager(BaseUserManager):
