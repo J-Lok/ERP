@@ -221,10 +221,17 @@
       border: 1px solid var(--border) !important;
       border-radius: 12px !important;
       color: var(--text) !important;
-      overflow: hidden;
+      /* No overflow:hidden here — it clipped any dropdown (e.g. a Choices.js
+         select) that opened inside a card. Header/footer/image corners are
+         rounded explicitly below instead, to the same radius, so cards still
+         look clean without relying on clipping. */
       box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12) !important;
       transition: transform 0.22s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.22s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.22s !important;
     }
+    .card-header:first-child { border-radius: 11px 11px 0 0 !important; }
+    .card-footer:last-child { border-radius: 0 0 11px 11px !important; }
+    .card-img-top { border-radius: 11px 11px 0 0 !important; }
+    .card-img-bottom { border-radius: 0 0 11px 11px !important; }
     .card:hover {
       transform: translateY(-2px);
       box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2) !important;
@@ -395,6 +402,12 @@
       box-shadow: 0 8px 20px rgba(0,0,0,0.35);
       z-index: 1056;
     }
+    /* .card has backdrop-filter, which creates its own stacking context —
+       a child's z-index can never rise above a sibling card no matter how
+       high it's set. Elevate the whole card above its siblings while one of
+       its selects is open, so the dropdown isn't painted over by the next
+       card in the page. */
+    .card:has(.choices.is-open) { position: relative; z-index: 1057; }
     .choices__list--dropdown .choices__item--selectable,
     .choices__list[aria-expanded] .choices__item--selectable { color: var(--text) !important; }
     .choices__list--dropdown .choices__item--selectable.is-highlighted,
