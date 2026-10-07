@@ -12,6 +12,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
   <script>(function(){var t=localStorage.getItem('zentral-theme')||'dark';document.documentElement.setAttribute('data-bs-theme',t);})();</script>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js@10.2.0/public/assets/styles/choices.min.css" />
 
   <style>
     /* ── Zentral Design Tokens ── */
@@ -150,10 +151,11 @@
     }
     .zentral-sidebar.collapsed .sidebar-user { padding: 12px 8px; justify-content: center; }
     .avatar {
-      border-radius: 50%; background: #1a6b45;
+      border-radius: 50%; background: #1a6b45; overflow: hidden;
       color: #fff; display: flex; align-items: center; justify-content: center;
       font-size: 12px; font-weight: 700; flex-shrink: 0; letter-spacing: .02em;
     }
+    .avatar img { width: 100%; height: 100%; object-fit: cover; }
     .user-name { font-size: 12.5px; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .user-role { font-size: 11px; color: var(--muted); }
 
@@ -372,6 +374,50 @@
     .modal-footer { border-top: 1px solid var(--border) !important; }
     .btn-close { filter: invert(60%); }
 
+    /* Searchable selects (Choices.js) — every <select> site-wide is enhanced
+       into one of these; themed to match the rest of the UI. */
+    .choices { margin-bottom: 0; }
+    .choices__inner {
+      background: var(--surface2) !important;
+      border: 1px solid var(--border) !important;
+      border-radius: 8px !important;
+      color: var(--text) !important;
+      min-height: calc(1.5em + 0.75rem + 2px);
+      padding: 0.375rem 0.75rem !important;
+      font-size: 1rem;
+    }
+    .choices.is-open .choices__inner { border-color: var(--muted-dim) !important; }
+    .choices__list--single { padding: 0; }
+    .choices__list--dropdown, .choices__list[aria-expanded] {
+      background: var(--surface2) !important;
+      border: 1px solid var(--border) !important;
+      border-radius: 8px !important;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.35);
+      z-index: 1056;
+    }
+    .choices__list--dropdown .choices__item--selectable,
+    .choices__list[aria-expanded] .choices__item--selectable { color: var(--text) !important; }
+    .choices__list--dropdown .choices__item--selectable.is-highlighted,
+    .choices__list[aria-expanded] .choices__item--selectable.is-highlighted {
+      background: var(--accent-dim) !important; color: var(--accent) !important;
+    }
+    .choices__item { color: var(--text) !important; }
+    .choices__placeholder { opacity: 0.6; color: var(--muted) !important; }
+    .choices__input {
+      background: transparent !important;
+      color: var(--text) !important;
+      margin-bottom: 0 !important;
+    }
+    .choices__input::placeholder { color: var(--muted-dim); }
+    .choices[data-type*="select-multiple"] .choices__item,
+    .choices[data-type*="text"] .choices__item {
+      background: var(--accent-dim) !important;
+      border: 1px solid var(--accent) !important;
+      color: var(--accent) !important;
+    }
+    .choices__button { filter: none; opacity: 0.7; }
+    .choices.is-disabled .choices__inner, .choices.is-disabled .choices__input { opacity: 0.6; }
+
     /* Dropdowns */
     .dropdown-menu {
       background: var(--surface) !important; border: 1px solid var(--border) !important;
@@ -570,6 +616,14 @@
       </a>
       {% endif %}
 
+      {% if user|has_role:'admin,manager,stock_manager,accountant' %}
+      <a href="{% url 'suppliers:supplier_list' %}" class="nav-item-inner {% if request.resolver_match.app_name == 'suppliers' %}active{% endif %}">
+        <i class="fas fa-truck"></i>
+        <span class="link-text">{% trans "Suppliers" %}</span>
+        {% if request.resolver_match.app_name == 'suppliers' %}<span class="nav-active-dot"></span>{% endif %}
+      </a>
+      {% endif %}
+
       {% if user|has_role:'admin,hr_manager,manager,secretary,accountant,employee' %}
       <a href="{% url 'meetings:dashboard' %}" class="nav-item-inner {% if request.resolver_match.app_name == 'meetings' %}active{% endif %}">
         <i class="fas fa-calendar-alt"></i>
@@ -624,7 +678,11 @@
 
     <div class="sidebar-user">
       <div class="avatar" style="width:32px;height:32px;font-size:11px;">
-        {{ user.first_name|first|upper }}{{ user.last_name|first|upper }}
+        {% if user.profile_picture %}
+          <img src="{{ user.profile_picture.url }}" alt="">
+        {% else %}
+          {{ user.first_name|first|upper }}{{ user.last_name|first|upper }}
+        {% endif %}
       </div>
       <div class="user-info" style="min-width:0;">
         <div class="user-name">{{ user.get_full_name }}</div>
@@ -713,7 +771,11 @@
         <div class="dropdown">
           <button class="topbar-btn dropdown-toggle" data-bs-toggle="dropdown" style="width:auto;padding:0 10px;gap:8px;">
             <div class="avatar" style="width:26px;height:26px;font-size:9px;">
-              {{ user.first_name|first|upper }}{{ user.last_name|first|upper }}
+              {% if user.profile_picture %}
+                <img src="{{ user.profile_picture.url }}" alt="">
+              {% else %}
+                {{ user.first_name|first|upper }}{{ user.last_name|first|upper }}
+              {% endif %}
             </div>
             <span style="font-size:12px;font-weight:600;max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ user.get_full_name }}</span>
           </button>
@@ -758,9 +820,153 @@
 
 {% endif %}
 
+{# Modals must live outside .zentral-shell/.zentral-main: those have
+   overflow:hidden, which clips and breaks click-through on any
+   position:fixed Bootstrap modal rendered inside them. #}
+{% block modals %}{% endblock %}
+
 {% include 'help_system.html' %}
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/choices.js@10.2.0/public/assets/scripts/choices.min.js"></script>
+<script>
+// ── Searchable selects, site-wide ──
+// Every <select> becomes type-to-filter via Choices.js. Opt a field out with
+// class="no-search-select" (e.g. a 2-option toggle where search adds nothing).
+window.ZentralChoicesInstances = new WeakMap();
+
+function zentralEnhanceSelects(root) {
+  (root || document).querySelectorAll('select').forEach(function (select) {
+    if (select.classList.contains('no-search-select') || select.dataset.choicesApplied) return;
+    select.dataset.choicesApplied = '1';
+    try {
+      const instance = new Choices(select, {
+        searchEnabled: true,
+        shouldSort: false,
+        itemSelectText: '',
+        placeholder: true,
+        searchPlaceholderValue: 'Rechercher…',
+        noResultsText: 'Aucun résultat',
+        noChoicesText: 'Aucune option',
+        allowHTML: false,
+        removeItemButton: select.multiple,
+      });
+      window.ZentralChoicesInstances.set(select, instance);
+    } catch (e) {
+      console.error('Choices.js init failed for select:', select, e);
+    }
+  });
+}
+
+// For code that clones a row containing an already-enhanced <select> (e.g.
+// an "add another line" button using cloneNode) — Choices.js re-parents the
+// original <select> inside a '.choices' wrapper div, and cloning copies that
+// stale, inert markup (no event listeners survive cloneNode) instead of a
+// plain selectable element. Call this on the clone, after renaming its
+// input/select name+id attributes, to restore each plain <select> and
+// re-enhance it fresh.
+window.zentralRestoreClonedSelects = function (root) {
+  root.querySelectorAll('.choices').forEach(function (wrapper) {
+    const select = wrapper.querySelector('select');
+    if (!select) return;
+    select.removeAttribute('data-choices-applied');
+    select.hidden = false;
+    select.style.display = '';
+    select.classList.remove('choices__input');
+    wrapper.replaceWith(select);
+  });
+  zentralEnhanceSelects(root);
+};
+
+// For code that adds a new <option> to a <select> after Choices.js has
+// already wrapped it (e.g. a "+" quick-create modal) — updates the Choices
+// instance itself, not just the (now hidden) native <select>.
+window.zentralAddChoiceOption = function (select, value, label, selectIt) {
+  const instance = window.ZentralChoicesInstances.get(select);
+  if (instance) {
+    instance.setChoices([{ value: String(value), label: label, selected: !!selectIt }], 'value', 'label', false);
+    if (selectIt) instance.setChoiceByValue(String(value));
+  } else {
+    select.add(new Option(label, value, selectIt, selectIt));
+  }
+};
+
+document.addEventListener('DOMContentLoaded', function () { zentralEnhanceSelects(document); });
+
+// ── Generic "+" quick-create modal wiring ──
+// Reused by every "create a new X inline" button (department, role, position,
+// category, journal, account, skill, ...) so each template only supplies its
+// own modal markup + a config object, not a copy of this fetch/validate logic.
+//
+// config:
+//   url         — endpoint to POST to
+//   saveId      — id of the modal's "Create" button
+//   modalId     — id of the modal element
+//   errorId     — id of the alert box used to show errors
+//   fields      — [{ id, name, required }] inputs inside the modal to submit
+//   selectId    — id of the <select> to update, OR a CSS selector string
+//                 (e.g. 'select[name$="-account"]') to update several at once
+//   labelKey    — key in the JSON response holding the display label (default 'name')
+//   extraFields — extra static {name: value} pairs always sent (e.g. {is_active: 'on'})
+window.zentralQuickCreate = function (config) {
+  const saveBtn = document.getElementById(config.saveId);
+  if (!saveBtn) return;
+
+  saveBtn.addEventListener('click', function () {
+    const errorBox = document.getElementById(config.errorId);
+    errorBox.classList.add('d-none');
+
+    const formData = new URLSearchParams();
+    Object.entries(config.extraFields || {}).forEach(([k, v]) => formData.set(k, v));
+
+    let missingRequired = false;
+    (config.fields || []).forEach(function (f) {
+      const el = document.getElementById(f.id);
+      const value = el.type === 'checkbox' ? (el.checked ? 'on' : '') : el.value.trim();
+      if (f.required && !value) missingRequired = true;
+      formData.set(f.name, value);
+    });
+
+    if (missingRequired) {
+      errorBox.textContent = config.requiredMessage || 'Please fill in all required fields.';
+      errorBox.classList.remove('d-none');
+      return;
+    }
+
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    fetch(config.url, {
+      method: 'POST',
+      headers: { 'X-CSRFToken': csrfToken },
+      credentials: 'same-origin',
+      body: formData,
+    })
+    .then(async (response) => {
+      const data = await response.json();
+      if (!response.ok || !data.success) {
+        const firstError = data.errors ? Object.values(data.errors)[0][0] : 'Error';
+        throw new Error(firstError);
+      }
+      const label = data[config.labelKey || 'name'];
+      const selects = config.selectId.indexOf('[') !== -1 || config.selectId.startsWith('.')
+        ? document.querySelectorAll(config.selectId)
+        : [document.getElementById(config.selectId)];
+      selects.forEach(function (select) {
+        if (select) window.zentralAddChoiceOption(select, data.id, label, true);
+      });
+
+      (config.fields || []).forEach(function (f) {
+        const el = document.getElementById(f.id);
+        if (el.type !== 'checkbox') el.value = '';
+      });
+      bootstrap.Modal.getInstance(document.getElementById(config.modalId)).hide();
+    })
+    .catch((err) => {
+      errorBox.textContent = err.message || config.genericError || 'Could not create — please try again.';
+      errorBox.classList.remove('d-none');
+    });
+  });
+};
+</script>
 <script>
 (function() {
   // ── Theme ──
