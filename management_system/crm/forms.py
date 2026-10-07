@@ -1,7 +1,6 @@
 import datetime
 
 from django import forms
-from django.utils import timezone
 
 from accounts.utils import CurrencyFieldsMixin
 from .models import Contact, Note, Opportunity

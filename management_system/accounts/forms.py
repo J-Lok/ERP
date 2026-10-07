@@ -3,7 +3,7 @@ from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth import authenticate
 from django.core.exceptions import ValidationError
 
-from .models import User, Company, Invitation, CompanyEmailSettings
+from .models import User, Company, CompanyEmailSettings
 from marketplace.models import CompanyPaymentSettings
 
 

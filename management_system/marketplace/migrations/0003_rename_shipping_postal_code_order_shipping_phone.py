@@ -1,6 +1,6 @@
 # Generated migration for renaming shipping_postal_code to shipping_phone
 
-from django.db import migrations, models
+from django.db import migrations
 
 
 class Migration(migrations.Migration):

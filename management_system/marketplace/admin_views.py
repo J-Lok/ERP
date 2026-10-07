@@ -2,10 +2,9 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db import transaction as db_transaction
-from django.db.models import Q, Count, Sum, F
+from django.db.models import Q, Sum
 from django.urls import reverse
 from django.utils import timezone
-from urllib.parse import quote
 from accounts.permissions import role_required, MARKETPLACE_ADMIN_ROLES
 from .models import Order, Client, OrderItem
 from .forms import QuickOrderForm
@@ -339,7 +338,6 @@ def admin_order_cancel(request, pk):
     if request.method == 'POST':
         from django.db import transaction as db_transaction
         from inventory.models import StockTransaction
-        from django.db.models import F
         
         try:
             with db_transaction.atomic():

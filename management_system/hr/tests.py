@@ -1,7 +1,6 @@
 from datetime import date
 from django.test import TestCase
 from accounts.models import Company
-from employees.models import Employee
 from .models import Position, LeaveRequest
 
 

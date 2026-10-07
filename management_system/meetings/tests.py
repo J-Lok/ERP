@@ -7,9 +7,9 @@ Unit tests for meetings app.
 from django.test import TestCase
 from django.utils import timezone
 from accounts.models import Company
-from employees.models import Employee, Department
+from employees.models import Department
 from django.contrib.auth import get_user_model
-from .models import Meeting, ActionItem, MeetingNote, MeetingAttachment
+from .models import Meeting, ActionItem, MeetingNote
 
 
 class MeetingModelTestCase(TestCase):

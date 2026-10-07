@@ -6,7 +6,7 @@ from django.core.exceptions import ValidationError
 from django.forms import BaseInlineFormSet, inlineformset_factory
 
 from accounts.utils import generate_company_code, CurrencyFieldsMixin
-from .models import Account, JournalEntry, JournalEntryLine, Journal, Transaction, ClientInvoice, SupplierInvoice, InvoiceLine, BankAccount, BankStatement, BankTransaction, Reconciliation, FinancialReport, ReportLine, MarketplaceFinanceSettings
+from .models import Account, JournalEntry, JournalEntryLine, Journal, Transaction, ClientInvoice, SupplierInvoice, InvoiceLine, BankAccount, BankStatement, BankTransaction, Reconciliation, MarketplaceFinanceSettings
 
 
 class AccountForm(CurrencyFieldsMixin, forms.ModelForm):
