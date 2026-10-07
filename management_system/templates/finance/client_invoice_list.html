@@ -33,7 +33,7 @@
             <td>{{ invoice.client_name }}</td>
             <td class="text-muted">{{ invoice.date|date:'d M Y' }}</td>
             <td class="text-muted">{{ invoice.due_date|date:'d M Y' }}</td>
-            <td class="text-end fw-semibold">{{ invoice.total|floatformat:2 }}</td>
+            <td class="text-end fw-semibold">{{ company.currency_symbol }} {{ invoice.total|floatformat:2 }}</td>
             <td>
               {% if invoice.status == 'draft' %}
               <span class="badge bg-secondary">{% trans "Draft" %}</span>

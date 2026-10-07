@@ -66,18 +66,17 @@
         <div class="card-body">
           <div class="row g-3">
             <div class="col-12">
-              {{ form.supplier_name.label_tag }}
-              {{ form.supplier_name }}
-              {% if form.supplier_name.errors %}
-              <div class="invalid-feedback d-block">{{ form.supplier_name.errors }}</div>
+              {{ form.supplier.label_tag }}
+              <div class="d-flex align-items-start gap-2">
+                <div class="flex-grow-1">{{ form.supplier }}</div>
+                <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#quickCreateSupplierModal" title="{% trans 'Add new supplier' %}">
+                  <i class="fas fa-plus" aria-hidden="true"></i>
+                </button>
+              </div>
+              {% if form.supplier.errors %}
+              <div class="invalid-feedback d-block">{{ form.supplier.errors }}</div>
               {% endif %}
-            </div>
-            <div class="col-12">
-              {{ form.supplier_address.label_tag }}
-              {{ form.supplier_address }}
-              {% if form.supplier_address.errors %}
-              <div class="invalid-feedback d-block">{{ form.supplier_address.errors }}</div>
-              {% endif %}
+              <div class="form-text">{% trans "Invoice snapshots this supplier's name and address at the time it's created." %}</div>
             </div>
           </div>
         </div>
@@ -85,8 +84,11 @@
 
       <!-- Invoice Lines -->
       <div class="card shadow-sm mb-4">
-        <div class="card-header">
+        <div class="card-header d-flex justify-content-between align-items-center">
           <h5 class="mb-0">{% trans "Invoice Lines" %}</h5>
+          <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#quickCreateAccountModal" title="{% trans 'Add new account' %}">
+            <i class="fas fa-plus me-1" aria-hidden="true"></i>{% trans "Account" %}
+          </button>
         </div>
         <div class="card-body">
           {{ formset.management_form }}
@@ -190,6 +192,86 @@ document.getElementById('add-line').addEventListener('click', function() {
     });
     
     linesContainer.appendChild(newLine);
+    window.zentralRestoreClonedSelects(newLine);
+});
+
+zentralQuickCreate({
+    url: '{% url "finance:account_quick_create" %}',
+    fields: [
+        { id: 'quickAccountName', name: 'name', required: true },
+        { id: 'quickAccountType', name: 'account_type', required: true },
+    ],
+    extraFields: { balance: '0' },
+    errorId: 'quickAccountError',
+    selectId: 'select[id$="-account"]',
+    modalId: 'quickCreateAccountModal',
+    saveId: 'quickAccountSave',
+});
+
+zentralQuickCreate({
+    url: '{% url "suppliers:supplier_quick_create" %}',
+    fields: [{ id: 'quickSupplierName', name: 'name', required: true }],
+    extraFields: { is_active: 'on' },
+    errorId: 'quickSupplierError',
+    selectId: '{{ form.supplier.id_for_label }}',
+    modalId: 'quickCreateSupplierModal',
+    saveId: 'quickSupplierSave',
 });
 </script>
+{% endblock %}
+
+{% block modals %}
+<div class="modal fade" id="quickCreateSupplierModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">{% trans "Add New Supplier" %}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-danger d-none" id="quickSupplierError"></div>
+                <div class="mb-3">
+                    <label class="form-label" for="quickSupplierName">{% trans "Name" %}</label>
+                    <input type="text" id="quickSupplierName" class="form-control" required>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">{% trans "Cancel" %}</button>
+                <button type="button" class="btn btn-primary" id="quickSupplierSave">{% trans "Create" %}</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="quickCreateAccountModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">{% trans "Add New Account" %}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-danger d-none" id="quickAccountError"></div>
+                <div class="mb-3">
+                    <label class="form-label" for="quickAccountName">{% trans "Name" %}</label>
+                    <input type="text" id="quickAccountName" class="form-control" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label" for="quickAccountType">{% trans "Type" %}</label>
+                    <select id="quickAccountType" class="form-select no-search-select">
+                        <option value="asset">{% trans "Asset" %}</option>
+                        <option value="liability">{% trans "Liability" %}</option>
+                        <option value="equity">{% trans "Equity" %}</option>
+                        <option value="revenue">{% trans "Revenue" %}</option>
+                        <option value="expense">{% trans "Expense" %}</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">{% trans "Cancel" %}</button>
+                <button type="button" class="btn btn-primary" id="quickAccountSave">{% trans "Create" %}</button>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}

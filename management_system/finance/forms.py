@@ -5,6 +5,7 @@ from django import forms
 from django.core.exceptions import ValidationError
 from django.forms import BaseInlineFormSet, inlineformset_factory
 
+from accounts.utils import generate_company_code
 from .models import Account, JournalEntry, JournalEntryLine, Journal, Transaction, ClientInvoice, SupplierInvoice, InvoiceLine, BankAccount, BankStatement, BankTransaction, Reconciliation, FinancialReport, ReportLine, MarketplaceFinanceSettings
 
 
@@ -219,8 +220,43 @@ JournalEntryLineFormSet = inlineformset_factory(
 # Invoicing Forms (Phase 2)
 # ---------------------------------------------------------------------------
 
-class ClientInvoiceForm(forms.ModelForm):
+class _AutoInvoiceNumberMixin:
+    """Shared logic for invoice forms whose `invoice_number` must always be
+    system-generated (per company), never typed — same convention as
+    Employee.employee_id and Stock.item_code."""
+
+    invoice_number_model = None
+    invoice_number_infix = None
+
+    def _init_invoice_number(self):
+        self.is_create = not (self.instance and self.instance.pk)
+        self.fields['invoice_number'].required = False
+        self.fields['invoice_number'].widget.attrs['readonly'] = True
+        if self.company and self.is_create:
+            # self.initial (not field.initial) — a bound `instance=` kwarg
+            # (even a blank, unsaved one) makes BaseModelForm pre-populate
+            # self.initial via model_to_dict(instance), which takes priority
+            # over field.initial and would otherwise shadow it with ''.
+            self.initial['invoice_number'] = generate_company_code(
+                self.company, self.invoice_number_model, 'invoice_number', self.invoice_number_infix,
+            )
+
+    def _clean_invoice_number(self, cleaned_data):
+        if self.company:
+            if self.is_create:
+                cleaned_data['invoice_number'] = generate_company_code(
+                    self.company, self.invoice_number_model, 'invoice_number', self.invoice_number_infix,
+                )
+            else:
+                cleaned_data['invoice_number'] = self.instance.invoice_number
+        return cleaned_data
+
+
+class ClientInvoiceForm(_AutoInvoiceNumberMixin, forms.ModelForm):
     """Form for creating/editing client invoices."""
+
+    invoice_number_model = ClientInvoice
+    invoice_number_infix = 'INV'
 
     class Meta:
         model = ClientInvoice
@@ -229,7 +265,7 @@ class ClientInvoiceForm(forms.ModelForm):
             'date', 'due_date', 'tax_rate', 'notes'
         ]
         widgets = {
-            'invoice_number': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. INV-001'}),
+            'invoice_number': forms.TextInput(attrs={'class': 'form-control'}),
             'client_name': forms.TextInput(attrs={'class': 'form-control'}),
             'client_address': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
             'client_email': forms.EmailInput(attrs={'class': 'form-control'}),
@@ -238,39 +274,66 @@ class ClientInvoiceForm(forms.ModelForm):
             'tax_rate': forms.NumberInput(attrs={'class': 'form-control', 'min': '0', 'step': '0.01'}),
             'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
         }
-
-    def __init__(self, *args, **kwargs):
-        self.company = kwargs.pop('company', None)
-        super().__init__(*args, **kwargs)
-        self.fields['client_address'].required = False
-        self.fields['client_email'].required = False
-        self.fields['notes'].required = False
-
-
-class SupplierInvoiceForm(forms.ModelForm):
-    """Form for creating/editing supplier invoices."""
-
-    class Meta:
-        model = SupplierInvoice
-        fields = [
-            'invoice_number', 'supplier_name', 'supplier_address',
-            'date', 'due_date', 'tax_rate', 'notes'
-        ]
-        widgets = {
-            'invoice_number': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. SUP-001'}),
-            'supplier_name': forms.TextInput(attrs={'class': 'form-control'}),
-            'supplier_address': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
-            'date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
-            'due_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
-            'tax_rate': forms.NumberInput(attrs={'class': 'form-control', 'min': '0', 'step': '0.01'}),
-            'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+        help_texts = {
+            'invoice_number': 'Auto-generated from your company domain — cannot be edited.',
         }
 
     def __init__(self, *args, **kwargs):
         self.company = kwargs.pop('company', None)
         super().__init__(*args, **kwargs)
-        self.fields['supplier_address'].required = False
+        self._init_invoice_number()
+        self.fields['client_address'].required = False
+        self.fields['client_email'].required = False
         self.fields['notes'].required = False
+
+    def clean(self):
+        return self._clean_invoice_number(super().clean())
+
+
+class SupplierInvoiceForm(_AutoInvoiceNumberMixin, forms.ModelForm):
+    """Form for creating/editing supplier invoices."""
+
+    invoice_number_model = SupplierInvoice
+    invoice_number_infix = 'SUP'
+
+    class Meta:
+        model = SupplierInvoice
+        fields = [
+            'invoice_number', 'supplier',
+            'date', 'due_date', 'tax_rate', 'notes'
+        ]
+        widgets = {
+            'invoice_number': forms.TextInput(attrs={'class': 'form-control'}),
+            'supplier': forms.Select(attrs={'class': 'form-select'}),
+            'date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'due_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'tax_rate': forms.NumberInput(attrs={'class': 'form-control', 'min': '0', 'step': '0.01'}),
+            'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+        }
+        help_texts = {
+            'invoice_number': 'Auto-generated from your company domain — cannot be edited.',
+        }
+
+    def __init__(self, *args, **kwargs):
+        self.company = kwargs.pop('company', None)
+        super().__init__(*args, **kwargs)
+        self._init_invoice_number()
+        if self.company:
+            from suppliers.models import Supplier
+            self.fields['supplier'].queryset = Supplier.objects.filter(company=self.company, is_active=True).order_by('name')
+        self.fields['notes'].required = False
+
+    def save(self, commit=True):
+        invoice = super().save(commit=False)
+        if invoice.supplier:
+            invoice.supplier_name = invoice.supplier.name
+            invoice.supplier_address = invoice.supplier.address
+        if commit:
+            invoice.save()
+        return invoice
+
+    def clean(self):
+        return self._clean_invoice_number(super().clean())
 
 
 class InvoiceLineForm(forms.ModelForm):

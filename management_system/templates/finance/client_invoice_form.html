@@ -92,8 +92,11 @@
 
       <!-- Invoice Lines -->
       <div class="card shadow-sm mb-4">
-        <div class="card-header">
+        <div class="card-header d-flex justify-content-between align-items-center">
           <h5 class="mb-0">{% trans "Invoice Lines" %}</h5>
+          <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#quickCreateAccountModal" title="{% trans 'Add new account' %}">
+            <i class="fas fa-plus me-1" aria-hidden="true"></i>{% trans "Account" %}
+          </button>
         </div>
         <div class="card-body">
           {{ formset.management_form }}
@@ -197,6 +200,54 @@ document.getElementById('add-line').addEventListener('click', function() {
     });
     
     linesContainer.appendChild(newLine);
+    window.zentralRestoreClonedSelects(newLine);
+});
+
+zentralQuickCreate({
+    url: '{% url "finance:account_quick_create" %}',
+    fields: [
+        { id: 'quickAccountName', name: 'name', required: true },
+        { id: 'quickAccountType', name: 'account_type', required: true },
+    ],
+    extraFields: { balance: '0' },
+    errorId: 'quickAccountError',
+    selectId: 'select[id$="-account"]',
+    modalId: 'quickCreateAccountModal',
+    saveId: 'quickAccountSave',
 });
 </script>
+{% endblock %}
+
+{% block modals %}
+<div class="modal fade" id="quickCreateAccountModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">{% trans "Add New Account" %}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-danger d-none" id="quickAccountError"></div>
+                <div class="mb-3">
+                    <label class="form-label" for="quickAccountName">{% trans "Name" %}</label>
+                    <input type="text" id="quickAccountName" class="form-control" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label" for="quickAccountType">{% trans "Type" %}</label>
+                    <select id="quickAccountType" class="form-select no-search-select">
+                        <option value="asset">{% trans "Asset" %}</option>
+                        <option value="liability">{% trans "Liability" %}</option>
+                        <option value="equity">{% trans "Equity" %}</option>
+                        <option value="revenue">{% trans "Revenue" %}</option>
+                        <option value="expense">{% trans "Expense" %}</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">{% trans "Cancel" %}</button>
+                <button type="button" class="btn btn-primary" id="quickAccountSave">{% trans "Create" %}</button>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}

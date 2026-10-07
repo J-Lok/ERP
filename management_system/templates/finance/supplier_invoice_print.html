@@ -3,13 +3,7 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <title>
-    {% if print_type == 'proforma' %}
-      {% trans "PROFORMA INVOICE" %}
-    {% else %}
-      {% trans "INVOICE" %}
-    {% endif %} — {{ invoice.invoice_number }}
-  </title>
+  <title>{% trans "SUPPLIER INVOICE" %} — {{ invoice.invoice_number }}</title>
   <style>
     body {
       font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
@@ -158,7 +152,7 @@
       font-weight: 700;
       color: #333;
     }
-    
+
     /* Print overrides */
     @media print {
       body {
@@ -174,7 +168,7 @@
         display: none !important;
       }
     }
-    
+
     .no-print-bar {
       max-width: 800px;
       margin: 0 auto 20px auto;
@@ -192,12 +186,7 @@
 
   <div class="no-print-bar no-print">
     <div>
-      <strong>{% trans "Print Preview" %}</strong> — 
-      {% if print_type == 'proforma' %}
-        {% trans "PROFORMA INVOICE" %}
-      {% else %}
-        {% trans "OFFICIAL INVOICE" %}
-      {% endif %}
+      <strong>{% trans "Print Preview" %}</strong> — {% trans "SUPPLIER INVOICE" %}
     </div>
     <div style="display: flex; gap: 8px;">
       <button onclick="window.print();" style="padding: 6px 14px; background: #1a5a6b; color: white; border: none; border-radius: 4px; font-weight: 600; cursor: pointer;">
@@ -222,25 +211,13 @@
           <p>{% trans "Phone" %}: {{ invoice.company.contact_phone }}</p>
         {% endif %}
       </div>
-      
+
       <div class="invoice-title">
-        <h1>
-          {% if print_type == 'proforma' %}
-            {% trans "PROFORMA INVOICE" %}
-          {% else %}
-            {% trans "INVOICE" %}
-          {% endif %}
-        </h1>
+        <h1>{% trans "SUPPLIER INVOICE" %}</h1>
         <table class="invoice-meta-table" style="margin-left: auto;">
           <tr>
             <td class="label">{% trans "Invoice #" %}</td>
-            <td class="value">
-              {% if print_type == 'proforma' %}
-                PRO-{{ invoice.invoice_number }}
-              {% else %}
-                INV-{{ invoice.invoice_number }}
-              {% endif %}
-            </td>
+            <td class="value">{{ invoice.invoice_number }}</td>
           </tr>
           <tr>
             <td class="label">{% trans "Date" %}</td>
@@ -252,13 +229,7 @@
           </tr>
           <tr>
             <td class="label">{% trans "Status" %}</td>
-            <td class="value">
-              {% if print_type == 'proforma' %}
-                {% trans "Proforma" %}
-              {% else %}
-                {{ invoice.get_status_display }}
-              {% endif %}
-            </td>
+            <td class="value">{{ invoice.get_status_display }}</td>
           </tr>
         </table>
       </div>
@@ -267,16 +238,13 @@
     <!-- Billing Info -->
     <div class="billing-section">
       <div class="billing-box">
-        <h3>{% trans "Client / Bill To" %}</h3>
-        <p><strong>{{ invoice.client_name }}</strong></p>
-        {% if invoice.client_address %}
-          <p>{{ invoice.client_address|linebreaksbr }}</p>
-        {% endif %}
-        {% if invoice.client_email %}
-          <p>{% trans "Email" %}: {{ invoice.client_email }}</p>
+        <h3>{% trans "Supplier" %}</h3>
+        <p><strong>{{ invoice.supplier_name }}</strong></p>
+        {% if invoice.supplier_address %}
+          <p>{{ invoice.supplier_address|linebreaksbr }}</p>
         {% endif %}
       </div>
-      
+
       <div class="billing-box" style="visibility: hidden;">
         <!-- Placeholder to maintain flex alignment balance -->
       </div>

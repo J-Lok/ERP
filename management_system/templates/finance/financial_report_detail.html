@@ -47,9 +47,9 @@
                                     </td>
                                     <td class="text-end">
                                         {% if line.is_total %}
-                                            <strong>{{ line.amount|floatformat:2 }}</strong>
+                                            <strong>{{ company.currency_symbol }} {{ line.amount|floatformat:2 }}</strong>
                                         {% else %}
-                                            {{ line.amount|floatformat:2 }}
+                                            {{ company.currency_symbol }} {{ line.amount|floatformat:2 }}
                                         {% endif %}
                                     </td>
                                 </tr>

@@ -82,8 +82,8 @@
             <td class="text-muted">{{ entry.date|date:'d M Y' }}</td>
             <td>{{ entry.reference|default:'—' }}</td>
             <td class="text-muted">{{ entry.description|truncatechars:40|default:'—' }}</td>
-            <td class="text-end text-success fw-semibold">{{ entry.total_debits|floatformat:2 }}</td>
-            <td class="text-end text-danger fw-semibold">{{ entry.total_credits|floatformat:2 }}</td>
+            <td class="text-end text-success fw-semibold">{{ company.currency_symbol }} {{ entry.total_debits|floatformat:2 }}</td>
+            <td class="text-end text-danger fw-semibold">{{ company.currency_symbol }} {{ entry.total_credits|floatformat:2 }}</td>
             <td class="text-center">
               {% if entry.is_balanced %}
               <span class="badge bg-success">✓</span>

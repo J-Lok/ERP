@@ -28,7 +28,7 @@
                                 <li><strong>{% trans "Account Number:" %}</strong> {{ bank_account.account_number }}</li>
                                 <li><strong>{% trans "Bank Name:" %}</strong> {{ bank_account.bank_name }}</li>
                                 <li><strong>{% trans "Linked Account:" %}</strong> {{ bank_account.account.code }} - {{ bank_account.account.name }}</li>
-                                <li><strong>{% trans "Opening Balance:" %}</strong> {{ bank_account.opening_balance|floatformat:2 }}</li>
+                                <li><strong>{% trans "Opening Balance:" %}</strong> {{ company.currency_symbol }} {{ bank_account.opening_balance|floatformat:2 }}</li>
                             </ul>
                         </div>
                     </div>

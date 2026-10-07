@@ -42,11 +42,11 @@
                                         <td>{{ reconciliation.bank_account.name }}</td>
                                         <td>{{ reconciliation.statement.statement_date|date:"M d, Y" }}</td>
                                         <td>{{ reconciliation.reconciled_date|date:"M d, Y" }}</td>
-                                        <td class="text-end">{{ reconciliation.bank_balance|floatformat:2 }}</td>
-                                        <td class="text-end">{{ reconciliation.book_balance|floatformat:2 }}</td>
+                                        <td class="text-end">{{ company.currency_symbol }} {{ reconciliation.bank_balance|floatformat:2 }}</td>
+                                        <td class="text-end">{{ company.currency_symbol }} {{ reconciliation.book_balance|floatformat:2 }}</td>
                                         <td class="text-end">
                                             <span class="{% if reconciliation.difference == 0 %}text-success{% else %}text-danger{% endif %}">
-                                                {{ reconciliation.difference|floatformat:2 }}
+                                                {{ company.currency_symbol }} {{ reconciliation.difference|floatformat:2 }}
                                             </span>
                                         </td>
                                         <td>
