@@ -37,7 +37,7 @@ class CompanyContextMiddleware(MiddlewareMixin):
         try:
             now = timezone.now()
             if not user.last_seen or (now - user.last_seen) > timedelta(seconds=60):
-                type(user).objects.filter(pk=user.pk).update(last_seen=now)
+                user.__class__.objects.filter(pk=user.pk).update(last_seen=now)
                 user.last_seen = now
         except Exception:
             logger.warning("Failed to update last_seen for user %s", user.pk, exc_info=True)
@@ -52,6 +52,7 @@ class RequireLoginMiddleware(MiddlewareMixin):
     """
     PUBLIC_URL_NAMES: ClassVar[set[str]] = {
         'company_login',
+        'company_register',
         'accept_invitation',
         'password_reset',
         'password_reset_done',
