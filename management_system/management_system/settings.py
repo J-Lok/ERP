@@ -74,6 +74,7 @@ INSTALLED_APPS = [
    
     'employees',
     'inventory',
+    'suppliers',
     'projects',
     'core',
     'marketplace',

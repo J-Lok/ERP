@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block title %}{% trans "Delete Supplier" %} — {{ supplier.name }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card shadow-sm border-danger">
+            <div class="card-header bg-danger text-white">
+                <i class="fas fa-exclamation-triangle me-2" aria-hidden="true"></i>{% trans "Confirm Deletion" %}
+            </div>
+            <div class="card-body">
+                <p>{% blocktrans with name=supplier.name %}Are you sure you want to delete supplier "{{ name }}"?{% endblocktrans %}</p>
+                {% if supplier.item_count or supplier.invoice_count %}
+                <div class="alert alert-warning">
+                    <i class="fas fa-info-circle me-1" aria-hidden="true"></i>
+                    {% blocktrans with items=supplier.item_count invoices=supplier.invoice_count %}
+                    This supplier is linked to {{ items }} stock item(s) and {{ invoices }} invoice(s) — they will keep their history but lose the supplier reference.
+                    {% endblocktrans %}
+                </div>
+                {% endif %}
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="d-flex justify-content-between mt-3">
+                        <a href="{% url 'suppliers:supplier_detail' supplier.pk %}" class="btn btn-outline-secondary">{% trans "Cancel" %}</a>
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-trash me-1" aria-hidden="true"></i>{% trans "Delete Supplier" %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

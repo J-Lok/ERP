@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% load crispy_forms_tags %}
+{% block title %}{{ title }} — ERP System{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow-sm">
+            <div class="card-header bg-white">
+                <h4 class="mb-0"><i class="fas fa-truck me-2 text-primary" aria-hidden="true"></i>{{ title }}</h4>
+            </div>
+            <div class="card-body">
+                <form method="post" novalidate>
+                    {% csrf_token %}
+                    {% if form.non_field_errors %}
+                    <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+                    {% endif %}
+                    <div class="row g-3">
+                        <div class="col-md-6">{{ form.name|as_crispy_field }}</div>
+                        <div class="col-md-6">{{ form.contact_person|as_crispy_field }}</div>
+                        <div class="col-md-6">{{ form.email|as_crispy_field }}</div>
+                        <div class="col-md-6">{{ form.phone|as_crispy_field }}</div>
+                        <div class="col-12">{{ form.address|as_crispy_field }}</div>
+                        <div class="col-12">{{ form.notes|as_crispy_field }}</div>
+                        <div class="col-md-6">{{ form.is_active|as_crispy_field }}</div>
+                    </div>
+                    <div class="d-flex justify-content-between mt-4 flex-wrap gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-1" aria-hidden="true"></i>{% trans "Save Supplier" %}
+                        </button>
+                        <div class="d-flex gap-2">
+                            {% if supplier %}
+                            <a href="{% url 'suppliers:supplier_detail' supplier.pk %}" class="btn btn-outline-info btn-sm">
+                                <i class="fas fa-eye me-1" aria-hidden="true"></i>{% trans "View Details" %}
+                            </a>
+                            {% endif %}
+                            <a href="{% url 'suppliers:supplier_list' %}" class="btn btn-outline-secondary btn-sm">
+                                <i class="fas fa-times me-1" aria-hidden="true"></i>{% trans "Cancel" %}
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
