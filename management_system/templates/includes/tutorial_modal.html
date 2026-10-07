@@ -252,13 +252,19 @@ document.addEventListener('DOMContentLoaded', function() {
     const nextBtn = document.getElementById('tutorialNextBtn');
     const finishBtn = document.getElementById('tutorialFinishBtn');
 
+    {% trans "Welcome to Your Enterprise Command Center" as tutorial_title_1 %}
+    {% trans "Navigating Your System" as tutorial_title_2 %}
+    {% trans "Quick In-Store Sales (POS)" as tutorial_title_3 %}
+    {% trans "Marketplace Accounting Mapping" as tutorial_title_4 %}
+    {% trans "Customer Payment Contacts" as tutorial_title_5 %}
+    {% trans "You're Ready to Roll!" as tutorial_title_6 %}
     const stepTitles = [
-        '{% trans "Welcome to Your Enterprise Command Center" %}',
-        '{% trans "Navigating Your System" %}',
-        '{% trans "Quick In-Store Sales (POS)" %}',
-        '{% trans "Marketplace Accounting Mapping" %}',
-        '{% trans "Customer Payment Contacts" %}',
-        '{% trans "You\'re Ready to Roll!" %}'
+        '{{ tutorial_title_1|escapejs }}',
+        '{{ tutorial_title_2|escapejs }}',
+        '{{ tutorial_title_3|escapejs }}',
+        '{{ tutorial_title_4|escapejs }}',
+        '{{ tutorial_title_5|escapejs }}',
+        '{{ tutorial_title_6|escapejs }}'
     ];
 
     function showStep(step) {
