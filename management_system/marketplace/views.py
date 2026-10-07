@@ -504,7 +504,7 @@ def checkout(request):
                             users=company_users,
                             notification_type='system',
                             title=f"New Order #{order.order_number}",
-                            message=f"New order #{order.order_number} (FCFA {order.total:,.0f}) placed by {client.get_full_name()}.",
+                            message=f"New order #{order.order_number} ({order.company.currency_symbol} {order.total:,.0f}) placed by {client.get_full_name()}.",
                             related_object=order
                         )
                     except Exception as notif_err:
@@ -818,8 +818,8 @@ def generate_order_pdf_bytes(order):
             y = height - 50
         p.drawString(50, y, str(item.item_name)[:35])
         p.drawString(300, y, str(item.quantity))
-        p.drawString(370, y, f"FCFA {item.unit_price:,.0f}")
-        p.drawString(470, y, f"FCFA {item.subtotal:,.0f}")
+        p.drawString(370, y, f"{order.company.currency_symbol} {item.unit_price:,.0f}")
+        p.drawString(470, y, f"{order.company.currency_symbol} {item.subtotal:,.0f}")
         y -= 20
 
     # Summary Line
@@ -827,7 +827,7 @@ def generate_order_pdf_bytes(order):
     y -= 25
     p.setFont("Helvetica-Bold", 12)
     p.drawString(370, y, "Total Payable:")
-    p.drawString(470, y, f"FCFA {order.total:,.0f}")
+    p.drawString(470, y, f"{order.company.currency_symbol} {order.total:,.0f}")
 
     p.showPage()
     p.save()

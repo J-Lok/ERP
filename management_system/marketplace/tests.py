@@ -45,7 +45,6 @@ class MarketplaceSingleCompanyOrderTests(TestCase):
             cost_price=Decimal('10.00'),
             selling_price=Decimal('25.00'),
             reorder_level=1,
-            supplier_name='Supplier A',
         )
         self.stock_b = Stock.objects.create(
             company=self.company_b,
@@ -57,7 +56,6 @@ class MarketplaceSingleCompanyOrderTests(TestCase):
             cost_price=Decimal('12.00'),
             selling_price=Decimal('30.00'),
             reorder_level=1,
-            supplier_name='Supplier B',
         )
 
         session = self.http_client.session
@@ -137,7 +135,6 @@ class CompanyShopRoutingTests(TestCase):
             cost_price=Decimal('12.00'),
             selling_price=Decimal('20.00'),
             reorder_level=1,
-            supplier_name='Supplier A',
         )
 
     def test_reserved_company_domain_is_rejected_by_model_validation(self):
@@ -438,7 +435,6 @@ class MarketplaceFinancePostingTests(TestCase):
             cost_price=Decimal('40.00'),
             selling_price=Decimal('100.00'),
             reorder_level=1,
-            supplier_name='Supplier',
         )
         self.order.items.create(
             stock=stock,
