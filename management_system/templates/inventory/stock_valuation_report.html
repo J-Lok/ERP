@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
 
 {% load i18n %}
+{% load currency_tags %}
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h2><i class="fas fa-dollar-sign me-2"></i>{% trans "Stock Valuation Report" %}</h2>
@@ -41,7 +42,7 @@
     <div class="col-md-3">
         <div class="card bg-info text-white">
             <div class="card-body text-center">
-                <h3 class="mb-0">{{ company.currency_symbol }}  {{ total_value|floatformat:0}}</h3>
+                <h3 class="mb-0">{{ total_value|currency:company }}</h3>
                 <small>{% trans "Total Value" %}</small>
             </div>
         </div>
@@ -49,7 +50,7 @@
     <div class="col-md-3">
         <div class="card bg-warning text-white">
             <div class="card-body text-center">
-                <h3 class="mb-0">{{ company.currency_symbol }}  {{ avg_cost_price|floatformat:0 }}</h3>
+                <h3 class="mb-0">{{ avg_cost_price|currency:company }}</h3>
                 <small>{% trans "Avg Cost Price" %}</small>
             </div>
         </div>
@@ -84,7 +85,7 @@
                         <td>{{ category.count }}</td>
                         <td>{{ category.total_quantity }}</td>
                         <td class="text-success">
-                            <strong>{{ company.currency_symbol }}  {{ category.total_value|floatformat:0 }}</strong>
+                            <strong>{{ category.total_value|currency:company }}</strong>
                         </td>
                         <td>
                             {% widthratio category.total_value total_value 100 %}%
@@ -104,7 +105,7 @@
                         <th>{% trans "Total" %}</th>
                         <th>{{ total_items }}</th>
                         <th>{{ total_quantity }}</th>
-                        <th>{{ company.currency_symbol }}  {{ total_value|floatformat:0 }}</th>
+                        <th>{{ total_value|currency:company }}</th>
                         <th>100%</th>
                         <td></td>
                     </tr>
@@ -146,9 +147,9 @@
                                 </td>
                                 <td>{{ item.category.name|default:"—" }}</td>
                                 <td>{{ item.quantity }}</td>
-                                <td>{{ company.currency_symbol }}  {{ item.cost_price|floatformat:0 }}</td>
+                                <td>{{ item.cost_price|currency:company }}</td>
                                 <td class="text-success">
-                                    <strong>{{ company.currency_symbol }}  {{ item.calculated_total_value|floatformat:0 }}</strong>
+                                    <strong>{{ item.calculated_total_value|currency:company }}</strong>
                                 </td>
                             </tr>
                             {% endfor %}
@@ -190,9 +191,9 @@
                                 </td>
                                 <td>{{ item.category.name|default:"—" }}</td>
                                 <td>{{ item.quantity }}</td>
-                                <td>{{ company.currency_symbol }}  {{ item.cost_price|floatformat:0 }}</td>
+                                <td>{{ item.cost_price|currency:company }}</td>
                                 <td class="text-warning">
-                                    <strong>{{ company.currency_symbol }}  {{ item.calculated_total_value|floatformat:0 }}</strong>
+                                    <strong>{{ item.calculated_total_value|currency:company }}</strong>
                                 </td>
                             </tr>
                             {% endfor %}
@@ -233,10 +234,10 @@
                         <td>{{ stock.name }}</td>
                         <td>{{ stock.category.name|default:"—" }}</td>
                         <td>{{ stock.quantity }}</td>
-                        <td>{{ company.currency_symbol }}  {{ stock.cost_price|floatformat:0 }}</td>
+                        <td>{{ stock.cost_price|currency:company }}</td>
                         <td>
                             <strong class="{% if stock.calculated_total_value > 1000 %}text-success{% endif %}">
-                                {{ company.currency_symbol }}  {{ stock.calculated_total_value|floatformat:0 }}
+                                {{ stock.calculated_total_value|currency:company }}
                             </strong>
                         </td>
                         <td>
@@ -252,7 +253,7 @@
                 <tfoot class="table-light">
                     <tr>
                         <th colspan="5" class="text-end">{% trans "Grand Total:" %}</th>
-                        <th colspan="2">{{ company.currency_symbol }}  {{ total_value|floatformat:0 }}</th>
+                        <th colspan="2">{{ total_value|currency:company }}</th>
                     </tr>
                 </tfoot>
             </table>

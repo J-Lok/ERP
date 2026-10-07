@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
 
 {% load i18n %}
+{% load currency_tags %}
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h2><i class="fas fa-boxes me-2"></i>{% trans "Inventory" %}</h2>
@@ -38,7 +39,7 @@
         <div class="card stat-card bg-success text-white">
             <div class="card-body text-center">
                 <i class="fas fa-dollar-sign fa-2x mb-2"></i>
-                <h3>{{ company.currency_symbol }} {{ total_value|floatformat:0 }}</h3>
+                <h3>{{ total_value|currency:company }}</h3>
                 <p>{% trans "Total Value" %}</p>
             </div>
         </div>
@@ -149,9 +150,9 @@
                             <span class="fw-bold">{{ stock.quantity }}</span>
                             <small class="text-muted">{{ stock.get_unit_display }}</small>
                         </td>
-                        <td>{{ company.currency_symbol }} {{ stock.cost_price|floatformat:0 }}</td>
+                        <td>{{ stock.cost_price|currency:company }}</td>
                         <td>
-                            <strong>{{ company.currency_symbol }} {{ stock.total_value|floatformat:0 }}</strong>
+                            <strong>{{ stock.total_value|currency:company }}</strong>
                         </td>
                         <td>
                             {% if stock.needs_reorder %}

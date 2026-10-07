@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load i18n %}
+{% load currency_tags %}
 <!-- marketplace/templates/marketplace/admin/order_cancel.html -->
 
 {% block title %}Cancel Order #{{ order.order_number }}{% endblock %}
@@ -57,7 +58,7 @@
                                         {{ order.get_payment_status_display }}
                                     </span>
                                 </p>
-                                <p class="mb-1"><strong>{% trans "Total Amount:" %}</strong> {{ company.currency_symbol }} {{ order.total }}</p>
+                                <p class="mb-1"><strong>{% trans "Total Amount:" %}</strong> {{ order.total|currency:company }}</p>
                             </div>
                         </div>
                     </div>
@@ -83,15 +84,15 @@
                                         <td>
                                             <span class="badge bg-info">{{ item.quantity }}</span>
                                         </td>
-                                        <td>{{ company.currency_symbol }} {{ item.unit_price }}</td>
-                                        <td>{{ company.currency_symbol }} {{ item.subtotal }}</td>
+                                        <td>{{ item.unit_price|currency:company }}</td>
+                                        <td>{{ item.subtotal|currency:company }}</td>
                                     </tr>
                                 {% endfor %}
                             </tbody>
                             <tfoot>
                                 <tr>
                                     <td colspan="4" class="text-end"><strong>{% trans "Total:" %}</strong></td>
-                                    <td><strong>{{ company.currency_symbol }} {{ order.total }}</strong></td>
+                                    <td><strong>{{ order.total|currency:company }}</strong></td>
                                 </tr>
                             </tfoot>
                         </table>

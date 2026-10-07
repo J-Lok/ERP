@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load i18n %}
+{% load currency_tags %}
 
 {% block title %}{% trans "Opportunities" %} — CRM{% endblock %}
 
@@ -115,7 +116,7 @@
               <span class="text-muted small">—</span>
             {% endif %}
           </td>
-          <td class="fw-semibold">{{ company.currency_symbol }} {{ opp.value|floatformat:0 }}</td>
+          <td class="fw-semibold">{{ opp.value|currency:company }}</td>
           <td>{{ opp.assigned_to.full_name|default:"—" }}</td>
           <td>
             {% if opp.follow_up_date %}

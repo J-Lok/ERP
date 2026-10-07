@@ -2,6 +2,7 @@
 {% load i18n %}
 {% load static %}
 {% load mathfilters %}
+{% load currency_tags %}
 {% block title %}{{ project.name }} - {{ block.super }}{% endblock %}
 
 {% block extra_css %}
@@ -118,7 +119,7 @@
                             <p><strong><i class="fas fa-calendar-check me-2"></i>{% trans "End Date:" %}</strong> {{ project.end_date|date:"F d, Y" }}</p>
                         </div>
                         <div class="col-md-6">
-                            <p><strong><i class="fas fa-dollar-sign me-2"></i>{% trans "Budget:" %}</strong> {{ company.currency_symbol }} {{ project.budget|floatformat:2 }}</p>
+                            <p><strong><i class="fas fa-dollar-sign me-2"></i>{% trans "Budget:" %}</strong> {{ project.budget|currency:company }}</p>
                             <p><strong><i class="fas fa-user-tie me-2"></i>{% trans "Manager:" %}</strong> 
                                 {% if project.manager %}
                                     {{ project.manager.user.get_full_name }}

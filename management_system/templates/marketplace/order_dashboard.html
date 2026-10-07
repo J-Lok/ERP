@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
 {% load i18n %}
 {% load static %}
+{% load currency_tags %}
 
 {% block title %}Order Management - {{ block.super }}{% endblock %}
 
@@ -98,7 +99,7 @@
                     </div>
                     <div>
                         <p class="text-muted small mb-0">{% trans "Revenue" %}</p>
-                        <h3 class="mb-0 fw-bold" style="font-size:1.1rem">{{ company.currency_symbol }} {{ total_revenue|floatformat:0 }}</h3>
+                        <h3 class="mb-0 fw-bold" style="font-size:1.1rem">{{ total_revenue|currency:company }}</h3>
                     </div>
                 </div>
             </div>
@@ -130,7 +131,7 @@
                                         <small class="text-muted">{{ order.client.email }}</small>
                                     </div>
                                     <div class="col-md-2">
-                                        <h5 class="mb-0 text-primary">{{ order.company.currency_symbol }} {{ order.total|floatformat:0 }}</h5>
+                                        <h5 class="mb-0 text-primary">{{ order.total|currency:order.company }}</h5>
                                         <small class="text-muted">{{ order.items.count }} item{{ order.items.count|pluralize }}</small>
                                     </div>
                                     <div class="col-md-3 text-end">
@@ -181,7 +182,7 @@
                                 {% else %}bg-secondary{% endif %}">
                                 {{ order.get_status_display }}
                             </span>
-                            <div class="small text-muted">{{ order.company.currency_symbol }} {{ order.total|floatformat:0 }}</div>
+                            <div class="small text-muted">{{ order.total|currency:order.company }}</div>
                         </div>
                     </div>
                     {% endfor %}

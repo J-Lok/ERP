@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
 {% load i18n %}
 {% load static %}
+{% load currency_tags %}
 
 {% block title %}Delete Project - {{ block.super }}{% endblock %}
 
@@ -38,7 +39,7 @@
                             </span>
                         </p>
                         <p class="mb-1"><strong>{% trans "Tasks:" %}</strong> {{ project.sous_taches.count }} task{{ project.sous_taches.count|pluralize }}</p>
-                        <p class="mb-0"><strong>{% trans "Budget:" %}</strong> {{ company.currency_symbol }} {{ project.budget|floatformat:2 }}</p>
+                        <p class="mb-0"><strong>{% trans "Budget:" %}</strong> {{ project.budget|currency:company }}</p>
                     </div>
 
                     <form method="post">

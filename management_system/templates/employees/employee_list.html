@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
 
 {% load i18n %}
+{% load currency_tags %}
 {% block title %}Employees — ERP System{% endblock %}
 
 {% block content %}
@@ -207,7 +208,7 @@
                                 {{ employee.get_status_display }}
                             </span>
                         </td>
-                        <td>{{ company.currency_symbol }} {{ employee.salary|floatformat:2 }}</td>
+                        <td>{{ employee.salary|currency:company }}</td>
                         <td>{{ employee.date_joined|date:"M j, Y" }}</td>
                         <td class="text-end">
                             <div class="btn-group btn-group-sm" role="group"

@@ -1,4 +1,5 @@
 {% load i18n %}
+{% load currency_tags %}
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -297,8 +298,8 @@
           <tr>
             <td>{{ line.description }}</td>
             <td class="text-end">{{ line.quantity }}</td>
-            <td class="text-end">{{ invoice.company.currency_symbol }} {{ line.unit_price|floatformat:0 }}</td>
-            <td class="text-end fw-semibold">{{ invoice.company.currency_symbol }} {{ line.line_total|floatformat:0 }}</td>
+            <td class="text-end">{{ line.unit_price|currency:invoice.company }}</td>
+            <td class="text-end fw-semibold">{{ line.line_total|currency:invoice.company }}</td>
           </tr>
         {% empty %}
           <tr>
@@ -313,17 +314,17 @@
       <table class="totals-table">
         <tr>
           <td class="label">{% trans "Subtotal" %}</td>
-          <td class="value">{{ invoice.company.currency_symbol }} {{ invoice.subtotal|floatformat:0 }}</td>
+          <td class="value">{{ invoice.subtotal|currency:invoice.company }}</td>
         </tr>
         {% if invoice.tax_amount > 0 %}
           <tr>
             <td class="label">{% trans "Tax" %} ({{ invoice.tax_rate }}%)</td>
-            <td class="value">{{ invoice.company.currency_symbol }} {{ invoice.tax_amount|floatformat:0 }}</td>
+            <td class="value">{{ invoice.tax_amount|currency:invoice.company }}</td>
           </tr>
         {% endif %}
         <tr class="grand-total">
           <td class="label">{% trans "Total" %}</td>
-          <td class="value">{{ invoice.company.currency_symbol }} {{ invoice.total|floatformat:0 }}</td>
+          <td class="value">{{ invoice.total|currency:invoice.company }}</td>
         </tr>
       </table>
     </div>

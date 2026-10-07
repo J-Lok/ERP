@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load i18n %}
+{% load currency_tags %}
 {% block title %}Pipeline — CRM{% endblock %}
 
 {% block content %}
@@ -57,7 +58,7 @@
         <span class="badge bg-secondary">{{ col.count }}</span>
       </div>
     </div>
-    <div class="text-muted small text-center mb-2">{{ company.currency_symbol }} {{ col.total|floatformat:0 }}</div>
+    <div class="text-muted small text-center mb-2">{{ col.total|currency:company }}</div>
 
     <!-- Cards -->
     {% for opp in col.items %}
@@ -74,7 +75,7 @@
           {% if opp.contact.organization %}<br>
           <i class="fas fa-building me-1"></i>{{ opp.contact.organization }}{% endif %}
         </p>
-        <p class="fw-bold text-success mb-2">{{ company.currency_symbol }} {{ opp.value|floatformat:0 }}</p>
+        <p class="fw-bold text-success mb-2">{{ opp.value|currency:company }}</p>
 
         {% if opp.assigned_to %}
         <p class="small text-muted mb-1">

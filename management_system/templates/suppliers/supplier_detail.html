@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load i18n %}
+{% load currency_tags %}
 {% block title %}{{ supplier.name }} — {% trans "Suppliers" %}{% endblock %}
 
 {% block content %}
@@ -47,7 +48,7 @@
         <div class="card shadow-sm h-100">
             <div class="card-body">
                 <div class="text-muted small">{% trans "Total Invoiced" %}</div>
-                <div class="h4 mb-0">{{ company.currency_symbol }} {{ invoice_stats.total|default:0|floatformat:0 }}</div>
+                <div class="h4 mb-0">{{ invoice_stats.total|currency:company }}</div>
             </div>
         </div>
     </div>
@@ -55,7 +56,7 @@
         <div class="card shadow-sm h-100">
             <div class="card-body">
                 <div class="text-muted small">{% trans "Outstanding" %}</div>
-                <div class="h4 mb-0 text-danger">{{ company.currency_symbol }} {{ supplier.total_unpaid|floatformat:0 }}</div>
+                <div class="h4 mb-0 text-danger">{{ supplier.total_unpaid|currency:company }}</div>
             </div>
         </div>
     </div>
@@ -133,7 +134,7 @@
                                 <td><a href="{% url 'finance:supplier_invoice_detail' invoice.pk %}">{{ invoice.invoice_number }}</a></td>
                                 <td class="text-muted small">{{ invoice.date|date:"M j, Y" }}</td>
                                 <td><span class="badge bg-secondary">{{ invoice.get_status_display }}</span></td>
-                                <td class="text-end">{{ company.currency_symbol }} {{ invoice.total|floatformat:0 }}</td>
+                                <td class="text-end">{{ invoice.total|currency:company }}</td>
                             </tr>
                             {% endfor %}
                         </tbody>

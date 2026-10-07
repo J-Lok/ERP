@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load i18n %}
+{% load currency_tags %}
 
 {% block title %}{% trans "Delete" %} {{ opportunity.title }} — CRM{% endblock %}
 
@@ -23,7 +24,7 @@
                     <dd class="col-7">{{ opportunity.get_stage_display }}</dd>
 
                     <dt class="col-5 text-muted fw-normal">{% trans "Value" %}</dt>
-                    <dd class="col-7">{{ company.currency_symbol }} {{ opportunity.value|floatformat:0 }}</dd>
+                    <dd class="col-7">{{ opportunity.value|currency:company }}</dd>
 
                     {% if opportunity.expected_close_date %}
                     <dt class="col-5 text-muted fw-normal">{% trans "Close Date" %}</dt>

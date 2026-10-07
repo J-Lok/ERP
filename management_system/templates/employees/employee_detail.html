@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
 
 {% load i18n %}
+{% load currency_tags %}
 {% block title %}{{ employee.user.get_full_name }} — Employee{% endblock %}
 
 {% block content %}
@@ -65,7 +66,7 @@
                             {% if can_see_salary %}
                             <li class="list-group-item px-0">
                                 <span class="text-muted">{% trans "Salary" %}</span><br>
-                                <strong>{{ company.currency_symbol }} {{ employee.salary|floatformat:2 }}</strong>
+                                <strong>{{ employee.salary|currency:company }}</strong>
                             </li>
                             {% endif %}
                         </ul>
@@ -133,7 +134,7 @@
 
                                     {% if can_see_salary %}
                                     <dt class="col-5 text-muted fw-normal">{% trans "Salary" %}</dt>
-                                    <dd class="col-7">{{ company.currency_symbol }} {{ employee.salary|floatformat:2 }}</dd>
+                                    <dd class="col-7">{{ employee.salary|currency:company }}</dd>
                                     {% endif %}
 
                                     <dt class="col-5 text-muted fw-normal">{% trans "Record Created" %}</dt>

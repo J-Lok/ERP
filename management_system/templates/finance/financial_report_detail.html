@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
 
 {% load i18n %}
+{% load currency_tags %}
 {% block title %}{{ report.get_report_type_display }} - {{ report.report_date }}{% endblock %}
 
 {% block content %}
@@ -47,9 +48,9 @@
                                     </td>
                                     <td class="text-end">
                                         {% if line.is_total %}
-                                            <strong>{{ company.currency_symbol }} {{ line.amount|floatformat:2 }}</strong>
+                                            <strong>{{ line.amount|currency:company }}</strong>
                                         {% else %}
-                                            {{ company.currency_symbol }} {{ line.amount|floatformat:2 }}
+                                            {{ line.amount|currency:company }}
                                         {% endif %}
                                     </td>
                                 </tr>

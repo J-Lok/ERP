@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load i18n %}
+{% load currency_tags %}
 {% block title %}All Orders - {{ block.super }}{% endblock %}
 {% block content %}
 <div class="container-fluid">
@@ -67,7 +68,7 @@
                             </td>
                             <td>{{ order.created_at|date:"M d, Y H:i" }}</td>
                             <td>{{ order.items.count }}</td>
-                            <td><strong>{{ company.currency_symbol }} {{ order.total|floatformat:2 }}</strong></td>
+                            <td><strong>{{ order.total|currency:company }}</strong></td>
                             <td>
                                 <span class="badge 
                                     {% if order.status == 'pending' %}bg-warning

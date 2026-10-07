@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
 {% load i18n %}
 {% load crispy_forms_tags %}
+{% load currency_tags %}
 
 {% block title %}{% trans "Quick In-Store Order" %}{% endblock %}
 
@@ -104,8 +105,8 @@ document.addEventListener('DOMContentLoaded', function() {
   const stockOptionsHTML = `
     <option value="">-- {% trans "Select Product" %} --</option>
     {% for stock in form.stock_queryset %}
-    <option value="{{ stock.pk }}" data-price="{{ stock.selling_price|default:0 }}" data-stock="{{ stock.quantity }}">
-      {{ stock.name }} ({{ company.currency_symbol }} {{ stock.selling_price|default:0|floatformat:0 }} | {{ stock.quantity }} in stock)
+    <option value="{{ stock.pk }}" data-price="{{ stock.selling_price|default:0|to_currency:company }}" data-stock="{{ stock.quantity }}">
+      {{ stock.name }} ({{ stock.selling_price|currency:company }} | {{ stock.quantity }} in stock)
     </option>
     {% endfor %}
   `;

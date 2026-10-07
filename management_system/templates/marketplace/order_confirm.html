@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load i18n %}
+{% load currency_tags %}
 <!-- marketplace/templates/marketplace/admin/order_confirm.html -->
 
 {% block title %}Confirm Order #{{ order.order_number }}{% endblock %}
@@ -34,7 +35,7 @@
                                 <p class="mb-1"><strong>{% trans "Order Date:" %}</strong> {{ order.created_at|date:"M d, Y H:i" }}</p>
                             </div>
                             <div class="col-sm-6">
-                                <p class="mb-1"><strong>{% trans "Total Amount:" %}</strong> {{ order.company.currency_symbol }} {{ order.total }}</p>
+                                <p class="mb-1"><strong>{% trans "Total Amount:" %}</strong> {{ order.total|currency:order.company }}</p>
                                 <p class="mb-1"><strong>{% trans "Payment Status:" %}</strong> 
                                     <span class="badge bg-{% if order.payment_status == 'paid' %}success{% elif order.payment_status == 'pending' %}warning{% elif order.payment_status == 'refunded' %}info{% else %}danger{% endif %}">
                                         {{ order.get_payment_status_display }}
@@ -66,31 +67,31 @@
                                         <td>{{ item.item_name }}</td>
                                         <td>{{ item.item_code }}</td>
                                         <td>{{ item.quantity }}</td>
-                                        <td>{{ order.company.currency_symbol }} {{ item.unit_price }}</td>
-                                        <td>{{ order.company.currency_symbol }} {{ item.subtotal }}</td>
+                                        <td>{{ item.unit_price|currency:order.company }}</td>
+                                        <td>{{ item.subtotal|currency:order.company }}</td>
                                     </tr>
                                 {% endfor %}
                             </tbody>
                             <tfoot>
                                 <tr>
                                     <td colspan="4" class="text-end"><strong>{% trans "Subtotal:" %}</strong></td>
-                                    <td>{{ order.company.currency_symbol }} {{ order.subtotal }}</td>
+                                    <td>{{ order.subtotal|currency:order.company }}</td>
                                 </tr>
                                 {% if order.tax > 0 %}
                                     <tr>
                                         <td colspan="4" class="text-end"><strong>{% trans "Tax:" %}</strong></td>
-                                        <td>{{ order.company.currency_symbol }} {{ order.tax }}</td>
+                                        <td>{{ order.tax|currency:order.company }}</td>
                                     </tr>
                                 {% endif %}
                                 {% if order.shipping > 0 %}
                                     <tr>
                                         <td colspan="4" class="text-end"><strong>{% trans "Shipping:" %}</strong></td>
-                                        <td>{{ order.company.currency_symbol }} {{ order.shipping }}</td>
+                                        <td>{{ order.shipping|currency:order.company }}</td>
                                     </tr>
                                 {% endif %}
                                 <tr>
                                     <td colspan="4" class="text-end"><strong>{% trans "Total:" %}</strong></td>
-                                    <td><strong>{{ order.company.currency_symbol }} {{ order.total }}</strong></td>
+                                    <td><strong>{{ order.total|currency:order.company }}</strong></td>
                                 </tr>
                             </tfoot>
                         </table>

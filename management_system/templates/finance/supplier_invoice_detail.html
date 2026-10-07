@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load i18n %}
+{% load currency_tags %}
 {% block title %}{{ invoice.invoice_number }} — Finance{% endblock %}
 
 {% block content %}
@@ -109,8 +110,8 @@
           <tr>
             <td>{{ line.description }}</td>
             <td class="text-end">{{ line.quantity }}</td>
-            <td class="text-end">{{ company.currency_symbol }} {{ line.unit_price|floatformat:2 }}</td>
-            <td class="text-end fw-semibold">{{ company.currency_symbol }} {{ line.line_total|floatformat:2 }}</td>
+            <td class="text-end">{{ line.unit_price|currency:company }}</td>
+            <td class="text-end fw-semibold">{{ line.line_total|currency:company }}</td>
             <td class="text-muted">{{ line.account.name }}</td>
           </tr>
           {% endfor %}
@@ -118,19 +119,19 @@
         <tfoot class="table-light fw-bold">
           <tr>
             <td colspan="3" class="text-end">{% trans "Subtotal" %}</td>
-            <td class="text-end">{{ company.currency_symbol }} {{ invoice.subtotal|floatformat:2 }}</td>
+            <td class="text-end">{{ invoice.subtotal|currency:company }}</td>
             <td></td>
           </tr>
           {% if invoice.tax_amount > 0 %}
           <tr>
             <td colspan="3" class="text-end">Tax ({{ invoice.tax_rate }}%)</td>
-            <td class="text-end">{{ company.currency_symbol }} {{ invoice.tax_amount|floatformat:2 }}</td>
+            <td class="text-end">{{ invoice.tax_amount|currency:company }}</td>
             <td></td>
           </tr>
           {% endif %}
           <tr>
             <td colspan="3" class="text-end">{% trans "Total" %}</td>
-            <td class="text-end text-primary">{{ company.currency_symbol }} {{ invoice.total|floatformat:2 }}</td>
+            <td class="text-end text-primary">{{ invoice.total|currency:company }}</td>
             <td></td>
           </tr>
         </tfoot>

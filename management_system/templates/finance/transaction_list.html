@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load i18n %}
+{% load currency_tags %}
 {% block title %}Transactions — Finance{% endblock %}
 
 {% block content %}
@@ -55,20 +56,20 @@
   <div class="col-sm-4">
     <div class="card border-0 bg-success bg-opacity-10 shadow-sm text-center py-2">
       <p class="text-muted small mb-0">{% trans "Credits (filtered)" %}</p>
-      <h5 class="mb-0 text-success fw-bold">{{ company.currency_symbol }} {{ credits|floatformat:0 }}</h5>
+      <h5 class="mb-0 text-success fw-bold">{{ credits|currency:company }}</h5>
     </div>
   </div>
   <div class="col-sm-4">
     <div class="card border-0 bg-danger bg-opacity-10 shadow-sm text-center py-2">
       <p class="text-muted small mb-0">{% trans "Debits (filtered)" %}</p>
-      <h5 class="mb-0 text-danger fw-bold">{{ company.currency_symbol }} {{ debits|floatformat:0 }}</h5>
+      <h5 class="mb-0 text-danger fw-bold">{{ debits|currency:company }}</h5>
     </div>
   </div>
   <div class="col-sm-4">
     <div class="card border-0 {% if net >= 0 %}bg-primary{% else %}bg-danger{% endif %} bg-opacity-10 shadow-sm text-center py-2">
       <p class="text-muted small mb-0">{% trans "Net" %}</p>
       <h5 class="mb-0 {% if net >= 0 %}text-primary{% else %}text-danger{% endif %} fw-bold">
-        {% if net >= 0 %}+{% endif %}{{ company.currency_symbol }} {{ net|floatformat:0 }}
+        {% if net >= 0 %}+{% endif %}{{ net|currency:company }}
       </h5>
     </div>
   </div>
@@ -109,10 +110,10 @@
           </td>
           <td class="small text-muted">{{ txn.description|truncatechars:50|default:"—" }}</td>
           <td class="text-end text-success fw-semibold">
-            {% if txn.transaction_type == 'credit' %}{{ company.currency_symbol }} {{ txn.amount|floatformat:0 }}{% endif %}
+            {% if txn.transaction_type == 'credit' %}{{ txn.amount|currency:company }}{% endif %}
           </td>
           <td class="text-end text-danger fw-semibold">
-            {% if txn.transaction_type == 'debit' %}{{ company.currency_symbol }} {{ txn.amount|floatformat:0 }}{% endif %}
+            {% if txn.transaction_type == 'debit' %}{{ txn.amount|currency:company }}{% endif %}
           </td>
           <td class="small text-muted">{{ txn.entered_by.get_full_name|default:"—" }}</td>
           <td class="text-end">

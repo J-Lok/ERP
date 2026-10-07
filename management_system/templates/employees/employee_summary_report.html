@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
 
 {% load i18n %}
+{% load currency_tags %}
 {% block title %}Employee Summary Report — ERP System{% endblock %}
 
 {% block content %}
@@ -175,19 +176,19 @@
         <div class="row g-3 text-center">
             <div class="col-sm-6 col-md-3">
                 <p class="text-muted small mb-1">{% trans "Average" %}</p>
-                <h4 class="fw-bold mb-0">{{ company.currency_symbol }} {{ salary_stats.avg_salary|floatformat:2|default:"0.00" }}</h4>
+                <h4 class="fw-bold mb-0">{{ salary_stats.avg_salary|currency:company }}</h4>
             </div>
             <div class="col-sm-6 col-md-3">
                 <p class="text-muted small mb-1">{% trans "Total Payroll" %}</p>
-                <h4 class="fw-bold mb-0">{{ company.currency_symbol }} {{ salary_stats.total_salary|floatformat:2|default:"0.00" }}</h4>
+                <h4 class="fw-bold mb-0">{{ salary_stats.total_salary|currency:company }}</h4>
             </div>
             <div class="col-sm-6 col-md-3">
                 <p class="text-muted small mb-1">{% trans "Minimum" %}</p>
-                <h4 class="fw-bold mb-0">{{ company.currency_symbol }} {{ salary_stats.min_salary|floatformat:2|default:"0.00" }}</h4>
+                <h4 class="fw-bold mb-0">{{ salary_stats.min_salary|currency:company }}</h4>
             </div>
             <div class="col-sm-6 col-md-3">
                 <p class="text-muted small mb-1">{% trans "Maximum" %}</p>
-                <h4 class="fw-bold mb-0">{{ company.currency_symbol }} {{ salary_stats.max_salary|floatformat:2|default:"0.00" }}</h4>
+                <h4 class="fw-bold mb-0">{{ salary_stats.max_salary|currency:company }}</h4>
             </div>
         </div>
     </div>
