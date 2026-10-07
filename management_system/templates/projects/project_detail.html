@@ -87,6 +87,9 @@
             </div>
         </div>
         <div>
+            <a href="{% url 'projects:project_task_kanban' project.pk %}" class="btn btn-outline-primary">
+                <i class="fas fa-columns me-2"></i>{% trans "Kanban" %}
+            </a>
             <a href="{% url 'projects:project_edit' project.pk %}" class="btn btn-primary">
                 <i class="fas fa-edit me-2"></i>{% trans "Edit Project" %}
             </a>
@@ -115,7 +118,7 @@
                             <p><strong><i class="fas fa-calendar-check me-2"></i>{% trans "End Date:" %}</strong> {{ project.end_date|date:"F d, Y" }}</p>
                         </div>
                         <div class="col-md-6">
-                            <p><strong><i class="fas fa-dollar-sign me-2"></i>{% trans "Budget:" %}</strong> ${{ project.budget|floatformat:2 }}</p>
+                            <p><strong><i class="fas fa-dollar-sign me-2"></i>{% trans "Budget:" %}</strong> {{ company.currency_symbol }} {{ project.budget|floatformat:2 }}</p>
                             <p><strong><i class="fas fa-user-tie me-2"></i>{% trans "Manager:" %}</strong> 
                                 {% if project.manager %}
                                     {{ project.manager.user.get_full_name }}
