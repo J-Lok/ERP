@@ -35,8 +35,13 @@ class Stock(models.Model):
     cost_price = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)], help_text='Cost price for inventory')
     selling_price = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)], help_text='Selling price for marketplace')
     reorder_level = models.IntegerField(validators=[MinValueValidator(0)])
-    supplier_name = models.CharField(max_length=200)
-    supplier_contact = models.CharField(max_length=100, blank=True)
+    supplier = models.ForeignKey(
+        'suppliers.Supplier',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='stock_items',
+    )
     location = models.CharField(max_length=200, blank=True)
     is_marketplace_visible = models.BooleanField(default=True, help_text='Show this item on the marketplace')
     last_restocked = models.DateField(null=True, blank=True)

@@ -32,7 +32,7 @@
             <div class="col-md-4">
                 <div class="card bg-light">
                     <div class="card-body text-center">
-                        <h3 class="text-warning">FCFA {{ total_value|floatformat:0 }}</h3>
+                        <h3 class="text-warning">{{ company.currency_symbol }} {{ total_value|floatformat:0 }}</h3>
                         <p class="text-muted mb-0">{% trans "Total Value at Risk" %}</p>
                     </div>
                 </div>
@@ -75,7 +75,7 @@
                         </td>
                         <td>{{ category.count }}</td>
                         <td>{{ category.total_items }}</td>
-                        <td class="text-danger">FCFA {{ category.total_value|floatformat:0 }}</td>
+                        <td class="text-danger">{{ company.currency_symbol }} {{ category.total_value|floatformat:0 }}</td>
                         <td>
                             <div class="progress" style="height: 20px;">
                                 <div class="progress-bar bg-warning" role="progressbar" 
@@ -154,11 +154,11 @@
                             {% endif %}
                             {% endwith %}
                         </td>
-                        <td>FCFA {{ item.cost_price|floatformat:0 }}</td>
+                        <td>{{ company.currency_symbol }} {{ item.cost_price|floatformat:0 }}</td>
                         <td class="text-danger">
-                            <strong>FCFA {{ item.total_value|floatformat:0 }}</strong>
+                            <strong>{{ company.currency_symbol }} {{ item.total_value|floatformat:0 }}</strong>
                         </td>
-                        <td>{{ item.supplier_name|default:"—" }}</td>
+                        <td>{{ item.supplier.name|default:"—" }}</td>
                         <td>
                             <a href="{% url 'inventory:stock_transaction' item.pk %}" class="btn btn-sm btn-primary">
                                 <i class="fas fa-exchange-alt"></i>

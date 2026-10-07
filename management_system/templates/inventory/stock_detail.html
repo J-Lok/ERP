@@ -58,11 +58,15 @@
                             </tr>
                             <tr>
                                 <th>{% trans "Supplier:" %}</th>
-                                <td>{{ stock.supplier_name|default:"—" }}</td>
+                                <td>
+                                    {% if stock.supplier %}
+                                    <a href="{% url 'suppliers:supplier_detail' stock.supplier.pk %}">{{ stock.supplier.name }}</a>
+                                    {% else %}—{% endif %}
+                                </td>
                             </tr>
                             <tr>
                                 <th>{% trans "Supplier Contact:" %}</th>
-                                <td>{{ stock.supplier_contact|default:"—" }}</td>
+                                <td>{{ stock.supplier.phone|default:stock.supplier.email|default:"—" }}</td>
                             </tr>
                         </table>
                     </div>
@@ -77,11 +81,11 @@
                             </tr>
                             <tr>
                                 <th>{% trans "Cost Price:" %}</th>
-                                <td>FCFA {{ stock.cost_price|floatformat:0 }}</td>
+                                <td>{{ company.currency_symbol }} {{ stock.cost_price|floatformat:0 }}</td>
                             </tr>
                             <tr>
                                 <th>{% trans "Selling Price:" %}</th>
-                                <td>FCFA {{ stock.selling_price|floatformat:0 }}</td>
+                                <td>{{ company.currency_symbol }} {{ stock.selling_price|floatformat:0 }}</td>
                             </tr>
                             <tr>
                                 <th>{% trans "Marketplace Visible:" %}</th>
@@ -96,7 +100,7 @@
                             <tr>
                                 <th>{% trans "Total Value:" %}</th>
                                 <td>
-                                    <strong class="text-success">FCFA {{ stock.total_value|floatformat:0 }}</strong>
+                                    <strong class="text-success">{{ company.currency_symbol }} {{ stock.total_value|floatformat:0 }}</strong>
                                 </td>
                             </tr>
                             <tr>
@@ -237,9 +241,11 @@
             <a href="{% url 'inventory:stock_edit' stock.pk %}" class="btn btn-warning me-2">
                 <i class="fas fa-edit me-1"></i>{% trans "Edit Item" %}
             </a>
-            <a href="mailto:{{ stock.supplier_contact }}" class="btn btn-outline-info me-2">
+            {% if stock.supplier.email %}
+            <a href="mailto:{{ stock.supplier.email }}" class="btn btn-outline-info me-2">
                 <i class="fas fa-envelope me-1"></i>{% trans "Contact Supplier" %}
             </a>
+            {% endif %}
         </div>
         <div>
             <a href="{% url 'inventory:stock_delete' stock.pk %}" class="btn btn-danger me-2">

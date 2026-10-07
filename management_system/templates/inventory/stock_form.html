@@ -28,7 +28,12 @@
                         </div>
                         
                         <div class="col-md-6">
-                            {{ form.category|as_crispy_field }}
+                            <div class="d-flex align-items-end gap-2">
+                                <div class="flex-grow-1">{{ form.category|as_crispy_field }}</div>
+                                <button type="button" class="btn btn-outline-secondary mb-3" data-bs-toggle="modal" data-bs-target="#quickCreateCategoryModal" title="{% trans 'Add new category' %}">
+                                    <i class="fas fa-plus" aria-hidden="true"></i>
+                                </button>
+                            </div>
                         </div>
                         <div class="col-md-6">
                             {{ form.unit|as_crispy_field }}
@@ -80,26 +85,33 @@
                         <div class="col-12 mt-4">
                             <h5 class="mb-3 border-bottom pb-2">{% trans "Supplier Information" %}</h5>
                         </div>
-                        
+
                         <div class="col-md-6">
-                            {{ form.supplier_name|as_crispy_field }}
+                            <div class="d-flex align-items-end gap-2">
+                                <div class="flex-grow-1">{{ form.supplier|as_crispy_field }}</div>
+                                <button type="button" class="btn btn-outline-secondary mb-3" data-bs-toggle="modal" data-bs-target="#quickCreateSupplierModal" title="{% trans 'Add new supplier' %}">
+                                    <i class="fas fa-plus" aria-hidden="true"></i>
+                                </button>
+                            </div>
                         </div>
-                        <div class="col-md-6">
-                            {{ form.supplier_contact|as_crispy_field }}
-                        </div>
-                        
+
                         <div class="col-12 mt-4">
                             <h5 class="mb-3 border-bottom pb-2">{% trans "Storage Information" %}</h5>
                         </div>
                         
                         <div class="col-md-6">
                             {{ form.location|as_crispy_field }}
+                            <datalist id="location-suggestions">
+                                {% for loc in form.location_suggestions %}
+                                <option value="{{ loc }}"></option>
+                                {% endfor %}
+                            </datalist>
                         </div>
                         <div class="col-md-6">
                             {{ form.last_restocked|as_crispy_field }}
                         </div>
                     </div>
-                    
+
                     <div class="alert alert-info mt-4">
                         <i class="fas fa-info-circle me-2"></i>
                         <strong>{% trans "Note:" %}</strong> 
@@ -130,4 +142,75 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block modals %}
+<div class="modal fade" id="quickCreateCategoryModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">{% trans "Add New Category" %}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-danger d-none" id="quickCategoryError"></div>
+                <div class="mb-3">
+                    <label class="form-label" for="quickCategoryName">{% trans "Name" %}</label>
+                    <input type="text" id="quickCategoryName" class="form-control" required>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">{% trans "Cancel" %}</button>
+                <button type="button" class="btn btn-primary" id="quickCategorySave">{% trans "Create" %}</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="quickCreateSupplierModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">{% trans "Add New Supplier" %}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-danger d-none" id="quickSupplierError"></div>
+                <div class="mb-3">
+                    <label class="form-label" for="quickSupplierName">{% trans "Name" %}</label>
+                    <input type="text" id="quickSupplierName" class="form-control" required>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">{% trans "Cancel" %}</button>
+                <button type="button" class="btn btn-primary" id="quickSupplierSave">{% trans "Create" %}</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    zentralQuickCreate({
+        url: '{% url "inventory:category_quick_create" %}',
+        fields: [{ id: 'quickCategoryName', name: 'name', required: true }],
+        errorId: 'quickCategoryError',
+        selectId: 'id_category',
+        modalId: 'quickCreateCategoryModal',
+        saveId: 'quickCategorySave',
+    });
+
+    zentralQuickCreate({
+        url: '{% url "suppliers:supplier_quick_create" %}',
+        fields: [{ id: 'quickSupplierName', name: 'name', required: true }],
+        extraFields: { is_active: 'on' },
+        errorId: 'quickSupplierError',
+        selectId: 'id_supplier',
+        modalId: 'quickCreateSupplierModal',
+        saveId: 'quickSupplierSave',
+    });
+});
+</script>
 {% endblock %}
