@@ -1,5 +1,5 @@
 [tool.ruff]
-target-version = "py311"
+target-version = "py312"
 
 [tool.ruff.lint]
 # Scoped to genuine correctness issues (undefined names, unused imports,
@@ -12,3 +12,8 @@ ignore = [
                # which ruff doesn't recognize as framework-safe.
     "E501",    # Line length.
 ]
+
+[tool.ruff.lint.per-file-ignores]
+# Literal passwords in test fixtures aren't secrets — flagging them as
+# "hardcoded passwords" is a false positive specific to test code.
+"**/tests.py" = ["S106"]

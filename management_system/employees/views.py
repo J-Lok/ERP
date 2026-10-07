@@ -480,7 +480,10 @@ def employee_import(request):
                         try:
                             date_joined = pd.to_datetime(row['Date Joined']).date()
                         except Exception:
-                            pass
+                            logger.warning(
+                                'Could not parse Date Joined %r for row %s — keeping default.',
+                                row.get('Date Joined'), emp_id,
+                            )
 
                     emp = getattr(user, 'employee_profile', None)
                     if not emp:
@@ -498,7 +501,10 @@ def employee_import(request):
                         try:
                             emp.date_of_birth = pd.to_datetime(row['Date of Birth']).date()
                         except Exception:
-                            pass
+                            logger.warning(
+                                'Could not parse Date of Birth %r for row %s — leaving unset.',
+                                row.get('Date of Birth'), emp_id,
+                            )
 
                     emp.save()
                     success_count += 1

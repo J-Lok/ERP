@@ -1,5 +1,5 @@
-import os
 import io
+import logging
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 from django.http import HttpResponse, HttpResponsePermanentRedirect, HttpResponseForbidden
@@ -8,18 +8,20 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_http_methods
 from django.urls import reverse
-from django.db.models import Q, F,Count, Sum
+from django.db.models import Q
 from django.db import transaction as db_transaction
 from django.utils import timezone
 from functools import wraps
 
 from .models import Client, Cart, CartItem, Order, OrderItem, Wishlist, WishlistItem, ProductReview, ReturnRequest, CompanyPaymentSettings
-from .forms import ClientRegistrationForm, ClientLoginForm, ClientProfileForm, CheckoutForm, AddToCartForm
+from .forms import ClientRegistrationForm, ClientLoginForm, ClientProfileForm, CheckoutForm
 from inventory.models import Stock, StockCategory, StockTransaction
-from inventory.services import adjust_stock, marketplace_visible_stocks
+from inventory.services import adjust_stock
 from accounts.models import Company
 from accounts.utils import safe_next_url
-from .services import reverse_order_payment_in_finance, post_order_payment_to_finance, MarketplaceFinancePostingError
+from .services import reverse_order_payment_in_finance
+
+logger = logging.getLogger(__name__)
 
 
 def get_cart_company(cart):
@@ -507,9 +509,9 @@ def checkout(request):
                             message=f"New order #{order.order_number} ({order.company.currency_symbol} {order.total:,.0f}) placed by {client.get_full_name()}.",
                             related_object=order
                         )
-                    except Exception as notif_err:
-                        pass
-                    
+                    except Exception:
+                        logger.warning('Could not notify company users of new order #%s.', order.order_number, exc_info=True)
+
                     messages.success(request, f'Order placed successfully! Order number: {order.order_number}. Please proceed with payment.')
                     return redirect('marketplace:payment_gateway', pk=order.pk)
                     

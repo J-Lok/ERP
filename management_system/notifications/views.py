@@ -1,8 +1,7 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from django.core.paginator import Paginator
-from django.db.models import Q
+from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from django.utils import timezone
@@ -38,7 +37,7 @@ def notification_list(request):
     page = request.GET.get('page')
     try:
         notifications_page = paginator.page(page)
-    except:
+    except (PageNotAnInteger, EmptyPage):
         notifications_page = paginator.page(1)
 
     # Get notification counts for badges

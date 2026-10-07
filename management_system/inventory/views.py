@@ -6,9 +6,8 @@ from django.db import transaction
 from django.utils import timezone
 import pandas as pd
 import io
-import json
 import math
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 from .models import Stock, StockTransaction, StockCategory
 from .services import adjust_stock, InsufficientStockError
@@ -375,7 +374,7 @@ def stock_transaction_export(request):
                 try:
                     if len(str(cell.value)) > max_length:
                         max_length = len(str(cell.value))
-                except:
+                except Exception:  # noqa: S110 — cosmetic column width, never worth failing the export over
                     pass
             adjusted_width = min(max_length + 2, 50)
             worksheet.column_dimensions[column_letter].width = adjusted_width
@@ -625,7 +624,7 @@ def stock_export(request):
                 try:
                     if len(str(cell.value)) > max_length:
                         max_length = len(str(cell.value))
-                except:
+                except Exception:  # noqa: S110 — cosmetic column width, never worth failing the export over
                     pass
             adjusted_width = min(max_length + 2, 50)
             worksheet.column_dimensions[column_letter].width = adjusted_width

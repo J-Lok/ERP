@@ -10,7 +10,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
 from django.db.models import Q, Count
-from django.http import HttpResponse, JsonResponse, FileResponse
+from django.http import JsonResponse, FileResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views.decorators.http import require_http_methods
@@ -21,7 +21,7 @@ from accounts.permissions import role_required
 from .models import Meeting, MeetingNote, ActionItem, MeetingAttachment
 from .forms import (
     MeetingForm, MeetingNoteForm, ActionItemForm, MeetingAttachmentForm,
-    QuickMeetingForm, MeetingFilterForm
+    MeetingFilterForm
 )
 
 logger = logging.getLogger(__name__)
@@ -473,11 +473,11 @@ def action_item_toggle_status(request, pk):
     
     if action_item.status != 'completed':
         action_item.mark_completed()
-        message = f'Action item marked as completed.'
+        message = 'Action item marked as completed.'
     else:
         action_item.status = 'pending'
         action_item.save()
-        message = f'Action item marked as pending.'
+        message = 'Action item marked as pending.'
     
     messages.success(request, message)
     return redirect('meetings:meeting_detail', pk=action_item.meeting.pk)
@@ -687,9 +687,6 @@ def meeting_report(request):
     total_actions = actions.count()
     completed_actions = actions.filter(status='completed').count()
     overdue_actions = actions.filter(status__in=['pending', 'in_progress'], due_date__lt=timezone.now().date()).count()
-    
-    # Attendance statistics
-    top_attendees = []
     
     # Calculate rates
     completion_rate = (completed_actions / total_actions * 100) if total_actions > 0 else 0

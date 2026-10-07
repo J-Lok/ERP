@@ -37,7 +37,7 @@ _secret_key = os.getenv('SECRET_KEY')
 if not _secret_key:
     if os.getenv('DATABASE_URL'):
         raise ImproperlyConfigured('SECRET_KEY environment variable is not set.')
-    _secret_key = 'django-insecure-local-dev-only-do-not-use-in-production'
+    _secret_key = 'django-insecure-local-dev-only-do-not-use-in-production'  # noqa: S105 — dev-only fallback, never reached when DATABASE_URL is set
 SECRET_KEY = _secret_key
 
 DEBUG = env_bool('DEBUG', True)

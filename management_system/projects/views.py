@@ -525,7 +525,6 @@ def project_summary_report(request):
         max_budget=Max('budget'),
     )
 
-    total = counts['total'] or 1  # avoid division by zero in annotation
     status_distribution = list(
         projects.values('status')
         .annotate(count=Count('id'))

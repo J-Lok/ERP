@@ -4,12 +4,12 @@ from decimal import Decimal, InvalidOperation
 
 import requests
 from django.contrib import messages
-from django.contrib.auth import login, logout, authenticate, update_session_auth_hash
+from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib.auth.views import PasswordChangeView
 from django.core.exceptions import PermissionDenied
-from django.core.mail import send_mail, get_connection, EmailMessage
+from django.core.mail import get_connection, EmailMessage
 from django.conf import settings
 from django.shortcuts import render, redirect, get_object_or_404
 from django.template.loader import render_to_string
@@ -81,7 +81,7 @@ def company_register(request):
             email = form.cleaned_data['admin_email']
             password = form.cleaned_data['admin_password']
 
-            user = User.objects.create_user(
+            User.objects.create_user(
                 email=email,
                 password=password,
                 first_name=form.cleaned_data['admin_first_name'],

@@ -13,12 +13,11 @@ HR module views:
 
 import logging
 from datetime import timedelta
-from calendar import monthrange
 
 from django.contrib import messages
 from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
-from django.db.models import Count, Q, Sum
-from django.http import HttpResponseForbidden, JsonResponse
+from django.db.models import Count, Q
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views.decorators.http import require_POST
@@ -36,8 +35,7 @@ from .forms import (
 from .models import (
     LeaveRequest, Position, SalaryComponent, PayrollPeriod, PayrollEntry,
     PayrollEntryComponent, Payslip,
-    PerformanceGoal, PerformanceReview, PerformanceReviewComment,
-    TrainingCourse, TrainingSession, EmployeeTraining, Skill, EmployeeSkill,
+    PerformanceGoal, PerformanceReview, TrainingCourse, TrainingSession, EmployeeTraining, Skill, EmployeeSkill,
 )
 
 HR_ROLES = ['admin', 'hr_manager']
@@ -1148,7 +1146,7 @@ def training_session_create(request):
     if request.method == 'POST':
         form = TrainingSessionForm(request.POST, company=company)
         if form.is_valid():
-            session = form.save()
+            form.save()
             messages.success(request, 'Training session created successfully.')
             return redirect('hr:training_session_list')
     else:

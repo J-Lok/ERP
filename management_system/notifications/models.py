@@ -1,6 +1,6 @@
 from django.db import models
 from django.conf import settings
-from django.urls import reverse
+from django.urls import NoReverseMatch, reverse
 from django.utils import timezone
 
 
@@ -158,7 +158,7 @@ class Notification(models.Model):
         if url_name:
             try:
                 return reverse(url_name)
-            except:
+            except NoReverseMatch:
                 pass
         return None
 
