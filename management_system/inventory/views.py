@@ -12,6 +12,14 @@ from datetime import timedelta
 from .models import Stock, StockTransaction, StockCategory
 from .services import adjust_stock, InsufficientStockError
 from .forms import StockForm, StockTransactionForm, StockCategoryForm
+from .excel_services import (
+    extract_excel_images,
+    get_image_for_row,
+    process_image_bytes,
+    normalize_column_name,
+    generate_stock_export_excel,
+    generate_stock_template_excel,
+)
 from accounts.permissions import (
     INVENTORY_VIEW_ROLES,
     INVENTORY_WRITE_ROLES,
@@ -214,7 +222,6 @@ def stock_transaction(request, pk):
                     
                     transaction_obj.save()
                     stock.refresh_from_db()
-                    transaction_obj.save()
                     
                     # Update last_restocked date for stock in transactions
                     if transaction_obj.transaction_type == 'in':
@@ -428,52 +435,60 @@ def _safe_str(val, default=''):
 
 @role_required(*INVENTORY_WRITE_ROLES)
 def stock_import(request):
-    """Import stock items from Excel"""
+    """Import stock items from Excel, including embedded photos or image URLs"""
     company = request.user.company
-    
+
     if request.method == 'POST' and request.FILES.get('excel_file'):
         excel_file = request.FILES['excel_file']
-        
+
         if not excel_file.name.endswith(('.xlsx', '.xls')):
             messages.error(request, 'Please upload a valid Excel file (.xlsx or .xls)')
             return redirect('inventory:stock_import')
-        
+
         try:
-            df = pd.read_excel(excel_file)
+            file_bytes = excel_file.read()
+            images_by_row, images_by_cell = extract_excel_images(file_bytes)
+
+            df = pd.read_excel(io.BytesIO(file_bytes))
+
+            # Map column headers to standard names using synonyms
+            col_map = {col: normalize_column_name(col) for col in df.columns}
+            photo_col_orig = next((orig for orig, norm in col_map.items() if norm == 'image'), None)
+            photo_col_idx = (df.columns.get_loc(photo_col_orig) + 1) if photo_col_orig in df.columns else None
+
+            df_norm = df.rename(columns=col_map)
             required_columns = ['item_code', 'name']
-            
+
             # Check required columns
-            missing_columns = [col for col in required_columns if col not in df.columns]
+            missing_columns = [col for col in required_columns if col not in df_norm.columns]
             if missing_columns:
                 messages.error(request, f'Missing required columns: {", ".join(missing_columns)}')
                 return redirect('inventory:stock_import')
-            
+
             success_count = 0
             updated_count = 0
             error_count = 0
             errors = []
-            
             # Cache categories and suppliers
             category_cache = {c.name: c for c in StockCategory.objects.filter(company=company)}
             from suppliers.models import Supplier
             supplier_cache = {s.name: s for s in Supplier.objects.filter(company=company)}
-            
             with transaction.atomic():
-                for index, row in df.iterrows():
+                for index, row in df_norm.iterrows():
                     row_num = index + 2
-                    
+
                     try:
                         item_code = _safe_str(row.get('item_code'))
                         name = _safe_str(row.get('name'))
-                        
+
                         if not item_code or not name:
                             errors.append(f'Row {row_num}: Missing required fields')
                             error_count += 1
                             continue
-                        
+
                         # Get or create category
                         category = None
-                        if 'category' in df.columns and pd.notna(row.get('category')):
+                        if 'category' in df_norm.columns and pd.notna(row.get('category')):
                             category_name = _safe_str(row.get('category'))
                             if category_name:
                                 category = category_cache.get(category_name)
@@ -487,7 +502,7 @@ def stock_import(request):
 
                         # Get or create supplier
                         supplier = None
-                        if 'supplier_name' in df.columns and pd.notna(row.get('supplier_name')):
+                        if 'supplier_name' in df_norm.columns and pd.notna(row.get('supplier_name')):
                             supplier_name = _safe_str(row.get('supplier_name'))
                             if supplier_name:
                                 supplier = supplier_cache.get(supplier_name)
@@ -498,42 +513,61 @@ def stock_import(request):
                                     )
                                     supplier_cache[supplier_name] = supplier
 
+                        # Extract photo / image (embedded in Excel or URL/base64 in cell)
+                        raw_img = get_image_for_row(row_num, row, photo_col_idx, images_by_row, images_by_cell)
+                        img_file_tuple = process_image_bytes(raw_img, item_code) if raw_img else None
+
                         # Check if stock item exists
                         stock = Stock.objects.filter(company=company, item_code=item_code).first()
-                        
+
                         if stock:
                             # Update existing item
                             stock.name = name
-                            stock.category = category
-                            stock.description = _safe_str(row.get('description'))
-                            stock.quantity = _safe_int(row.get('quantity'), 0)
-                            stock.unit = _safe_str(row.get('unit'), 'pcs')
-                            stock.cost_price = _safe_float(row.get('cost_price'), 0)
-                            stock.selling_price = _safe_float(row.get('selling_price'), 0)
-                            stock.reorder_level = _safe_int(row.get('reorder_level'), 0)
-                            stock.supplier = supplier
-                            stock.location = _safe_str(row.get('location'))
-                            
-                            # Update is_marketplace_visible if provided
-                            if 'is_marketplace_visible' in df.columns and pd.notna(row.get('is_marketplace_visible')):
-                                value = str(row.get('is_marketplace_visible')).strip().lower()
-                                stock.is_marketplace_visible = value in ('true', 'yes', '1', 'y')
-                            
-                            # Update last_restocked if quantity increased
-                            if 'quantity' in df.columns and pd.notna(row.get('quantity')):
-                                new_quantity = _safe_int(row.get('quantity'), 0)
+                            if category:
+                                stock.category = category
+                            if supplier:
+                                stock.supplier = supplier
+                            if 'description' in df_norm.columns and pd.notna(row.get('description')):
+                                stock.description = _safe_str(row.get('description'))
+                            if 'quantity' in df_norm.columns and pd.notna(row.get('quantity')):
+                                new_quantity = _safe_int(row.get('quantity'), stock.quantity)
                                 if new_quantity > stock.quantity:
                                     stock.last_restocked = timezone.now().date()
-                            
+                                stock.quantity = new_quantity
+                            if 'unit' in df_norm.columns and pd.notna(row.get('unit')):
+                                stock.unit = _safe_str(row.get('unit'), stock.unit or 'pcs')
+                            if 'cost_price' in df_norm.columns and pd.notna(row.get('cost_price')):
+                                stock.cost_price = _safe_float(row.get('cost_price'), float(stock.cost_price))
+                            if 'selling_price' in df_norm.columns and pd.notna(row.get('selling_price')):
+                                stock.selling_price = _safe_float(row.get('selling_price'), float(stock.selling_price))
+                            if 'reorder_level' in df_norm.columns and pd.notna(row.get('reorder_level')):
+                                stock.reorder_level = _safe_int(row.get('reorder_level'), stock.reorder_level)
+                            if 'supplier_name' in df_norm.columns and pd.notna(row.get('supplier_name')):
+                                stock.supplier_name = _safe_str(row.get('supplier_name'), stock.supplier_name)
+                            if 'supplier_contact' in df_norm.columns and pd.notna(row.get('supplier_contact')):
+                                stock.supplier_contact = _safe_str(row.get('supplier_contact'), stock.supplier_contact)
+                            if 'location' in df_norm.columns and pd.notna(row.get('location')):
+                                stock.location = _safe_str(row.get('location'), stock.location)
+
+                            # Update is_marketplace_visible if provided
+                            if 'is_marketplace_visible' in df_norm.columns and pd.notna(row.get('is_marketplace_visible')):
+                                value = str(row.get('is_marketplace_visible')).strip().lower()
+                                stock.is_marketplace_visible = value in ('true', 'yes', '1', 'y', 'vrai', 'oui')
+
+                            # Update image only if a new photo was supplied
+                            if img_file_tuple:
+                                filename, content_file = img_file_tuple
+                                stock.image.save(filename, content_file, save=False)
+
                             stock.save()
                             updated_count += 1
                         else:
                             # Create new item
                             is_visible = True
-                            if 'is_marketplace_visible' in df.columns and pd.notna(row.get('is_marketplace_visible')):
+                            if 'is_marketplace_visible' in df_norm.columns and pd.notna(row.get('is_marketplace_visible')):
                                 value = str(row.get('is_marketplace_visible')).strip().lower()
-                                is_visible = value in ('true', 'yes', '1', 'y')
-                            
+                                is_visible = value in ('true', 'yes', '1', 'y', 'vrai', 'oui')
+
                             stock = Stock(
                                 company=company,
                                 item_code=item_code,
@@ -550,21 +584,25 @@ def stock_import(request):
                                 is_marketplace_visible=is_visible,
                                 created_by=request.user,
                             )
-                            
+
                             if stock.quantity > 0:
                                 stock.last_restocked = timezone.now().date()
-                            
+
+                            if img_file_tuple:
+                                filename, content_file = img_file_tuple
+                                stock.image.save(filename, content_file, save=False)
+
                             stock.save()
                             success_count += 1
-                        
+
                     except Exception as e:
                         errors.append(f'Row {row_num}: {str(e)}')
                         error_count += 1
-            
+
             # Show results
             if success_count > 0 or updated_count > 0:
                 messages.success(request, f'Processed: {success_count} created, {updated_count} updated.')
-            
+
             if error_count > 0:
                 error_message = f'{error_count} errors occurred during import.'
                 if errors:
@@ -572,68 +610,23 @@ def stock_import(request):
                     if len(errors) > 5:
                         error_message += f' ... and {len(errors) - 5} more'
                 messages.warning(request, error_message)
-            
+
             return redirect('inventory:stock_list')
-            
+
         except Exception as e:
             messages.error(request, f'Error reading Excel file: {str(e)}')
-    
+
     return render(request, 'inventory/stock_import.html')
 
 @role_required(*INVENTORY_REPORT_ROLES)
 def stock_export(request):
-    """Export stock items to Excel"""
+    """Export stock items to Excel with embedded photos"""
     company = request.user.company
     stocks = Stock.objects.filter(company=company).select_related('category', 'created_by', 'supplier')
-    
-    # Prepare data
-    data = []
-    for stock in stocks:
-        data.append({
-            'Item Code': stock.item_code,
-            'Name': stock.name,
-            'Category': stock.category.name if stock.category else '',
-            'Description': stock.description,
-            'Quantity': stock.quantity,
-            'Unit': stock.get_unit_display(),
-            'Unit Price': float(stock.cost_price),
-            'Total Value': float(stock.total_value),
-            'Reorder Level': stock.reorder_level,
-            'Supplier Name': stock.supplier.name if stock.supplier else '',
-            'Location': stock.location,
-            'Last Restocked': stock.last_restocked.strftime('%Y-%m-%d') if stock.last_restocked else '',
-            'Needs Reorder': 'Yes' if stock.needs_reorder else 'No',
-            'Created By': stock.created_by.get_full_name() if stock.created_by else '',
-            'Created At': stock.created_at.strftime('%Y-%m-%d %H:%M'),
-        })
-    
-    # Create DataFrame
-    df = pd.DataFrame(data)
-    
-    # Create Excel file in memory
-    buffer = io.BytesIO()
-    with pd.ExcelWriter(buffer, engine='openpyxl') as writer:
-        df.to_excel(writer, sheet_name='Stock Data', index=False)
-        
-        # Auto-adjust column widths
-        worksheet = writer.sheets['Stock Data']
-        for column in worksheet.columns:
-            max_length = 0
-            column_letter = column[0].column_letter
-            for cell in column:
-                try:
-                    if len(str(cell.value)) > max_length:
-                        max_length = len(str(cell.value))
-                except Exception:  # noqa: S110 — cosmetic column width, never worth failing the export over
-                    pass
-            adjusted_width = min(max_length + 2, 50)
-            worksheet.column_dimensions[column_letter].width = adjusted_width
-    
-    buffer.seek(0)
-    
-    # Create response
+    excel_data = generate_stock_export_excel(stocks)
+
     response = HttpResponse(
-        buffer.getvalue(),
+        excel_data,
         content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     )
     response['Content-Disposition'] = 'attachment; filename="stock_export.xlsx"'
@@ -641,81 +634,10 @@ def stock_export(request):
 
 @role_required(*INVENTORY_WRITE_ROLES)
 def stock_download_template(request):
-    """Download Excel template for stock import"""
-    sample_data = {
-        'item_code': 'ITEM-001',
-        'name': 'Sample Item Name',
-        'category': 'Electronics',
-        'description': 'Sample description',
-        'quantity': 100,
-        'unit': 'pcs',
-        'cost_price': 10.50,
-        'selling_price': 15.99,
-        'reorder_level': 20,
-        'supplier_name': 'Sample Supplier Inc.',
-        'location': 'Warehouse A, Shelf B2',
-        'is_marketplace_visible': True,
-    }
-    
-    df = pd.DataFrame([sample_data])
-    
-    # Create instructions
-    instructions = pd.DataFrame({
-        'Column': list(sample_data.keys()),
-        'Required': [
-            'Yes',
-            'Yes',
-            'No',
-            'No',
-            'No',
-            'No',
-            'No',
-            'No',
-            'No',
-            'No',
-            'No',
-            'No',
-        ],
-        'Description': [
-            'Unique item code',
-            'Item name',
-            'Category name (will be created if not exists)',
-            'Item description',
-            'Initial quantity',
-            'Unit: pcs, kg, ltr, box, set',
-            'Cost price per unit (for inventory valuation)',
-            'Selling price per unit (for marketplace)',
-            'Reorder level',
-            'Supplier name (will be created if not exists)',
-            'Storage location',
-            'Show on marketplace (true/false)',
-        ],
-        'Example': [
-            sample_data['item_code'],
-            sample_data['name'],
-            sample_data['category'],
-            sample_data['description'],
-            str(sample_data['quantity']),
-            sample_data['unit'],
-            f"{sample_data['cost_price']:.2f}",
-            f"{sample_data['selling_price']:.2f}",
-            str(sample_data['reorder_level']),
-            sample_data['supplier_name'],
-            sample_data['location'],
-            'true',
-        ]
-    })
-    
-    # Create Excel file
-    buffer = io.BytesIO()
-    with pd.ExcelWriter(buffer, engine='openpyxl') as writer:
-        df.to_excel(writer, sheet_name='Template', index=False)
-        instructions.to_excel(writer, sheet_name='Instructions', index=False)
-    
-    buffer.seek(0)
-    
+    """Download Excel template for stock import including photo column"""
+    template_data = generate_stock_template_excel()
     response = HttpResponse(
-        buffer.getvalue(),
+        template_data,
         content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     )
     response['Content-Disposition'] = 'attachment; filename="stock_import_template.xlsx"'

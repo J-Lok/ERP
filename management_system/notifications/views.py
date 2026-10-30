@@ -239,5 +239,6 @@ def get_unread_count(request):
 
     return JsonResponse({
         'count': count,
+        'unread_count': count,
         'recent': recent_items
     })

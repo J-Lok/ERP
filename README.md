@@ -1,189 +1,171 @@
-ERP System
-Multi-Tenant Company Management Platform
-Django 6.0  ·  Bootstrap 5  ·  Python 3.12
+# Erpis ERP — Multi-Tenant Enterprise Platform
+### Modern Cloud Operations, Double-Entry Accounting, HRMS & Omnichannel Commerce
+**Django 6.0 · Python 3.12 · Bootstrap 5 · PostgreSQL / SQLite · Docker Ready**
 
+---
 
-Overview
-This ERP system is a Django-based multi-tenant platform that lets multiple independent companies (tenants) share a single deployment while keeping their data fully isolated. Each company has its own employees, projects, inventory, finances, and CRM records.
-The system ships with nine Django apps, role-based access control, a Bootstrap 5 UI, and is production-ready via Docker or Railway.
+## Overview
 
-Apps
-App	Purpose	Key models
-accounts	Multi-tenancy & authentication	Company, User
-core	Dashboard & shared views	—
-employees	Staff directory & departments	Employee, Department
-hr	Positions & leave workflow	Position, LeaveRequest
-finance	Accounts & transactions	Account, Transaction
-projects	Projects & subtasks	Project, SousTache, CommentaireTache
-inventory	Stock management	Item, StockMovement
-crm	Customer relations	Customer, Interaction
-marketplace	Multi-vendor storefront	Vendor, Product, Order
+**Erpis** is a comprehensive, production-ready, multi-tenant Enterprise Resource Planning (ERP) platform built on Django 6.0. It provides an all-in-one suite of business applications designed for fast-growing companies and SMEs, with native bilingual support (English & French), regional multi-currency (including FCFA), and direct-to-consumer/B2B commerce integration.
 
-Getting Started
-Prerequisites
-•Python 3.12+
-•pip
-•Git
+The platform consists of **11 core Django applications**, **42 database models**, **192 server-rendered responsive templates**, and an automated commerce-to-finance ledger pipeline.
 
-Local setup
-1.Clone the repository
-git clone https://github.com/J-Lok/ERP.git
-cd ERP/management_system
-2.Create and activate a virtual environment
-python -m venv env
-source env/bin/activate      # Windows: env\Scripts\activate
-3.Install dependencies
-pip install -r ../requirements.txt
-4.Apply migrations
-python manage.py migrate
-5.Create a superuser
-python manage.py createsuperuser
-6.Start the development server
-python manage.py runserver
-The app is now available at http://127.0.0.1:8000
+---
 
-Docker
+## System Architecture & Core Modules
+
+```
+                                 ┌───────────────────────────────────┐
+                                 │           ERPIS PLATFORM          │
+                                 └─────────────────┬─────────────────┘
+                                                   │
+         ┌───────────────────┬─────────────────────┼─────────────────────┬───────────────────┐
+         │                   │                     │                     │                   │
+         ▼                   ▼                     ▼                     ▼                   ▼
+┌─────────────────┐ ┌─────────────────┐   ┌─────────────────┐   ┌─────────────────┐ ┌─────────────────┐
+│ Multi-Tenancy   │ │ Financial Core  │   │ People & Talent │   │ Commerce & CRM  │ │ Governance & Ops│
+│ & Security      │ │ Double-Entry    │   │ Full Payroll    │   │ Zero-Sync Store │ │ Meetings, Notes │
+│ Token Invites   │ │ General Ledger  │   │ Leave Requests  │   │ B2B Pipeline    │ │ Action Items    │
+│ Domain Scoping  │ │ Bank Reconcile  │   │ Reviews & Skills│   │ Stock Locking   │ │ Tasks & Projects│
+│ Custom SMTP     │ │ Invoicing & Tax │   │ Salary Grades   │   │ RMA & Reviews   │ │ In-App Alerts   │
+└─────────────────┘ └─────────────────┘   └─────────────────┘   └─────────────────┘ └─────────────────┘
+```
+
+### Applications Reference
+
+| App | Purpose | Key Models & Capabilities |
+| :--- | :--- | :--- |
+| **`accounts`** | Multi-tenancy, authentication & tenant config | `Company`, `User`, `Invitation`, `CompanyEmailSettings`. Enforces UUID company isolation, custom email-as-username login, 7-day tokenized user invitations, per-company custom SMTP, and mobile money/WhatsApp contact configuration. |
+| **`finance`** | Full double-entry accounting & treasury | `Account` (hierarchical chart of accounts), `Journal`, `JournalEntry`, `JournalEntryLine` (balanced debit/credit), `ClientInvoice`, `SupplierInvoice`, `InvoiceLine` with PDF printing, `BankAccount`, `BankStatement`, `BankTransaction`, `Reconciliation`, `FinancialReport`, and `MarketplaceFinanceSettings`. |
+| **`hr`** | Human resources, payroll & talent development | `Position` (with salary grades), `LeaveRequest` (6 leave types with approve/deny workflows and employee status sync), `SalaryComponent`, `PayrollPeriod`, `PayrollEntry`, `Payslip` (with auto-generation, locking, and email delivery), `PerformanceGoal`, `PerformanceReview`, `TrainingCourse`, `TrainingSession`, `EmployeeTraining`, `Skill`, and `EmployeeSkill`. |
+| **`inventory`** | Warehouse & stock management | `StockCategory`, `Stock`, `StockTransaction`. Real-time stock valuation at cost and selling prices, low-stock reorder thresholds, automated Excel import & export with embedded product photo thumbnails, and atomic stock quantity adjustments using pessimistic database row-locking (`select_for_update()`). |
+| **`marketplace`** | Integrated omnichannel storefront & fulfillment | `Client` (platform customer registration), `Cart`, `CartItem`, `Order`, `OrderItem`, `Wishlist`, `ProductReview`, `ReturnRequest` (RMA workflow), and `CompanyPaymentSettings` (MTN MoMo, Orange Money, Wave, WhatsApp ordering). Automatically posts sales entries to the finance ledger and issues reversal entries on returns. Complete Admin Order Fulfillment dashboard (Confirm, Ship, Deliver, Cancel, Invoice PDF). |
+| **`crm`** | Customer relationships & deal flow | `Contact` (synced with marketplace clients), `Note` (calls, emails, meetings), and `Opportunity` visual sales pipeline (Prospect → Qualified → Proposal → Won/Lost) with deal values, follow-up dates, and direct invoice conversion. |
+| **`meetings`** | Executive governance & team alignment | `Meeting`, `MeetingNote` (agenda, summaries, decisions made, risks identified, next steps, document uploads), `ActionItem` (assigned owners, deadlines, priority, completion tracking), and `MeetingAttachment`. |
+| **`projects`** | Project management & task delegation | `Project` (budgeting, status, dates, managers), `SousTache` (subtasks with status transitions, assignees, dates), and `CommentaireTache`. Project completion percentage is automatically aggregated via database queries on subtask status changes. |
+| **`employees`** | Staff directory & organizational structure | `Employee`, `Department`. Automatic profile creation upon User registration, employee role-to-permission mapping, and `terminate()` / `reactivate()` methods syncing linked user accounts. |
+| **`notifications`** | In-app alert center & user preferences | `Notification` (read, unread, archive workflows, AJAX live counter) and `NotificationPreference` (granular per-user toggles across leave, payroll, reviews, meetings, and system alerts). |
+| **`core`** | Dashboards & multi-tenant platform administration | Role-aware company dashboard (`show_employee_stats`, `show_finance_stats`, `show_hr_stats`), recent activity feeds, online user tracking, and superuser-only global platform dashboard (`platform_dashboard`). |
+
+---
+
+## Role-Based Access Control (RBAC)
+
+All access control is declared in [`accounts/permissions.py`](file:///c:/Users/karlh/Desktop/ERP/ERP/management_system/accounts/permissions.py) using the `@role_required` and `@company_admin_required` decorators.
+
+| Role | Access Level |
+| :--- | :--- |
+| **`admin`** | Full access to all company data, user invitations, email settings, and marketplace administration. |
+| **`manager`** | Full operational access across projects, departments, employees, inventory, CRM, and meetings. |
+| **`hr_manager`** | Full HRMS access: employee profiles, positions, leave approvals, payroll periods, and performance reviews. |
+| **`accountant`** | Read and write access to chart of accounts, journal entries, client/supplier invoices, bank reconciliation, and financial reports. |
+| **`stock_manager`** | Stock creation, adjustments, movements, categories, and marketplace catalog management. |
+| **`secretary`** | CRM contacts, lead follow-ups, meeting scheduling, minutes recording, and self-service leave requests. |
+| **`employee`** | Self-service portal: submit leave requests, track assigned projects/tasks, review performance goals, view payslips, and browse marketplace. |
+
+---
+
+## Getting Started
+
+### Prerequisites
+* **Python 3.12+**
+* **Git**
+* **PostgreSQL** (recommended for production) or **SQLite** (default for local development)
+
+### Local Setup
+
+1. **Clone the repository**:
+   ```bash
+   git clone https://github.com/J-Lok/ERP.git
+   cd ERP
+   ```
+
+2. **Create and activate a virtual environment**:
+   ```bash
+   python -m venv env
+   # Windows:
+   .\env\Scripts\activate
+   # Linux/macOS:
+   source env/bin/activate
+   ```
+
+3. **Install dependencies**:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+4. **Configure environment variables**:
+   Copy the example environment file:
+   ```bash
+   cp env.example management_system/.env
+   ```
+   *(For local SQLite development, leave `DATABASE_URL` empty or commented out).*
+
+5. **Apply database migrations**:
+   ```bash
+   cd management_system
+   python manage.py migrate
+   ```
+
+6. **Create a superuser**:
+   ```bash
+   python manage.py createsuperuser
+   ```
+
+7. **Start the development server**:
+   ```bash
+   python manage.py runserver
+   ```
+   The platform is now available at `http://127.0.0.1:8000`.
+
+---
+
+## Running Automated Tests
+
+The test suite covers all 11 applications with multi-tenant isolation, atomic stock adjustments, payroll math, role permissions, and governance:
+
+```bash
+cd management_system
+python manage.py test accounts.tests core.tests crm.tests employees.tests finance.tests hr.tests inventory.tests marketplace.tests meetings.tests notifications.tests projects.tests
+```
+
+---
+
+## Deployment
+
+### Docker
+```bash
 docker build -t erp .
-docker run -p 8000:8000 erp
+docker run -p 8000:8000 -e DATABASE_URL=postgresql://user:pass@host:5432/dbname erp
+```
 
-Railway deployment
-The repository includes a railpack.toml. Push to a Railway project and the platform will build and start Gunicorn automatically.
+### Cloud Platforms (Render, Railway, Heroku) & VPS
+The project includes production-ready configuration files:
+* **`render.yaml`**, **`Procfile`**, and **`build.sh`** for cloud deployments (Render, Railway, Heroku).
+* **`docker-compose.yml`** and **`docker-compose.prod.yml`** for multi-container development and production.
+* **`deploy/vps-deploy.sh`** for self-hosted Ubuntu/Debian VPS deployments with Nginx and SSL.
+* **Gunicorn** serves the WSGI application (`management_system.wsgi:application`).
+* **WhiteNoise** serves compressed and version-hashed static files.
+* **Cloudinary** handles persistent user-uploaded media (product images, documents, attachments).
+* **SMTP / Resend** handles transactional emails and user invitations.
 
-Architecture
-Multi-tenancy
-Every data model includes a company foreign key. Tenant isolation is enforced at the view layer — every queryset is filtered to request.user.company. The CompanyContextMiddleware attaches the current company to every request object for convenience.
-New users self-register by supplying a company domain and the shared company password. The first user created for a company is automatically assigned the admin role.
+---
 
-Authentication
-•Email is the login identifier (username field is removed).
-•Custom AbstractUser in the accounts app (AUTH_USER_MODEL = "accounts.User").
-•Company-scoped registration with a shared company password.
+## Localization & Currencies
 
-Role-Based Access Control
-All access logic lives in accounts/permissions.py — the single source of truth for role constants and the role_required decorator.
-Roles
-Role	Description
-admin	Full access to all company data and settings
-hr_manager	Manage employees, positions, and leave requests
-accountant	Read and write financial accounts and transactions
-manager	Manage projects, view employees and inventory
-secretary	CRM access, leave submission, project viewing
-stock_manager	Write access to inventory and stock movements
-employee	Self-service only — submit leave, view projects
+* **Languages**: English (`en`) and French (`fr`) fully translated in `management_system/locale/`. Users can switch their preferred interface language directly from their profile.
+* **Currencies**: Built with native support for **FCFA**, EUR, and USD, alongside localized mobile payment options (Wave, Orange Money, MTN MoMo).
 
-Permission matrix
-Feature / App	Admin	HR Mgr	Accountant	Manager	Secretary	Stock Mgr	Employee
-Employees — view	✓	✓	✓	✓	✓	✓	✓
-Employees — create / edit	✓	✓					
-Employees — delete	✓						
-HR — positions & leave	✓	✓					
-Leave — submit	✓	✓	✓	✓	✓	✓	✓
-Finance	✓		✓	✓			
-Projects — view	✓	✓	✓	✓	✓	✓	✓
-Projects — create / edit	✓	✓		✓			
-Inventory — view	✓	✓	✓	✓	✓	✓	✓
-Inventory — write	✓					✓	
-CRM	✓			✓	✓		
-Marketplace admin	✓						
+---
 
-Usage in views
-Decorate any view function with role_required, passing one or more role constants:
-from accounts.permissions import role_required, EMPLOYEE_WRITE_ROLES
+## Contributing
 
-@role_required(*EMPLOYEE_WRITE_ROLES)
-def employee_create(request):
-    ...
-Superusers bypass all role checks. Unauthorised requests are redirected to the dashboard with an error message.
-
-Employee role → user access level sync
-When an employee's job title (Employee.role) is saved, the linked User.role is automatically updated so that permissions take effect immediately on the next request. The mapping is:
-Employee job title	User access role
-manager, project_manager	manager
-hr	hr_manager
-accountant	accountant
-secretary	secretary
-stock_manager	stock_manager
-developer, designer, analyst, engineer, intern, other	employee
-Job titles with no special access (developer, designer, analyst, engineer, intern, other) map to the employee role.
-
-App Reference
-accounts
-•Company: UUID-keyed tenant. Subscription plans: free, basic, premium, enterprise.
-•User: custom AbstractUser with email login, role field, is_company_admin flag.
-•CompanyContextMiddleware: attaches request.company on every request.
-•company_context processor: injects company, is_company_admin, user_role into all templates.
-
-employees
-•Employee: linked 1-to-1 with User. Role choices are job titles (manager, developer, etc.).
-•Department: company-scoped, soft-deletable via is_active flag.
-•Auto-create: a post_save signal creates an Employee profile whenever a new User with a company is saved.
-•terminate() / reactivate() methods sync the linked User.is_active.
-
-hr
-•Position: job title with a salary grade, unique per company.
-•LeaveRequest: six leave types, approve/deny workflow, automatic employee status sync.
-
-finance
-•Account: named financial account with balance, unique per company.
-•Transaction: credit/debit entries that auto-adjust the parent account balance atomically.
-•KPI dashboard with date-range filtering.
-
-projects
-•Project: status, priority, manager FK, completion percentage.
-•SousTache: subtask with status transitions via change_status().
-•CommentaireTache: threaded comments on tasks.
-•AJAX toggle endpoint updates subtask completion and recalculates project progress using a DB aggregate.
-
-inventory
-•Largest app by view count (1 047 lines). Manages items, categories, and stock movements.
-•Report views restricted to admin, manager, accountant, stock_manager.
-
-crm
-•Customer records and interaction log, accessible to admin, manager, secretary.
-
-marketplace
-•Multi-vendor storefront with platform-wide registration.
-•Uses a separate client_login_required decorator — marketplace buyers/sellers are not ERP staff and are outside the staff role hierarchy.
-
-Dependencies
-Package	Version	Purpose
-Django	6.0.2	Web framework
-django-crispy-forms	2.5	Form rendering
-crispy-bootstrap5	2025.6	Bootstrap 5 template pack
-asgiref	3.11.1	ASGI compatibility
-openpyxl	3.1.5	Excel export
-pandas	3.0.0	Data processing for reports
-Pillow	12.1.0	Image handling (employee photos)
-python-dateutil	2.9.0	Date utilities
-sqlparse	0.5.5	SQL formatting
-numpy	2.4.2	Numerical support for pandas
-et_xmlfile	2.0.0	openpyxl XML engine
-tzdata	2025.3	Timezone data
-gunicorn	—	Production WSGI server
-
-Project Structure
-ERP/
-├── Dockerfile
-├── railpack.toml
-├── requirements.txt
-├── manage.py
-└── management_system/
-    ├── accounts/          # Multi-tenancy & auth
-    ├── core/              # Dashboard
-    ├── employees/         # Staff directory
-    ├── hr/                # Leave & positions
-    ├── finance/           # Accounts & transactions
-    ├── projects/          # Project tracking
-    ├── inventory/         # Stock management
-    ├── crm/               # Customer relations
-    ├── marketplace/       # Multi-vendor shop
-    ├── templates/         # App-specific HTML
-    └── management_system/ # Settings & root URLs
-
-Contributing
-7.Fork the repository and create a feature branch.
-8.Make your changes with clear commit messages.
-9.Run python manage.py check before pushing.
-10.Open a pull request against the main branch.
-
-Repository: https://github.com/J-Lok/ERP
+1. Fork the repository and create your feature branch (`git checkout -b feature/my-feature`).
+2. Implement your changes following standard Django conventions and type annotations.
+3. Verify system checks and run the test suite:
+   ```bash
+   python manage.py check
+   python manage.py test
+   ```
+4. Commit your changes with clear, descriptive commit messages.
+5. Open a Pull Request against the `main` branch.

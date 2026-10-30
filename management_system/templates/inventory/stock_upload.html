@@ -33,7 +33,7 @@
                         <button type="submit" class="btn btn-primary">
                             <i class="fas fa-upload"></i> {% trans "Upload File" %}
                         </button>
-                        <a href="{% url 'stock_download_template' %}" class="btn btn-info">
+                        <a href="{% url 'inventory:stock_download_template' %}" class="btn btn-info">
                             <i class="fas fa-download"></i> {% trans "Download Template" %}
                         </a>
                         <a href="{% url 'inventory:stock_list' %}" class="btn btn-secondary">{% trans "Cancel" %}</a>

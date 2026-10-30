@@ -5,7 +5,7 @@
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
   <h2 class="mb-0"><i class="fas fa-users text-primary me-2"></i>{% trans "Employee Training" %}</h2>
-  <a href="{% url 'hr:employee_training_enroll' %}" class="btn btn-primary btn-sm">
+  <a href="{% url 'hr:training_session_list' %}" class="btn btn-primary btn-sm">
     <i class="fas fa-plus me-1"></i>{% trans "Enroll Employee" %}
   </a>
 </div>
@@ -91,10 +91,9 @@
           </td>
           <td class="text-end">
             {% if training.status == 'enrolled' or training.status == 'in_progress' %}
-            <a href="{% url 'hr:employee_training_complete' training.pk %}" class="btn btn-sm btn-outline-success"><i class="fas fa-check"></i></a>
+            <a href="{% url 'hr:employee_training_complete' training.pk %}" class="btn btn-sm btn-outline-success" title="Complete"><i class="fas fa-check"></i></a>
+            <a href="{% url 'hr:employee_training_cancel' training.pk %}" class="btn btn-sm btn-outline-danger" title="Cancel Enrollment"><i class="fas fa-times"></i></a>
             {% endif %}
-            <a href="{% url 'hr:employee_training_edit' training.pk %}" class="btn btn-sm btn-outline-secondary"><i class="fas fa-edit"></i></a>
-            <a href="{% url 'hr:employee_training_delete' training.pk %}" class="btn btn-sm btn-outline-danger"><i class="fas fa-trash"></i></a>
           </td>
         </tr>
         {% empty %}

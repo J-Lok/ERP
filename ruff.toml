@@ -1,0 +1,18 @@
+extend-exclude = ["**/migrations/*"]
+
+[lint]
+# Keep this deliberately narrow: only rules that catch real, silent bugs
+# (crashes, dead code from accidental redefinition). Style/preference rules
+# (import sorting, unused imports, mutable class defaults on Django
+# CHOICES lists, blind except, etc.) are intentionally left out — they
+# were never enforced in this codebase and turning them on wholesale
+# would produce hundreds of unreviewed findings with no bug behind them,
+# defeating the point of CI as a signal. Widen this list deliberately,
+# rule by rule, if the team wants to adopt more of them later.
+select = [
+    "E9",    # syntax errors
+    "F821",  # undefined name (e.g. missing import) -> NameError at runtime
+    "F811",  # redefinition of an unused name -> silently dead code
+    "F63",   # invalid comparisons/assertions
+    "F7",    # break/continue/return/yield outside a loop or function
+]
