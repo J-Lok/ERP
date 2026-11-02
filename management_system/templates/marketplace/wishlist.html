@@ -1,40 +1,160 @@
 {% extends 'marketplace/marketplace_base.html' %}
 {% load i18n %}
 {% load currency_tags %}
-{% block title %}Wishlist - {{ block.super }}{% endblock %}
+
+{% block title %}{% trans "My Wishlist" %} - {{ block.super }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .wishlist-card {
+        border-radius: 12px;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        background: #ffffff;
+        overflow: hidden;
+    }
+    .wishlist-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+    }
+    .wishlist-img-box {
+        position: relative;
+        width: 100%;
+        padding-top: 100%; /* 1:1 aspect ratio */
+        background: #f8f9fa;
+        overflow: hidden;
+    }
+    .wishlist-img-box img {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    .wishlist-img-placeholder {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #adb5bd;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="container">
-    <h2 class="mb-4"><i class="fas fa-heart me-2"></i>{% trans "My Wishlist" %}</h2>
-    
+<div class="container py-3">
+    <!-- Header -->
+    <div class="d-flex align-items-center justify-content-between mb-3">
+        <div class="d-flex align-items-center gap-2">
+            <a href="{% url 'marketplace:shop' %}" class="btn btn-sm btn-light rounded-circle shadow-sm p-2 d-inline-flex align-items-center justify-content-center" style="width:34px;height:34px;">
+                <i class="fas fa-arrow-left text-dark"></i>
+            </a>
+            <h4 class="fw-bold mb-0">{% trans "My Wishlist" %}</h4>
+            {% if items %}
+            <span class="badge bg-danger rounded-pill">{{ items.count }}</span>
+            {% endif %}
+        </div>
+        <a href="{% url 'marketplace:shop' %}" class="btn btn-sm btn-outline-primary rounded-pill">
+            <i class="fas fa-store me-1"></i>{% trans "Browse Products" %}
+        </a>
+    </div>
+
     {% if items %}
-    <div class="row">
+    <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-2 g-md-3">
         {% for item in items %}
-        <div class="col-md-4 mb-4">
-            <div class="card">
-                <div class="card-body">
-                    <h5>{{ item.stock.name }}</h5>
-                    <p class="text-muted">{{ item.stock.item_code }}</p>
-                    <h4 class="text-primary">{{ item.stock.selling_price|currency:item.stock.company }}</h4>
-                    <p><span class="badge bg-success">{{ item.stock.quantity }} available</span></p>
-                    <form method="post" action="{% url 'marketplace:add_to_cart' item.stock.pk %}">
+        <div class="col" id="wishlist-col-{{ item.pk }}">
+            <div class="card h-100 border-0 shadow-sm wishlist-card">
+                <!-- Image Box -->
+                <div class="wishlist-img-box">
+                    <a href="{% url 'marketplace:product_detail' item.stock.pk %}">
+                        {% if item.stock.photo %}
+                        <img src="{{ item.stock.photo.url }}" alt="{{ item.stock.name }}" loading="lazy">
+                        {% else %}
+                        <div class="wishlist-img-placeholder">
+                            <i class="fas fa-box fa-3x opacity-50"></i>
+                        </div>
+                        {% endif %}
+                    </a>
+                    <!-- Remove Form Button -->
+                    <form method="post" action="{% url 'marketplace:remove_from_wishlist' item.pk %}" class="position-absolute top-0 end-0 m-2">
                         {% csrf_token %}
-                        <input type="hidden" name="quantity" value="1">
-                        <button type="submit" class="btn btn-primary w-100 mb-2">{% trans "Add to Cart" %}</button>
+                        <button type="submit" class="btn btn-sm btn-light rounded-circle shadow-sm text-danger p-0 d-flex align-items-center justify-content-center" 
+                                style="width: 32px; height: 32px;" title="{% trans 'Remove from wishlist' %}">
+                            <i class="fas fa-trash-alt small"></i>
+                        </button>
                     </form>
-                    <form method="post" action="{% url 'marketplace:remove_from_wishlist' item.pk %}">
-                        {% csrf_token %}
-                        <button type="submit" class="btn btn-outline-danger w-100">{% trans "Remove" %}</button>
-                    </form>
+                    <!-- Stock Badge -->
+                    <div class="position-absolute bottom-0 start-0 m-2">
+                        {% if item.stock.quantity > 0 %}
+                        <span class="badge bg-success bg-opacity-90 rounded-pill small" style="font-size:10px;">
+                            <i class="fas fa-check-circle me-1"></i>{% trans "In Stock" %}
+                        </span>
+                        {% else %}
+                        <span class="badge bg-danger bg-opacity-90 rounded-pill small" style="font-size:10px;">
+                            {% trans "Out of Stock" %}
+                        </span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Body -->
+                <div class="card-body p-2 p-md-3 d-flex flex-column justify-content-between">
+                    <div>
+                        <div class="text-muted small mb-1" style="font-size:11px;">
+                            {{ item.stock.company.name|default:_("Merchant") }}
+                        </div>
+                        <h6 class="fw-bold mb-1 text-truncate">
+                            <a href="{% url 'marketplace:product_detail' item.stock.pk %}" class="text-decoration-none text-dark">
+                                {{ item.stock.name }}
+                            </a>
+                        </h6>
+                        <div class="text-muted small mb-2" style="font-size:11px;">
+                            <code>{{ item.stock.item_code }}</code>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="fw-bold text-primary fs-5 mb-2">
+                            {{ item.stock.selling_price|currency:item.stock.company }}
+                        </div>
+
+                        {% if item.stock.quantity > 0 %}
+                        <button type="button" 
+                                class="btn btn-sm btn-primary w-100 rounded-pill fw-bold quick-add-btn" 
+                                data-stock-id="{{ item.stock.pk }}">
+                            <i class="fas fa-cart-plus me-1"></i>{% trans "Add to Cart" %}
+                        </button>
+                        {% else %}
+                        <button type="button" class="btn btn-sm btn-secondary w-100 rounded-pill" disabled>
+                            {% trans "Out of Stock" %}
+                        </button>
+                        {% endif %}
+                    </div>
                 </div>
             </div>
         </div>
         {% endfor %}
     </div>
+
     {% else %}
-    <div class="text-center py-5">
-        <i class="fas fa-heart fa-5x text-muted mb-3"></i>
-        <h4>{% trans "Your wishlist is empty" %}</h4>
-        <a href="{% url 'marketplace:shop' %}" class="btn btn-primary mt-3">{% trans "Browse Products" %}</a>
+    <!-- Empty Wishlist -->
+    <div class="card border-0 shadow-sm rounded-4 text-center py-5 my-4">
+        <div class="card-body py-5">
+            <div class="mb-3">
+                <div class="rounded-circle bg-light d-inline-flex align-items-center justify-content-center" style="width: 100px; height: 100px;">
+                    <i class="fas fa-heart fa-3x text-danger opacity-50"></i>
+                </div>
+            </div>
+            <h4 class="fw-bold mb-2">{% trans "Your wishlist is empty" %}</h4>
+            <p class="text-muted mb-4">{% trans "Save items you love so you can easily purchase them later." %}</p>
+            <a href="{% url 'marketplace:shop' %}" class="btn btn-primary btn-lg px-4 rounded-pill fw-bold shadow-sm">
+                <i class="fas fa-store me-2"></i>{% trans "Explore Catalog" %}
+            </a>
+        </div>
     </div>
     {% endif %}
 </div>

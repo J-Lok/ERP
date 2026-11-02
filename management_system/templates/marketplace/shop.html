@@ -1,64 +1,600 @@
 {% extends 'marketplace/marketplace_base.html' %}
 {% load i18n %}
 {% load currency_tags %}
-{% block title %}Shop - {{ block.super }}{% endblock %}
+
+{% block title %}
+    {% if company %}{{ company.name }} — {% endif %}{% trans "Catalog & Wholesale Deals" %} — {{ block.super }}
+{% endblock %}
+
 {% block extra_css %}
 <style>
-    .product-card { transition: all 0.3s; cursor: pointer; height: 100%; }
-    .product-card:hover { transform: translateY(-10px); box-shadow: 0 15px 35px rgba(0,0,0,0.1); }
-    .product-image { height: 200px; object-fit: cover; background: #f3f4f6; display: flex; align-items: center; justify-content: center; font-size: 4rem; color: #d1d5db; }
-    .price { font-size: 1.5rem; font-weight: 700; color: var(--primary-color); }
+    /* Category Horizontal Scroller (Alibaba Mobile Style) */
+    .category-scroll-container {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        overflow-x: auto;
+        padding: 6px 2px 10px;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+        -webkit-overflow-scrolling: touch;
+    }
+    .category-scroll-container::-webkit-scrollbar {
+        display: none;
+    }
+    .category-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 7px 15px;
+        background: var(--surface-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 999px;
+        color: var(--app-text);
+        text-decoration: none;
+        font-size: 0.82rem;
+        font-weight: 500;
+        white-space: nowrap;
+        transition: all 0.2s ease;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        flex-shrink: 0;
+    }
+    .category-pill:hover,
+    .category-pill.active {
+        background: var(--primary-gradient);
+        border-color: transparent;
+        color: #ffffff;
+        box-shadow: 0 4px 12px rgba(255, 96, 0, 0.25);
+    }
+
+    /* Store Info Card (Header on Mobile & Desktop) */
+    .store-hero-card {
+        background: linear-gradient(135deg, rgba(255,96,0,0.06) 0%, rgba(255,140,55,0.04) 100%);
+        border: 1px solid rgba(255, 96, 0, 0.15);
+        border-radius: 14px;
+        padding: 14px 18px;
+        margin-bottom: 16px;
+    }
+
+    /* 2-Column Alibaba Product Card Grid */
+    .product-card {
+        background: var(--surface-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 14px;
+        overflow: hidden;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        position: relative;
+    }
+    .product-card:hover {
+        transform: translateY(-3px);
+        box-shadow: var(--card-shadow-hover);
+    }
+    @media (max-width: 767.98px) {
+        .product-card {
+            border-radius: 12px;
+        }
+    }
+
+    /* 1:1 Aspect Ratio Image Box */
+    .product-img-box {
+        position: relative;
+        width: 100%;
+        aspect-ratio: 1 / 1;
+        background: #f1f5f9;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    [data-bs-theme="dark"] .product-img-box {
+        background: #1e293b;
+    }
+    .product-img-box img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.35s ease;
+    }
+    .product-card:hover .product-img-box img {
+        transform: scale(1.05);
+    }
+
+    /* Floating Badges */
+    .card-badge-left {
+        position: absolute;
+        top: 8px;
+        left: 8px;
+        z-index: 2;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+    .card-badge {
+        font-size: 0.65rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+        padding: 3px 7px;
+        border-radius: 6px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+    }
+
+    /* Floating Wishlist Heart */
+    .card-wishlist-btn {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        z-index: 2;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.85);
+        backdrop-filter: blur(4px);
+        border: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #64748b;
+        font-size: 0.88rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+    }
+    [data-bs-theme="dark"] .card-wishlist-btn {
+        background: rgba(30, 41, 59, 0.85);
+        color: #94a3b8;
+    }
+    .card-wishlist-btn:hover,
+    .card-wishlist-btn.active {
+        color: #ef4444;
+        background: #ffffff;
+        transform: scale(1.1);
+    }
+
+    /* Product Card Body */
+    .product-card-body {
+        padding: 10px 12px 12px;
+        display: flex;
+        flex-direction: column;
+        flex-grow: 1;
+        justify-content: space-between;
+    }
+    .product-title {
+        font-size: 0.88rem;
+        font-weight: 600;
+        line-height: 1.35;
+        color: var(--app-text);
+        text-decoration: none;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        min-height: 2.38rem;
+        margin-bottom: 4px;
+    }
+    .product-title:hover {
+        color: var(--primary-color);
+    }
+
+    .moq-tag {
+        font-size: 0.72rem;
+        color: var(--text-muted);
+        margin-bottom: 6px;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .product-price {
+        font-size: 1.05rem;
+        font-weight: 800;
+        color: var(--primary-color);
+        letter-spacing: -0.3px;
+    }
+
+    /* Quick-Add Button */
+    .quick-add-btn {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: var(--primary-gradient);
+        border: none;
+        color: white;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.85rem;
+        box-shadow: 0 2px 8px rgba(255, 96, 0, 0.35);
+        transition: transform 0.15s ease, opacity 0.15s ease;
+        cursor: pointer;
+    }
+    .quick-add-btn:active {
+        transform: scale(0.9);
+    }
+    .quick-add-btn:hover {
+        opacity: 0.92;
+        color: white;
+    }
 </style>
 {% endblock %}
+
 {% block content %}
-<div class="container">
-    <h1 class="mb-4"><i class="fas fa-shopping-bag me-2"></i>Shop{% if company %} - {{ company.name }}{% endif %}</h1>
-    
-    <!-- Filters -->
-    <div class="row mb-4">
-        <div class="col-md-8">
-            <form method="get" class="d-flex gap-2">
-                <input type="hidden" name="company" value="{% if company %}{{ company.domain }}{% endif %}">
-                <input type="text" name="q" class="form-control" placeholder="Search products..." value="{{ query }}">
-                <select name="category" class="form-select" style="max-width: 200px;">
-                    <option value="">{% trans "All Categories" %}</option>
-                    {% for cat in categories %}
-                    <option value="{{ cat.id }}" {% if selected_category == cat.id|stringformat:"s" %}selected{% endif %}>{{ cat.name }}</option>
-                    {% endfor %}
-                </select>
-                <button type="submit" class="btn btn-primary"><i class="fas fa-search"></i></button>
-            </form>
+<div class="container py-3">
+
+    <!-- Store Profile & Wholesale Header -->
+    {% if company %}
+    <div class="store-hero-card">
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+            <div class="d-flex align-items-center gap-3">
+                <div class="rounded-circle bg-white shadow-sm p-2 d-flex align-items-center justify-content-center text-primary" style="width: 48px; height: 48px;">
+                    <i class="fas fa-store fa-lg"></i>
+                </div>
+                <div>
+                    <div class="d-flex align-items-center gap-2">
+                        <h5 class="mb-0 fw-bold">{{ company.name }}</h5>
+                        <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 py-1 px-2 small">
+                            <i class="fas fa-check-circle me-1"></i>{% trans "Verified Merchant" %}
+                        </span>
+                    </div>
+                    <p class="small text-muted mb-0 mt-1">
+                        <i class="fas fa-boxes text-primary me-1"></i>{{ total_products }} {% trans "Items in Catalog" %}
+                        {% if company.currency %} · <i class="fas fa-coins me-1"></i>{{ company.currency }}{% endif %}
+                    </p>
+                </div>
+            </div>
+
+            <div class="d-flex align-items-center gap-2">
+                {% if company.whatsapp_number %}
+                <a href="https://wa.me/{{ company.whatsapp_number|cut:'+'|cut:' ' }}?text=Hello%20{{ company.name }}!%20I%20am%20browsing%20your%20marketplace." 
+                   target="_blank" class="btn btn-sm btn-success rounded-pill px-3 fw-semibold">
+                    <i class="fab fa-whatsapp me-1"></i>{% trans "Inquire / RFQ" %}
+                </a>
+                {% endif %}
+                <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-3" data-bs-toggle="offcanvas" data-bs-target="#filterOffcanvas">
+                    <i class="fas fa-sliders-h me-1"></i>{% trans "Filters" %}
+                </button>
+            </div>
         </div>
     </div>
-    
-    <!-- Products -->
-    <div class="row">
+    {% endif %}
+
+    <!-- Horizontal Category Scrollbar (Alibaba Style) -->
+    <div class="mb-3">
+        <div class="category-scroll-container">
+            <a href="{% url 'marketplace:shop' %}{% if query %}?q={{ query }}{% endif %}" 
+               class="category-pill {% if not selected_category %}active{% endif %}">
+                <i class="fas fa-fire"></i>
+                <span>{% trans "All Deals" %}</span>
+            </a>
+            {% for cat in categories %}
+            <a href="{% url 'marketplace:shop' %}?category={{ cat.id }}{% if query %}&q={{ query }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}" 
+               class="category-pill {% if selected_category == cat.id %}active{% endif %}">
+                <i class="fas fa-tag"></i>
+                <span>{{ cat.name }}</span>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Active Filters & Sorting Strip -->
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3 px-1">
+        <div class="d-flex align-items-center gap-2">
+            <span class="small fw-semibold text-muted">
+                <strong>{{ total_products }}</strong> {% trans "products found" %}
+            </span>
+            {% if query %}
+            <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 rounded-pill px-2 py-1 small d-flex align-items-center gap-1">
+                "{{ query }}"
+                <a href="{% url 'marketplace:shop' %}{% if selected_category %}?category={{ selected_category }}{% endif %}" class="text-primary text-decoration-none">
+                    <i class="fas fa-times-circle"></i>
+                </a>
+            </span>
+            {% endif %}
+            {% if min_price or max_price %}
+            <span class="badge bg-secondary bg-opacity-10 text-secondary border rounded-pill px-2 py-1 small">
+                {% if min_price %}Min: {{ min_price }}{% endif %}
+                {% if max_price %} Max: {{ max_price }}{% endif %}
+            </span>
+            {% endif %}
+        </div>
+
+        <!-- Sort selector -->
+        <div class="d-flex align-items-center gap-2">
+            <form method="get" id="quickSortForm" class="d-flex align-items-center">
+                {% if query %}<input type="hidden" name="q" value="{{ query }}">{% endif %}
+                {% if selected_category %}<input type="hidden" name="category" value="{{ selected_category }}">{% endif %}
+                {% if min_price %}<input type="hidden" name="min_price" value="{{ min_price }}">{% endif %}
+                {% if max_price %}<input type="hidden" name="max_price" value="{{ max_price }}">{% endif %}
+                
+                <select name="sort" class="form-select form-select-sm rounded-pill border-0 shadow-sm pe-4" 
+                        style="font-size: 0.8rem; background-color: var(--surface-bg); color: var(--app-text);"
+                        onchange="document.getElementById('quickSortForm').submit();">
+                    <option value="newest" {% if sort_by == 'newest' %}selected{% endif %}>{% trans "Sort: Newest" %}</option>
+                    <option value="price_asc" {% if sort_by == 'price_asc' %}selected{% endif %}>{% trans "Price: Low to High" %}</option>
+                    <option value="price_desc" {% if sort_by == 'price_desc' %}selected{% endif %}>{% trans "Price: High to Low" %}</option>
+                    <option value="popular" {% if sort_by == 'popular' %}selected{% endif %}>{% trans "Most Stock / Popular" %}</option>
+                    <option value="name_asc" {% if sort_by == 'name_asc' %}selected{% endif %}>{% trans "Name: A to Z" %}</option>
+                </select>
+            </form>
+
+            <button class="btn btn-sm btn-light border rounded-pill d-md-none px-3" type="button" data-bs-toggle="offcanvas" data-bs-target="#filterOffcanvas">
+                <i class="fas fa-filter text-primary"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- 2-Column Responsive Product Grid (Alibaba Mobile Style) -->
+    <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-2 g-md-3">
         {% for stock in stocks %}
-        <div class="col-md-4 col-lg-3 mb-4">
-            <div class="card product-card" onclick="window.location='{% url 'marketplace:product_detail' stock.pk %}'">
-                <div class="product-image card-img-top">
-                    {% if stock.image %}
-                        <img src="{{ stock.image.url }}" alt="{{ stock.name }}" style="width: 100%; height: 200px; object-fit: cover;">
+        <div class="col">
+            <div class="product-card">
+                <!-- Badges -->
+                <div class="card-badge-left">
+                    {% if stock.quantity <= stock.reorder_level %}
+                    <span class="card-badge bg-warning text-dark">
+                        <i class="fas fa-fire me-1"></i>{% trans "Low Stock" %}
+                    </span>
                     {% else %}
-                        <i class="fas fa-box"></i>
+                    <span class="card-badge bg-success text-white">
+                        <i class="fas fa-check me-1"></i>{% trans "In Stock" %}
+                    </span>
                     {% endif %}
                 </div>
-                <div class="card-body">
-                    <h6 class="card-title">{{ stock.name }}</h6>
-                    <p class="text-muted small mb-2">{{ stock.item_code }}</p>
-                    <div class="d-flex justify-content-between align-items-center">
-                        <span class="price">{{ stock.selling_price|currency:company }}</span>
-                        <span class="badge bg-success">{{ stock.quantity }} in stock</span>
+
+                <!-- Wishlist Heart Toggle (AJAX) -->
+                {% if is_logged_in %}
+                <button type="button" 
+                        class="card-wishlist-btn {% if stock.id in wishlist_stock_ids %}active{% endif %}" 
+                        data-stock-id="{{ stock.id }}"
+                        title="{% trans 'Save to wishlist' %}"
+                        onclick="toggleWishlist(this, '{{ stock.id }}')">
+                    <i class="{% if stock.id in wishlist_stock_ids %}fas fa-heart text-danger{% else %}far fa-heart{% endif %}"></i>
+                </button>
+                {% endif %}
+
+                <!-- Product 1:1 Image -->
+                <a href="{% url 'marketplace:product_detail' stock.pk %}" class="product-img-box text-decoration-none">
+                    {% if stock.image %}
+                        <img src="{{ stock.image.url }}" alt="{{ stock.name }}" loading="lazy">
+                    {% else %}
+                        <i class="fas fa-box fa-3x text-muted opacity-50"></i>
+                    {% endif %}
+                </a>
+
+                <!-- Product Body -->
+                <div class="product-card-body">
+                    <div>
+                        <a href="{% url 'marketplace:product_detail' stock.pk %}" class="product-title" title="{{ stock.name }}">
+                            {{ stock.name }}
+                        </a>
+                        <!-- B2B MOQ & Category -->
+                        <div class="moq-tag">
+                            <span>MOQ: 1 {{ stock.get_unit_display }}</span>
+                            {% if stock.category %}
+                            <span>· {{ stock.category.name|truncatechars:12 }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Price & Quick Action -->
+                    <div class="d-flex align-items-center justify-content-between mt-2 pt-1 border-top border-light">
+                        <div>
+                            <div class="product-price">{{ stock.selling_price|currency:company }}</div>
+                            <small class="text-muted" style="font-size: 0.68rem;">/ {{ stock.get_unit_display }}</small>
+                        </div>
+
+                        <!-- 1-Tap Quick Add to Cart -->
+                        {% if is_logged_in %}
+                        <button type="button" class="quick-add-btn" 
+                                data-stock-id="{{ stock.id }}"
+                                data-stock-name="{{ stock.name }}"
+                                title="{% trans 'Quick Add' %}"
+                                onclick="quickAddToCart(this, '{{ stock.id }}', '{{ stock.name|escapejs }}')">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                        {% else %}
+                        <a href="{% url 'marketplace:client_login' %}" class="quick-add-btn text-white text-decoration-none" title="{% trans 'Login to buy' %}">
+                            <i class="fas fa-shopping-cart" style="font-size: 0.75rem;"></i>
+                        </a>
+                        {% endif %}
                     </div>
                 </div>
             </div>
         </div>
         {% empty %}
-        <div class="col-12 text-center py-5">
-            <i class="fas fa-box-open fa-5x text-muted mb-3"></i>
-            <h4>{% trans "No products found" %}</h4>
+        <div class="col-12 py-5 text-center">
+            <div class="rounded-circle bg-light d-inline-flex align-items-center justify-content-center p-4 mb-3 text-muted" style="width: 80px; height: 80px;">
+                <i class="fas fa-box-open fa-2x"></i>
+            </div>
+            <h5 class="fw-bold">{% trans "No products found" %}</h5>
+            <p class="text-muted small mb-3">{% trans "Try adjusting your search criteria or explore other categories." %}</p>
+            <a href="{% url 'marketplace:shop' %}" class="btn btn-primary btn-sm rounded-pill px-4">
+                <i class="fas fa-redo me-1"></i>{% trans "Clear Filters" %}
+            </a>
         </div>
         {% endfor %}
     </div>
+
 </div>
+
+<!-- Filter Offcanvas Bottom Sheet (Alibaba Style) -->
+<div class="offcanvas offcanvas-bottom rounded-top-4" tabindex="-1" id="filterOffcanvas" style="height: auto; max-height: 80vh;">
+    <div class="offcanvas-header border-bottom py-3">
+        <h6 class="offcanvas-title fw-bold d-flex align-items-center gap-2">
+            <i class="fas fa-sliders-h text-primary"></i>
+            {% trans "Filter & Refine" %}
+        </h6>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+    </div>
+    <div class="offcanvas-body p-3">
+        <form method="get" action="{% url 'marketplace:shop' %}">
+            {% if query %}<input type="hidden" name="q" value="{{ query }}">{% endif %}
+
+            <!-- Sort By -->
+            <div class="mb-3">
+                <label class="form-label small fw-bold text-uppercase text-muted">{% trans "Sort Order" %}</label>
+                <div class="row g-2">
+                    <div class="col-6">
+                        <input type="radio" class="btn-check" name="sort" id="sortNew" value="newest" {% if sort_by == 'newest' %}checked{% endif %}>
+                        <label class="btn btn-sm btn-outline-secondary w-100 rounded-pill py-2" for="sortNew">
+                            <i class="fas fa-clock me-1"></i>{% trans "Newest" %}
+                        </label>
+                    </div>
+                    <div class="col-6">
+                        <input type="radio" class="btn-check" name="sort" id="sortLow" value="price_asc" {% if sort_by == 'price_asc' %}checked{% endif %}>
+                        <label class="btn btn-sm btn-outline-secondary w-100 rounded-pill py-2" for="sortLow">
+                            <i class="fas fa-arrow-down me-1"></i>{% trans "Price: Low" %}
+                        </label>
+                    </div>
+                    <div class="col-6">
+                        <input type="radio" class="btn-check" name="sort" id="sortHigh" value="price_desc" {% if sort_by == 'price_desc' %}checked{% endif %}>
+                        <label class="btn btn-sm btn-outline-secondary w-100 rounded-pill py-2" for="sortHigh">
+                            <i class="fas fa-arrow-up me-1"></i>{% trans "Price: High" %}
+                        </label>
+                    </div>
+                    <div class="col-6">
+                        <input type="radio" class="btn-check" name="sort" id="sortPop" value="popular" {% if sort_by == 'popular' %}checked{% endif %}>
+                        <label class="btn btn-sm btn-outline-secondary w-100 rounded-pill py-2" for="sortPop">
+                            <i class="fas fa-fire me-1"></i>{% trans "Most Stock" %}
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Price Range -->
+            <div class="mb-3">
+                <label class="form-label small fw-bold text-uppercase text-muted">{% trans "Price Range" %}</label>
+                <div class="input-group input-group-sm">
+                    <input type="number" step="any" name="min_price" class="form-control" placeholder="Min" value="{{ min_price }}">
+                    <span class="input-group-text bg-light border-0">—</span>
+                    <input type="number" step="any" name="max_price" class="form-control" placeholder="Max" value="{{ max_price }}">
+                </div>
+            </div>
+
+            <!-- Categories -->
+            <div class="mb-4">
+                <label class="form-label small fw-bold text-uppercase text-muted">{% trans "Category" %}</label>
+                <select name="category" class="form-select form-select-sm">
+                    <option value="">{% trans "All Categories" %}</option>
+                    {% for cat in categories %}
+                    <option value="{{ cat.id }}" {% if selected_category == cat.id %}selected{% endif %}>{{ cat.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="d-grid gap-2">
+                <button type="submit" class="btn btn-primary py-2 rounded-pill fw-semibold">
+                    <i class="fas fa-check me-1"></i>{% trans "Apply Filters" %}
+                </button>
+                <a href="{% url 'marketplace:shop' %}" class="btn btn-light py-2 rounded-pill text-muted small">
+                    {% trans "Reset All" %}
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Get CSRF cookie helper
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    // 1-Tap Quick Add to Cart via AJAX
+    function quickAddToCart(btn, stockId, stockName) {
+        btn.disabled = true;
+        const icon = btn.querySelector('i');
+        const oldClass = icon.className;
+        icon.className = 'fas fa-spinner fa-spin';
+
+        const formData = new FormData();
+        formData.append('quantity', '1');
+        formData.append('format', 'json');
+
+        fetch('/marketplace/cart/add/' + stockId + '/', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: formData
+        })
+        .then(response => response.json().then(data => ({ status: response.status, body: data })))
+        .then(res => {
+            btn.disabled = false;
+            icon.className = oldClass;
+
+            if (res.status === 200 && res.body.success) {
+                if (window.updateCartCounter) {
+                    window.updateCartCounter(res.body.cart_count);
+                }
+                if (window.showMpToast) {
+                    window.showMpToast('Added ' + stockName + ' to cart!', true);
+                }
+            } else {
+                if (window.showMpToast) {
+                    window.showMpToast(res.body.message || 'Could not add to cart', false);
+                }
+            }
+        })
+        .catch(err => {
+            btn.disabled = false;
+            icon.className = oldClass;
+            if (window.showMpToast) {
+                window.showMpToast('Network error, please try again.', false);
+            }
+        });
+    }
+
+    // 1-Tap Wishlist Toggle via AJAX
+    function toggleWishlist(btn, stockId) {
+        const icon = btn.querySelector('i');
+
+        const formData = new FormData();
+        formData.append('toggle', '1');
+        formData.append('format', 'json');
+
+        fetch('/marketplace/wishlist/add/' + stockId + '/', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                if (data.in_wishlist) {
+                    btn.classList.add('active');
+                    icon.className = 'fas fa-heart text-danger';
+                    if (window.showMpToast) window.showMpToast('Saved to wishlist', true);
+                } else {
+                    btn.classList.remove('active');
+                    icon.className = 'far fa-heart';
+                    if (window.showMpToast) window.showMpToast('Removed from wishlist', true);
+                }
+            }
+        })
+        .catch(err => {
+            console.error('Wishlist error:', err);
+        });
+    }
+</script>
 {% endblock %}

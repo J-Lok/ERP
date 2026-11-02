@@ -146,7 +146,7 @@ def _render_shop_for_company(request, company=None):
         company=company,
         quantity__gt=0,
         is_marketplace_visible=True
-    ).select_related('category').order_by('-created_at')
+    ).select_related('category')
 
     query = request.GET.get('q', '').strip()
     if query:
@@ -166,12 +166,44 @@ def _render_shop_for_company(request, company=None):
         except (ValueError, TypeError):
             pass
 
+    # Price range filter
+    min_price = request.GET.get('min_price', '').strip()
+    max_price = request.GET.get('max_price', '').strip()
+    if min_price:
+        try:
+            stocks = stocks.filter(selling_price__gte=float(min_price))
+        except ValueError:
+            min_price = ''
+    if max_price:
+        try:
+            stocks = stocks.filter(selling_price__lte=float(max_price))
+        except ValueError:
+            max_price = ''
+
+    # Sorting options
+    sort_by = request.GET.get('sort', 'newest').strip()
+    if sort_by == 'price_asc':
+        stocks = stocks.order_by('selling_price')
+    elif sort_by == 'price_desc':
+        stocks = stocks.order_by('-selling_price')
+    elif sort_by == 'name_asc':
+        stocks = stocks.order_by('name')
+    elif sort_by == 'popular':
+        stocks = stocks.order_by('-quantity')
+    else:
+        sort_by = 'newest'
+        stocks = stocks.order_by('-created_at')
+
     categories = StockCategory.objects.filter(company=company).order_by('name')
 
     cart_count = 0
+    wishlist_stock_ids = set()
     if client:
         cart = Cart.objects.filter(client=client).first()
         cart_count = cart.total_items if cart else 0
+        wishlist = Wishlist.objects.filter(client=client).first()
+        if wishlist:
+            wishlist_stock_ids = set(wishlist.items.values_list('stock_id', flat=True))
 
     context = {
         'stocks': stocks,
@@ -179,8 +211,13 @@ def _render_shop_for_company(request, company=None):
         'company': company,
         'query': query,
         'selected_category': selected_category,
+        'sort_by': sort_by,
+        'min_price': min_price,
+        'max_price': max_price,
         'cart_count': cart_count,
+        'wishlist_stock_ids': wishlist_stock_ids,
         'is_logged_in': client is not None,
+        'total_products': stocks.count(),
     }
 
     return render(request, 'marketplace/shop.html', context)
@@ -233,14 +270,34 @@ def product_detail(request, pk):
     
     # Check if client can purchase this product (clients can buy from any company now)
     can_purchase = client is not None
-    
+
+    reviews = stock.reviews.all().select_related('client').order_by('-created_at')
+    review_count = reviews.count()
+    avg_rating = round(sum(r.rating for r in reviews) / review_count, 1) if review_count else 0
+
+    related_stocks = Stock.objects.filter(
+        company=stock.company,
+        is_marketplace_visible=True,
+        quantity__gt=0
+    ).exclude(pk=stock.pk).select_related('category')[:6]
+
+    cart_count = 0
+    if client:
+        cart = Cart.objects.filter(client=client).first()
+        cart_count = cart.total_items if cart else 0
+
     context = {
         'stock': stock,
         'in_wishlist': in_wishlist,
         'is_logged_in': client is not None,
         'can_purchase': can_purchase,
+        'reviews': reviews,
+        'review_count': review_count,
+        'avg_rating': avg_rating,
+        'related_stocks': related_stocks,
+        'cart_count': cart_count,
     }
-    
+
     return render(request, 'marketplace/product_detail.html', context)
 
 
@@ -259,11 +316,12 @@ def view_cart(request):
     """View shopping cart"""
     client = request.client
     cart, created = Cart.objects.get_or_create(client=client)
-    cart_items = cart.items.all().select_related('stock')
+    cart_items = cart.items.all().select_related('stock', 'stock__company')
     
     context = {
         'cart': cart,
         'cart_items': cart_items,
+        'cart_company': get_cart_company(cart),
     }
     
     return render(request, 'marketplace/cart.html', context)
@@ -274,66 +332,130 @@ def add_to_cart(request, stock_id):
     """Add item to cart"""
     client = request.client
     stock = get_object_or_404(Stock, pk=stock_id)
-    
+
     if request.method == 'POST':
-        quantity = int(request.POST.get('quantity', 1))
-        
+        try:
+            quantity = max(1, int(request.POST.get('quantity', 1)))
+        except (ValueError, TypeError):
+            quantity = 1
+
+        is_ajax = (
+            request.headers.get('x-requested-with') == 'XMLHttpRequest' or
+            request.POST.get('format') == 'json'
+        )
+        is_buy_now = request.POST.get('buy_now') in ('1', 'true', 'True')
+
         # Check stock availability
         if stock.quantity < quantity:
-            messages.error(request, f'Only {stock.quantity} units available.')
+            msg = f'Only {stock.quantity} units available.'
+            if is_ajax:
+                return JsonResponse({'success': False, 'message': msg}, status=400)
+            messages.error(request, msg)
             return redirect('marketplace:product_detail', pk=stock_id)
-        
+
         cart, created = Cart.objects.get_or_create(client=client)
         cart_company = get_cart_company(cart)
         if cart_company and cart_company.id != stock.company_id:
-            messages.error(
-                request,
+            msg = (
                 f'Your cart already contains items from {cart_company.name}. '
                 'Please clear the cart before adding products from another company.'
             )
+            if is_ajax:
+                return JsonResponse({'success': False, 'message': msg, 'company_conflict': True}, status=400)
+            messages.error(request, msg)
             return redirect('marketplace:view_cart')
-        
+
         # Check if item already in cart
         cart_item, created = CartItem.objects.get_or_create(
             cart=cart,
             stock=stock,
             defaults={'quantity': quantity}
         )
-        
+
         if not created:
             # Update quantity
             new_quantity = cart_item.quantity + quantity
             if new_quantity > stock.quantity:
-                messages.error(request, f'Only {stock.quantity} units available.')
+                msg = f'Only {stock.quantity} units available.'
+                if is_ajax:
+                    return JsonResponse({'success': False, 'message': msg}, status=400)
+                messages.error(request, msg)
                 return redirect('marketplace:view_cart')
             cart_item.quantity = new_quantity
             cart_item.save()
-            messages.success(request, f'Updated {stock.name} quantity to {new_quantity}')
+            msg = f'Updated {stock.name} quantity to {new_quantity}'
         else:
-            messages.success(request, f'Added {stock.name} to cart')
-        
+            msg = f'Added {stock.name} to cart'
+
+        if is_ajax:
+            return JsonResponse({
+                'success': True,
+                'message': msg,
+                'cart_count': cart.total_items,
+                'stock_id': stock.id,
+            })
+
+        messages.success(request, msg)
+
+        if is_buy_now:
+            return redirect('marketplace:checkout')
+
+        next_url = request.POST.get('next')
+        if next_url and next_url.startswith('/'):
+            return redirect(next_url)
+
         return redirect('marketplace:view_cart')
-    
+
     return redirect('marketplace:shop')
 
 
 @client_login_required
 def update_cart_item(request, item_id):
-    """Update cart item quantity"""
+    """Update cart item quantity with AJAX support"""
     client = request.client
     cart_item = get_object_or_404(CartItem, pk=item_id, cart__client=client)
     
     if request.method == 'POST':
-        quantity = int(request.POST.get('quantity', 1))
+        is_ajax = (
+            request.headers.get('x-requested-with') == 'XMLHttpRequest' or
+            request.POST.get('format') == 'json'
+        )
+        try:
+            quantity = int(request.POST.get('quantity', 1))
+        except (ValueError, TypeError):
+            quantity = 1
         
+        cart = cart_item.cart
         if quantity <= 0:
             cart_item.delete()
+            cart.refresh_from_db()
+            if is_ajax:
+                return JsonResponse({
+                    'success': True,
+                    'deleted': True,
+                    'cart_count': cart.total_items,
+                    'total_price': float(cart.total_price),
+                    'message': 'Item removed from cart'
+                })
             messages.success(request, 'Item removed from cart')
         elif quantity > cart_item.stock.quantity:
-            messages.error(request, f'Only {cart_item.stock.quantity} units available')
+            msg = f'Only {cart_item.stock.quantity} units available'
+            if is_ajax:
+                return JsonResponse({'success': False, 'message': msg}, status=400)
+            messages.error(request, msg)
         else:
             cart_item.quantity = quantity
             cart_item.save()
+            cart.refresh_from_db()
+            if is_ajax:
+                return JsonResponse({
+                    'success': True,
+                    'quantity': cart_item.quantity,
+                    'subtotal': float(cart_item.subtotal),
+                    'cart_count': cart.total_items,
+                    'total_price': float(cart.total_price),
+                    'message': 'Cart updated'
+                })
             messages.success(request, 'Cart updated')
     
     return redirect('marketplace:view_cart')
@@ -341,13 +463,26 @@ def update_cart_item(request, item_id):
 
 @client_login_required
 def remove_from_cart(request, item_id):
-    """Remove item from cart"""
+    """Remove item from cart with AJAX support"""
     client = request.client
     cart_item = get_object_or_404(CartItem, pk=item_id, cart__client=client)
     
     if request.method == 'POST':
+        is_ajax = (
+            request.headers.get('x-requested-with') == 'XMLHttpRequest' or
+            request.POST.get('format') == 'json'
+        )
         item_name = cart_item.stock.name
+        cart = cart_item.cart
         cart_item.delete()
+        cart.refresh_from_db()
+        if is_ajax:
+            return JsonResponse({
+                'success': True,
+                'cart_count': cart.total_items,
+                'total_price': float(cart.total_price),
+                'message': f'Removed {item_name} from cart'
+            })
         messages.success(request, f'Removed {item_name} from cart')
     
     return redirect('marketplace:view_cart')
@@ -385,25 +520,43 @@ def view_wishlist(request):
 
 @client_login_required
 def add_to_wishlist(request, stock_id):
-    """Add item to wishlist"""
+    """Add or toggle item in wishlist"""
     client = request.client
     stock = get_object_or_404(Stock, pk=stock_id, is_marketplace_visible=True)
-    
+
     if request.method == 'POST':
-        wishlist, created = Wishlist.objects.get_or_create(client=client)
-        
+        is_ajax = (
+            request.headers.get('x-requested-with') == 'XMLHttpRequest' or
+            request.POST.get('format') == 'json'
+        )
+        is_toggle = request.POST.get('toggle') in ('1', 'true', 'True') or is_ajax
+
+        wishlist, _ = Wishlist.objects.get_or_create(client=client)
+
+        existing_item = WishlistItem.objects.filter(wishlist=wishlist, stock=stock).first()
+
+        if existing_item and is_toggle:
+            existing_item.delete()
+            if is_ajax:
+                return JsonResponse({'success': True, 'in_wishlist': False, 'message': f'Removed {stock.name} from wishlist'})
+            messages.success(request, f'Removed {stock.name} from wishlist')
+            return redirect(safe_next_url(request, default_url='marketplace:shop', url_to_check=request.META.get('HTTP_REFERER')))
+
         item, created = WishlistItem.objects.get_or_create(
             wishlist=wishlist,
             stock=stock
         )
-        
+
+        if is_ajax:
+            return JsonResponse({'success': True, 'in_wishlist': True, 'message': f'Added {stock.name} to wishlist'})
+
         if created:
             messages.success(request, f'Added {stock.name} to wishlist')
         else:
             messages.info(request, f'{stock.name} is already in your wishlist')
-        
+
         return redirect(safe_next_url(request, default_url='marketplace:shop', url_to_check=request.META.get('HTTP_REFERER')))
-    
+
     return redirect('marketplace:shop')
 
 

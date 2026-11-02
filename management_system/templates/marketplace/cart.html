@@ -1,72 +1,418 @@
 {% extends 'marketplace/marketplace_base.html' %}
 {% load i18n %}
 {% load currency_tags %}
-{% block title %}Shopping Cart - {{ block.super }}{% endblock %}
+
+{% block title %}{% trans "Shopping Cart" %} ({{ cart.total_items }}) - {{ block.super }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .cart-item-card {
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
+        border-radius: 12px;
+    }
+    .cart-thumbnail {
+        width: 80px;
+        height: 80px;
+        object-fit: cover;
+        border-radius: 8px;
+        background-color: #f8f9fa;
+        flex-shrink: 0;
+    }
+    .stepper-btn {
+        width: 32px;
+        height: 32px;
+        border-radius: 50% !important;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+        font-weight: bold;
+    }
+    .stepper-input {
+        width: 48px;
+        text-align: center;
+        font-weight: 700;
+        border: none;
+        background: transparent;
+    }
+    .stepper-container {
+        display: inline-flex;
+        align-items: center;
+        background: #f1f3f5;
+        border-radius: 20px;
+        padding: 3px 6px;
+    }
+    .cart-sticky-bar {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        z-index: 1040;
+        background: #ffffff;
+        box-shadow: 0 -4px 16px rgba(0,0,0,0.08);
+        padding: 10px 16px;
+        padding-bottom: calc(10px + env(safe-area-inset-bottom));
+    }
+    .assurance-badge {
+        background: #fff8f0;
+        border: 1px solid #ffd8a8;
+        border-radius: 10px;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="container">
-    <h2 class="mb-4"><i class="fas fa-shopping-cart me-2"></i>{% trans "Shopping Cart" %}</h2>
-    
+<div class="container py-3 pb-5 mb-5 mb-md-0">
+    <!-- Breadcrumb / Header -->
+    <div class="d-flex align-items-center justify-content-between mb-3">
+        <div class="d-flex align-items-center gap-2">
+            <a href="{% url 'marketplace:shop' %}" class="btn btn-sm btn-light rounded-circle shadow-sm p-2 d-inline-flex align-items-center justify-content-center" style="width:34px;height:34px;">
+                <i class="fas fa-arrow-left text-dark"></i>
+            </a>
+            <h4 class="fw-bold mb-0">{% trans "Shopping Cart" %}</h4>
+            <span class="badge bg-primary rounded-pill" id="cartItemCountBadge">{{ cart.total_items }}</span>
+        </div>
+        {% if cart_items %}
+        <form method="post" action="{% url 'marketplace:clear_cart' %}" onsubmit="return confirm('{% trans "Are you sure you want to clear your entire cart?" %}');" class="d-none d-md-inline">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-sm btn-outline-danger border-0">
+                <i class="fas fa-trash-alt me-1"></i>{% trans "Clear Cart" %}
+            </button>
+        </form>
+        {% endif %}
+    </div>
+
     {% if cart_items %}
-    <div class="row">
-        <div class="col-md-8">
-            {% for item in cart_items %}
-            <div class="card mb-3">
-                <div class="card-body">
-                    <div class="row align-items-center">
-                        <div class="col-md-6">
-                            <h5 class="mb-1">{{ item.stock.name }}</h5>
-                            <p class="text-muted small mb-0">{{ item.stock.item_code }}</p>
-                        </div>
-                        <div class="col-md-2">
-                            <p class="mb-0"><strong>{{ item.stock.selling_price|currency:item.stock.company }}</strong></p>
-                        </div>
-                        <div class="col-md-2">
-                            <form method="post" action="{% url 'marketplace:update_cart_item' item.pk %}" class="d-inline">
-                                {% csrf_token %}
-                                <input type="number" name="quantity" value="{{ item.quantity }}" min="1" max="{{ item.stock.quantity }}" class="form-control" onchange="this.form.submit()">
-                            </form>
-                        </div>
-                        <div class="col-md-2 text-end">
-                            <p class="mb-2"><strong>{{ item.subtotal|currency:item.stock.company }}</strong></p>
-                            <form method="post" action="{% url 'marketplace:remove_from_cart' item.pk %}" class="d-inline">
-                                {% csrf_token %}
-                                <button type="submit" class="btn btn-sm btn-danger">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </form>
+    <div class="row g-3 g-lg-4" id="cartMainContainer">
+        <!-- Cart Items List (Left Column) -->
+        <div class="col-lg-8">
+            <!-- Merchant Header -->
+            <div class="card border-0 shadow-sm mb-3 rounded-3">
+                <div class="card-body py-2 px-3 d-flex align-items-center justify-content-between bg-light rounded-3">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="fas fa-store text-primary"></i>
+                        <span class="fw-bold text-dark">{{ cart_company.name|default:_("Verified Merchant") }}</span>
+                        <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill" style="font-size:10px;">
+                            <i class="fas fa-check-circle me-1"></i>{% trans "Verified" %}
+                        </span>
+                    </div>
+                    {% if cart_company.whatsapp_number %}
+                    <a href="https://wa.me/{{ cart_company.whatsapp_number|cut:' '|cut:'+'|cut:'-' }}?text=Hello,%20I%20have%20questions%20about%20my%20cart" 
+                       target="_blank" class="btn btn-sm btn-outline-success rounded-pill py-0 px-2" style="font-size:12px;">
+                        <i class="fab fa-whatsapp me-1"></i>{% trans "Inquire" %}
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Items -->
+            <div id="cartItemsList">
+                {% for item in cart_items %}
+                <div class="card border-0 shadow-sm mb-3 cart-item-card" id="cart-item-row-{{ item.pk }}">
+                    <div class="card-body p-3">
+                        <div class="d-flex gap-3">
+                            <!-- Thumbnail -->
+                            <a href="{% url 'marketplace:product_detail' item.stock.pk %}">
+                                {% if item.stock.photo %}
+                                <img src="{{ item.stock.photo.url }}" alt="{{ item.stock.name }}" class="cart-thumbnail">
+                                {% else %}
+                                <div class="cart-thumbnail d-flex align-items-center justify-content-center text-muted border">
+                                    <i class="fas fa-box fa-2x opacity-50"></i>
+                                </div>
+                                {% endif %}
+                            </a>
+
+                            <!-- Info -->
+                            <div class="flex-grow-1 min-w-0">
+                                <div class="d-flex justify-content-between align-items-start gap-2">
+                                    <div>
+                                        <a href="{% url 'marketplace:product_detail' item.stock.pk %}" class="text-decoration-none text-dark fw-bold text-truncate d-block" style="max-width: 320px;">
+                                            {{ item.stock.name }}
+                                        </a>
+                                        <div class="text-muted small mb-1">
+                                            <span class="badge bg-light text-secondary border me-1">{{ item.stock.item_code }}</span>
+                                            {% if item.stock.category %}
+                                            <span class="text-muted" style="font-size:11px;">{{ item.stock.category.name }}</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <!-- Delete Button -->
+                                    <button type="button" class="btn btn-sm text-muted p-1 hover-danger border-0 delete-item-trigger" 
+                                            data-item-id="{{ item.pk }}" data-item-name="{{ item.stock.name }}" 
+                                            title="{% trans 'Remove' %}">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </button>
+                                </div>
+
+                                <!-- Price & Quantity Row -->
+                                <div class="d-flex align-items-center justify-content-between mt-2 pt-2 border-top flex-wrap gap-2">
+                                    <div>
+                                        <span class="text-muted small d-block" style="font-size:11px;">{% trans "Unit Price" %}</span>
+                                        <span class="fw-semibold text-dark">{{ item.stock.selling_price|currency:item.stock.company }}</span>
+                                    </div>
+
+                                    <!-- Stepper -->
+                                    <div class="d-flex align-items-center gap-3">
+                                        <div class="stepper-container">
+                                            <button type="button" class="btn btn-sm btn-light stepper-btn qty-change-btn" 
+                                                    data-item-id="{{ item.pk }}" data-delta="-1" data-current="{{ item.quantity }}"
+                                                    aria-label="{% trans 'Decrease' %}">
+                                                <i class="fas fa-minus small"></i>
+                                            </button>
+                                            <input type="text" class="stepper-input" id="qty-display-{{ item.pk }}" value="{{ item.quantity }}" readonly>
+                                            <button type="button" class="btn btn-sm btn-light stepper-btn qty-change-btn" 
+                                                    data-item-id="{{ item.pk }}" data-delta="1" data-current="{{ item.quantity }}" data-max="{{ item.stock.quantity }}"
+                                                    aria-label="{% trans 'Increase' %}">
+                                                <i class="fas fa-plus small"></i>
+                                            </button>
+                                        </div>
+
+                                        <!-- Line Subtotal -->
+                                        <div class="text-end">
+                                            <span class="text-muted small d-none d-sm-block" style="font-size:11px;">{% trans "Subtotal" %}</span>
+                                            <span class="fw-bold text-primary fs-6 item-subtotal-text" id="item-subtotal-{{ item.pk }}">
+                                                {{ item.subtotal|currency:item.stock.company }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
+                {% endfor %}
             </div>
-            {% endfor %}
+
+            <!-- Assurance Card -->
+            <div class="assurance-badge p-3 mb-4">
+                <div class="d-flex align-items-start gap-3">
+                    <i class="fas fa-shield-alt text-warning fa-2x mt-1"></i>
+                    <div>
+                        <h6 class="fw-bold text-dark mb-1">{% trans "Direct Trade Assurance" %}</h6>
+                        <p class="text-muted small mb-0">
+                            {% trans "Your transaction is secured directly with the registered merchant. Enjoy flexible mobile money payment options and local direct delivery." %}
+                        </p>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div class="col-md-4">
-            <div class="card">
-                <div class="card-body">
-                    <h5 class="mb-3">{% trans "Order Summary" %}</h5>
+
+        <!-- Order Summary (Right Column Desktop) -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm rounded-3 sticky-top" style="top: 80px;">
+                <div class="card-body p-4">
+                    <h5 class="fw-bold mb-3">{% trans "Order Summary" %}</h5>
+                    
                     <div class="d-flex justify-content-between mb-2">
-                        <span>Items ({{ cart.total_items }})</span>
-                        <span>{{ cart.total_price|currency:cart.items.first.stock.company }}</span>
+                        <span class="text-muted">{% trans "Items Total" %} (<span id="summaryItemCount">{{ cart.total_items }}</span>)</span>
+                        <span class="fw-semibold" id="summaryTotalAmount">{{ cart.total_price|currency:cart_company }}</span>
                     </div>
-                    <hr>
-                    <div class="d-flex justify-content-between mb-3">
-                        <strong>{% trans "Total" %}</strong>
-                        <strong class="text-primary">{{ cart.total_price|currency:cart.items.first.stock.company }}</strong>
+
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted">{% trans "Estimated Shipping" %}</span>
+                        <span class="text-success fw-semibold">{% trans "Free / Handled by Merchant" %}</span>
                     </div>
-                    <a href="{% url 'marketplace:checkout' %}" class="btn btn-primary w-100 mb-2">
+
+                    <hr class="my-3">
+
+                    <div class="d-flex justify-content-between align-items-baseline mb-4">
+                        <span class="fw-bold fs-5">{% trans "Total" %}</span>
+                        <span class="fw-bold fs-4 text-primary" id="summaryFinalTotal">{{ cart.total_price|currency:cart_company }}</span>
+                    </div>
+
+                    <a href="{% url 'marketplace:checkout' %}" class="btn btn-primary btn-lg w-100 rounded-pill fw-bold shadow-sm mb-2">
                         <i class="fas fa-lock me-2"></i>{% trans "Proceed to Checkout" %}
                     </a>
-                    <a href="{% url 'marketplace:shop' %}" class="btn btn-outline-secondary w-100">{% trans "Continue Shopping" %}</a>
+
+                    <a href="{% url 'marketplace:shop' %}" class="btn btn-outline-secondary w-100 rounded-pill">
+                        <i class="fas fa-arrow-left me-2"></i>{% trans "Continue Shopping" %}
+                    </a>
                 </div>
             </div>
         </div>
     </div>
+
+    <!-- Mobile Sticky Checkout Bottom Bar (Smartphones) -->
+    <div class="cart-sticky-bar d-lg-none">
+        <div class="d-flex align-items-center justify-content-between">
+            <div>
+                <span class="text-muted d-block small" style="font-size:11px;">{% trans "Total Amount" %}</span>
+                <span class="fw-bold text-primary fs-5" id="mobileCartTotal">{{ cart.total_price|currency:cart_company }}</span>
+            </div>
+            <a href="{% url 'marketplace:checkout' %}" class="btn btn-primary fw-bold px-4 py-2 rounded-pill shadow">
+                {% trans "Checkout" %} (<span id="mobileCartBadge">{{ cart.total_items }}</span>) <i class="fas fa-arrow-right ms-1"></i>
+            </a>
+        </div>
+    </div>
+
     {% else %}
-    <div class="text-center py-5">
-        <i class="fas fa-shopping-cart fa-5x text-muted mb-3"></i>
-        <h4>{% trans "Your cart is empty" %}</h4>
-        <a href="{% url 'marketplace:shop' %}" class="btn btn-primary mt-3">{% trans "Start Shopping" %}</a>
+    <!-- Empty Cart -->
+    <div class="card border-0 shadow-sm rounded-4 text-center py-5 my-4">
+        <div class="card-body py-5">
+            <div class="mb-3">
+                <div class="rounded-circle bg-light d-inline-flex align-items-center justify-content-center" style="width: 100px; height: 100px;">
+                    <i class="fas fa-shopping-bag fa-3x text-muted opacity-50"></i>
+                </div>
+            </div>
+            <h4 class="fw-bold mb-2">{% trans "Your cart is empty" %}</h4>
+            <p class="text-muted mb-4">{% trans "Browse our catalog to discover quality products at wholesale prices." %}</p>
+            <a href="{% url 'marketplace:shop' %}" class="btn btn-primary btn-lg px-4 rounded-pill fw-bold shadow-sm">
+                <i class="fas fa-store me-2"></i>{% trans "Start Shopping" %}
+            </a>
+        </div>
     </div>
     {% endif %}
 </div>
+
+<!-- Hidden CSRF token and URLs for JavaScript -->
+<form id="cartCsrfForm" class="d-none">
+    {% csrf_token %}
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const csrfToken = document.querySelector('#cartCsrfForm [name=csrfmiddlewaretoken]')?.value || '';
+
+    // Handle Quantity Stepper Click
+    document.querySelectorAll('.qty-change-btn').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const itemId = this.dataset.itemId;
+            const delta = parseInt(this.dataset.delta, 10);
+            const input = document.getElementById('qty-display-' + itemId);
+            if (!input) return;
+
+            let currentVal = parseInt(input.value, 10) || 1;
+            let maxVal = parseInt(this.dataset.max, 10) || 999999;
+            let newVal = currentVal + delta;
+
+            if (newVal <= 0) {
+                if (confirm('{% trans "Do you want to remove this item from your cart?" %}')) {
+                    deleteCartItem(itemId);
+                }
+                return;
+            }
+            if (newVal > maxVal) {
+                if (window.showMarketplaceToast) {
+                    showMarketplaceToast('{% trans "Maximum available stock reached" %}', 'warning');
+                }
+                return;
+            }
+
+            // Temporarily set value
+            input.value = newVal;
+
+            // Submit AJAX update
+            updateCartItemQty(itemId, newVal);
+        });
+    });
+
+    // Handle Delete Trigger
+    document.querySelectorAll('.delete-item-trigger').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const itemId = this.dataset.itemId;
+            const itemName = this.dataset.itemName || 'item';
+            if (confirm('{% trans "Remove" %} ' + itemName + ' {% trans "from cart?" %}')) {
+                deleteCartItem(itemId);
+            }
+        });
+    });
+
+    function updateCartItemQty(itemId, qty) {
+        const formData = new FormData();
+        formData.append('quantity', qty);
+        formData.append('csrfmiddlewaretoken', csrfToken);
+        formData.append('format', 'json');
+
+        fetch('/marketplace/cart/update/' + itemId + '/', {
+            method: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                if (data.deleted) {
+                    removeRowFromDOM(itemId, data.cart_count, data.total_price);
+                } else {
+                    updateTotals(data.cart_count);
+                }
+            } else {
+                if (window.showMarketplaceToast) {
+                    showMarketplaceToast(data.message || '{% trans "Error updating cart" %}', 'warning');
+                }
+            }
+        })
+        .catch(err => {
+            console.error('Error updating cart:', err);
+            window.location.reload();
+        });
+    }
+
+    function deleteCartItem(itemId) {
+        const formData = new FormData();
+        formData.append('csrfmiddlewaretoken', csrfToken);
+        formData.append('format', 'json');
+
+        fetch('/marketplace/cart/remove/' + itemId + '/', {
+            method: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                removeRowFromDOM(itemId, data.cart_count, data.total_price);
+            } else {
+                window.location.reload();
+            }
+        })
+        .catch(err => {
+            window.location.reload();
+        });
+    }
+
+    function removeRowFromDOM(itemId, newCartCount, newTotal) {
+        const row = document.getElementById('cart-item-row-' + itemId);
+        if (row) {
+            row.style.transition = 'all 0.3s ease';
+            row.style.opacity = '0';
+            row.style.transform = 'translateX(-20px)';
+            setTimeout(() => {
+                row.remove();
+                if (newCartCount === 0) {
+                    window.location.reload();
+                } else {
+                    updateTotals(newCartCount);
+                }
+            }, 300);
+        }
+    }
+
+    function updateTotals(newCartCount) {
+        // Update badges
+        const badges = [
+            document.getElementById('cartItemCountBadge'),
+            document.getElementById('summaryItemCount'),
+            document.getElementById('mobileCartBadge'),
+            document.getElementById('mobileCartBadgeIcon')
+        ];
+        badges.forEach(b => {
+            if (b) b.textContent = newCartCount;
+        });
+
+        // Trigger reload if count changed to keep currencies cleanly formatted
+        setTimeout(() => {
+            window.location.reload();
+        }, 400);
+    }
+});
+</script>
 {% endblock %}

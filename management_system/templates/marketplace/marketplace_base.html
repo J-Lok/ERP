@@ -1,161 +1,429 @@
 {% load i18n %}
+{% load currency_tags %}
 <!DOCTYPE html>
 <html lang="en" data-bs-theme="light">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>{% block title %}Marketplace{% endblock %}</title>
     
     <!-- Bootstrap 5 -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     
-    <!-- Font Awesome -->
+    <!-- Font Awesome 6 -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     
     <style>
         :root {
-            --primary-color: #6366f1;
-            --secondary-color: #8b5cf6;
+            --primary-color: #ff6000;
+            --primary-hover: #e55300;
+            --secondary-color: #ff7d2b;
+            --primary-gradient: linear-gradient(135deg, #ff6000 0%, #ff8c37 100%);
             --success-color: #10b981;
             --danger-color: #ef4444;
             --warning-color: #f59e0b;
-            --dark-color: #1f2937;
-            --light-color: #f3f4f6;
-            --app-bg: #f9fafb;
+            --info-color: #0284c7;
+            --dark-color: #111827;
+            --light-color: #f8fafc;
+            --app-bg: #f8fafc;
             --surface-bg: #ffffff;
-            --app-text: #111827;
-            --card-shadow: 0 2px 10px rgba(0,0,0,0.05);
-            --card-shadow-hover: 0 8px 25px rgba(0,0,0,0.1);
-        }
-        [data-bs-theme="dark"] {
-            --app-bg: #0b1220;
-            --surface-bg: #1f2937;
-            --app-text: #e5e7eb;
-            --card-shadow: 0 2px 10px rgba(0,0,0,0.35);
-            --card-shadow-hover: 0 8px 25px rgba(0,0,0,0.45);
+            --border-color: #e2e8f0;
+            --app-text: #0f172a;
+            --text-muted: #64748b;
+            --card-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+            --card-shadow-hover: 0 10px 25px -5px rgba(0,0,0,0.08), 0 8px 10px -6px rgba(0,0,0,0.04);
+            --bottom-nav-height: 60px;
         }
         
+        [data-bs-theme="dark"] {
+            --primary-color: #ff6000;
+            --primary-hover: #ff7d2b;
+            --secondary-color: #ea580c;
+            --primary-gradient: linear-gradient(135deg, #ea580c 0%, #c2410c 100%);
+            --app-bg: #0b1120;
+            --surface-bg: #1e293b;
+            --border-color: #334155;
+            --app-text: #f1f5f9;
+            --text-muted: #94a3b8;
+            --card-shadow: 0 1px 3px rgba(0,0,0,0.4);
+            --card-shadow-hover: 0 10px 25px -5px rgba(0,0,0,0.5);
+        }
+        
+        * {
+            -webkit-tap-highlight-color: transparent;
+        }
+
         body {
-            font-family: 'Poppins', sans-serif;
+            font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background-color: var(--app-bg);
             color: var(--app-text);
             transition: background-color 0.25s ease, color 0.25s ease;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Safe area bottom spacing for mobile bottom navigation */
+        @media (max-width: 767.98px) {
+            body {
+                padding-bottom: calc(var(--bottom-nav-height) + env(safe-area-inset-bottom, 16px) + 12px) !important;
+            }
         }
         
-        /* Navbar */
+        /* Desktop Navbar */
         .marketplace-navbar {
-            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            background: var(--primary-gradient);
+            box-shadow: 0 2px 12px rgba(255, 96, 0, 0.2);
+            position: sticky;
+            top: 0;
+            z-index: 1030;
         }
         
         .navbar-brand {
             font-weight: 700;
-            font-size: 1.5rem;
+            font-size: 1.35rem;
+            letter-spacing: -0.5px;
         }
         
         .nav-link {
-            color: rgba(255,255,255,0.9) !important;
-            transition: all 0.3s;
+            color: rgba(255,255,255,0.92) !important;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            padding: 0.5rem 0.85rem !important;
+            border-radius: 8px;
         }
         
         .nav-link:hover {
-            color: white !important;
-            transform: translateY(-2px);
+            color: #ffffff !important;
+            background: rgba(255,255,255,0.15);
         }
         
         .cart-badge {
             position: absolute;
-            top: -8px;
-            right: -8px;
+            top: -4px;
+            right: -6px;
+            background: #ef4444;
+            color: white;
+            border-radius: 999px;
+            padding: 2px 6px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            min-width: 18px;
+            text-align: center;
+        }
+        
+        /* Mobile Top Header (App Bar) */
+        .mobile-top-bar {
+            background: var(--primary-gradient);
+            color: #ffffff;
+            position: sticky;
+            top: 0;
+            z-index: 1030;
+            padding: 0.65rem 0.85rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.12);
+        }
+
+        .mobile-search-pill {
+            background: #ffffff;
+            border-radius: 999px;
+            display: flex;
+            align-items: center;
+            padding: 6px 14px;
+            color: #64748b;
+            font-size: 0.85rem;
+            text-decoration: none;
+            width: 100%;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+            transition: all 0.2s ease;
+        }
+
+        .mobile-search-pill:hover,
+        .mobile-search-pill:focus {
+            color: #1e293b;
+            background: #ffffff;
+        }
+
+        /* Fixed App-Like Bottom Navigation Bar */
+        .mp-bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: var(--bottom-nav-height);
+            background: var(--surface-bg);
+            border-top: 1px solid var(--border-color);
+            z-index: 1040;
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+            padding-bottom: env(safe-area-inset-bottom, 0px);
+            box-shadow: 0 -3px 15px rgba(0,0,0,0.06);
+            backdrop-filter: blur(10px);
+        }
+
+        .mp-bottom-nav .nav-tab {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.72rem;
+            font-weight: 500;
+            position: relative;
+            transition: all 0.2s ease;
+        }
+
+        .mp-bottom-nav .nav-tab i {
+            font-size: 1.25rem;
+            margin-bottom: 2px;
+            transition: transform 0.2s ease;
+        }
+
+        .mp-bottom-nav .nav-tab:active i {
+            transform: scale(0.9);
+        }
+
+        .mp-bottom-nav .nav-tab.active {
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+
+        .mp-bottom-nav .nav-tab .badge-counter {
+            position: absolute;
+            top: 4px;
+            right: calc(50% - 18px);
             background: var(--danger-color);
             color: white;
-            border-radius: 50%;
-            padding: 2px 6px;
-            font-size: 0.75rem;
-            font-weight: bold;
+            font-size: 0.65rem;
+            font-weight: 700;
+            border-radius: 999px;
+            padding: 1px 5px;
+            min-width: 16px;
+            text-align: center;
+            border: 2px solid var(--surface-bg);
         }
         
         /* Buttons */
         .btn-primary {
-            background: var(--primary-color);
-            border: none;
-            transition: all 0.3s;
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+            color: #ffffff;
+            font-weight: 600;
+            border-radius: 10px;
+            padding: 0.5rem 1.25rem;
+            transition: all 0.2s ease;
         }
         
-        .btn-primary:hover {
-            background: var(--secondary-color);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+        .btn-primary:hover,
+        .btn-primary:focus {
+            background-color: var(--primary-hover);
+            border-color: var(--primary-hover);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(255, 96, 0, 0.35);
+        }
+
+        .btn-orange {
+            background: var(--primary-gradient);
+            border: none;
+            color: white;
+            font-weight: 600;
+        }
+        .btn-orange:hover {
+            opacity: 0.95;
+            color: white;
+            transform: translateY(-1px);
+        }
+
+        /* Cards */
+        .card {
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            background-color: var(--surface-bg);
+            color: var(--app-text);
+            box-shadow: var(--card-shadow);
+            transition: all 0.25s ease;
         }
         
         /* Footer */
         .marketplace-footer {
             background: var(--dark-color);
-            color: white;
-            padding: 40px 0 20px;
-            margin-top: 80px;
+            color: #94a3b8;
+            padding: 40px 0 25px;
+            margin-top: 60px;
+            font-size: 0.9rem;
         }
         
         .footer-link {
-            color: rgba(255,255,255,0.7);
+            color: #94a3b8;
             text-decoration: none;
-            transition: color 0.3s;
+            transition: color 0.2s;
         }
         
         .footer-link:hover {
+            color: #ffffff;
+        }
+
+        /* Float WhatsApp (Desktop) */
+        .whatsapp-float-btn {
+            position: fixed;
+            bottom: 24px;
+            left: 24px;
+            width: 52px;
+            height: 52px;
+            background: #25d366;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            box-shadow: 0 6px 20px rgba(37, 211, 102, 0.4);
+            z-index: 1020;
+            text-decoration: none;
+            transition: all 0.25s ease;
+        }
+
+        .whatsapp-float-btn:hover {
+            transform: scale(1.08);
             color: white;
         }
-        
-        /* Alerts */
-        .alert {
-            border-radius: 10px;
-            border: none;
-        }
-        
-        /* Cards */
-        .card {
-            border: none;
-            border-radius: 15px;
-            background-color: var(--surface-bg);
-            color: var(--app-text);
-            box-shadow: var(--card-shadow);
-            transition: all 0.3s;
-        }
-        
-        .card:hover {
-            box-shadow: var(--card-shadow-hover);
-        }
+
+        /* Theme toggle button */
         .theme-toggle-btn {
             position: fixed;
             right: 1rem;
             bottom: 1rem;
-            z-index: 1080;
+            z-index: 1035;
             border-radius: 999px;
-            width: 44px;
-            height: 44px;
+            width: 42px;
+            height: 42px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            box-shadow: 0 4px 14px rgba(0,0,0,0.18);
+            background: var(--surface-bg);
+            border: 1px solid var(--border-color);
+            color: var(--app-text);
+        }
+
+        @media (max-width: 767.98px) {
+            .theme-toggle-btn {
+                bottom: calc(var(--bottom-nav-height) + 15px);
+                right: 12px;
+                width: 38px;
+                height: 38px;
+                font-size: 0.85rem;
+            }
+            .whatsapp-float-btn {
+                display: none !important; /* Integrated into mobile bottom navigation & PDP */
+            }
+        }
+
+        /* Floating Toast for Fast Actions */
+        .mp-floating-toast {
+            position: fixed;
+            bottom: calc(var(--bottom-nav-height) + 15px);
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            opacity: 0;
+            visibility: hidden;
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(10px);
+            color: #ffffff;
+            padding: 10px 18px;
+            border-radius: 999px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.25);
+            z-index: 2000;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            white-space: nowrap;
+        }
+
+        .mp-floating-toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* Offcanvas categories styling */
+        .category-drawer-link {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            border-radius: 10px;
+            color: var(--app-text);
+            text-decoration: none;
+            font-weight: 500;
+            transition: background 0.15s ease;
+            margin-bottom: 4px;
+        }
+
+        .category-drawer-link:hover,
+        .category-drawer-link.active {
+            background: rgba(255, 96, 0, 0.1);
+            color: var(--primary-color);
         }
     </style>
     
     {% block extra_css %}{% endblock %}
 </head>
 <body>
-    <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark marketplace-navbar">
-        <div class="container">
-            <a class="navbar-brand" href="{% url 'marketplace:shop' %}">
-                <i class="fas fa-store me-2"></i>
-                {% if company %}
-                    {{ company.name }} Shop
-                {% else %}
-                    Shop
+
+    <!-- 1. Mobile Top App Bar (Alibaba Style, visible on smartphones < 768px) -->
+    <header class="mobile-top-bar d-md-none">
+        <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
+            <button class="btn btn-sm text-white p-1" type="button" data-bs-toggle="offcanvas" data-bs-target="#categoriesOffcanvas" aria-label="Open categories">
+                <i class="fas fa-bars fa-lg"></i>
+            </button>
+            <a href="{% url 'marketplace:shop' %}" class="text-white text-decoration-none fw-bold fs-5 text-truncate" style="max-width: 220px;">
+                {% if company %}{{ company.name }}{% elif marketplace_company %}{{ marketplace_company.name }}{% else %}Erpis Shop{% endif %}
+                <i class="fas fa-certificate text-warning ms-1 small" title="Verified Store"></i>
+            </a>
+            <div class="d-flex align-items-center gap-2">
+                {% if company and company.whatsapp_number %}
+                <a href="https://wa.me/{{ company.whatsapp_number|cut:'+'|cut:' ' }}?text=Hello%20{{ company.name }}!" target="_blank" class="btn btn-sm text-white p-1" title="WhatsApp Chat">
+                    <i class="fab fa-whatsapp fa-lg text-white"></i>
+                </a>
                 {% endif %}
+                <a href="{% url 'marketplace:view_cart' %}" class="btn btn-sm text-white p-1 position-relative" title="Cart">
+                    <i class="fas fa-shopping-cart fa-lg"></i>
+                    {% if cart_count %}
+                    <span class="cart-badge">{{ cart_count }}</span>
+                    {% endif %}
+                </a>
+            </div>
+        </div>
+        <!-- Quick search bar in top header -->
+        <div>
+            <form method="get" action="{% url 'marketplace:shop' %}" class="position-relative">
+                <input type="text" name="q" class="form-control form-control-sm rounded-pill ps-4 pe-5 border-0 shadow-sm" 
+                       placeholder="{% trans 'Search in store (e.g. electronics, tools)...' %}" 
+                       value="{{ query|default:'' }}" style="background: rgba(255,255,255,0.95); font-size: 0.85rem; height: 36px;">
+                <button type="submit" class="btn btn-sm position-absolute end-0 top-50 translate-middle-y text-primary pe-3 border-0 bg-transparent">
+                    <i class="fas fa-search"></i>
+                </button>
+            </form>
+        </div>
+    </header>
+
+    <!-- 2. Desktop Navbar (visible on >= 768px) -->
+    <nav class="navbar navbar-expand-md navbar-dark marketplace-navbar d-none d-md-block">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center gap-2" href="{% url 'marketplace:shop' %}">
+                <i class="fas fa-store"></i>
+                <span>{% if company %}{{ company.name }}{% elif marketplace_company %}{{ marketplace_company.name }}{% else %}Marketplace{% endif %}</span>
+                <span class="badge bg-warning text-dark fw-bold" style="font-size: 0.68rem;">VERIFIED</span>
             </a>
             
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
@@ -163,14 +431,18 @@
             </button>
             
             <div class="collapse navbar-collapse" id="navbarNav">
-                {% if request.session.client_id %}
-                <!-- Logged in menu -->
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'marketplace:shop' %}">
                             <i class="fas fa-shopping-bag me-1"></i>{% trans "Shop" %}
                         </a>
                     </li>
+                    <li class="nav-item">
+                        <button class="nav-link btn btn-link text-white text-decoration-none border-0" type="button" data-bs-toggle="offcanvas" data-bs-target="#categoriesOffcanvas">
+                            <i class="fas fa-th-large me-1"></i>{% trans "Categories" %}
+                        </button>
+                    </li>
+                    {% if request.session.client_id or marketplace_client %}
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'marketplace:order_list' %}">
                             <i class="fas fa-box me-1"></i>{% trans "My Orders" %}
@@ -181,122 +453,250 @@
                             <i class="fas fa-heart me-1"></i>{% trans "Wishlist" %}
                         </a>
                     </li>
+                    {% endif %}
                 </ul>
                 
-                <ul class="navbar-nav">
+                <ul class="navbar-nav align-items-center">
                     <li class="nav-item position-relative me-3">
-                        <a class="nav-link" href="{% url 'marketplace:view_cart' %}">
+                        <a class="nav-link d-flex align-items-center" href="{% url 'marketplace:view_cart' %}">
                             <i class="fas fa-shopping-cart fa-lg"></i>
+                            <span class="ms-2 d-none d-lg-inline">{% trans "Cart" %}</span>
                             {% if cart_count %}
                             <span class="cart-badge">{{ cart_count }}</span>
                             {% endif %}
                         </a>
                     </li>
+
+                    {% if request.session.client_id or marketplace_client %}
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" data-bs-toggle="dropdown">
-                            <i class="fas fa-user-circle me-1"></i>{% trans "Account" %}
+                        <a class="nav-link dropdown-toggle d-flex align-items-center gap-2" href="#" id="userDropdown" data-bs-toggle="dropdown">
+                            <i class="fas fa-user-circle fa-lg"></i>
+                            <span>{{ marketplace_client.first_name|default:_("Account") }}</span>
                         </a>
-                        <ul class="dropdown-menu dropdown-menu-end">
-                            <li><a class="dropdown-item" href="{% url 'marketplace:client_profile' %}"><i class="fas fa-user me-2"></i>{% trans "Profile" %}</a></li>
+                        <ul class="dropdown-menu dropdown-menu-end shadow border-0">
+                            <li>
+                                <a class="dropdown-item py-2" href="{% url 'marketplace:client_profile' %}">
+                                    <i class="fas fa-user me-2 text-primary"></i>{% trans "Profile" %}
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item py-2" href="{% url 'marketplace:order_list' %}">
+                                    <i class="fas fa-box-open me-2 text-info"></i>{% trans "My Orders" %}
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item py-2" href="{% url 'marketplace:view_wishlist' %}">
+                                    <i class="fas fa-heart me-2 text-danger"></i>{% trans "Wishlist" %}
+                                </a>
+                            </li>
                             <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item text-danger" href="{% url 'marketplace:client_logout' %}"><i class="fas fa-sign-out-alt me-2"></i>{% trans "Logout" %}</a></li>
+                            <li>
+                                <a class="dropdown-item py-2 text-danger" href="{% url 'marketplace:client_logout' %}">
+                                    <i class="fas fa-sign-out-alt me-2"></i>{% trans "Logout" %}
+                                </a>
+                            </li>
                         </ul>
                     </li>
-                </ul>
-                {% else %}
-                <!-- Guest menu -->
-                <ul class="navbar-nav ms-auto">
+                    {% else %}
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'marketplace:client_login' %}">
                             <i class="fas fa-sign-in-alt me-1"></i>{% trans "Login" %}
                         </a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'marketplace:client_register' %}">
+                    <li class="nav-item ms-lg-2">
+                        <a class="btn btn-sm btn-light text-primary fw-semibold px-3 rounded-pill" href="{% url 'marketplace:client_register' %}">
                             <i class="fas fa-user-plus me-1"></i>{% trans "Register" %}
                         </a>
                     </li>
+                    {% endif %}
                 </ul>
-                {% endif %}
             </div>
         </div>
     </nav>
 
-    <!-- Messages -->
+    <!-- Categories Offcanvas Drawer (Mobile & Desktop) -->
+    <div class="offcanvas offcanvas-start" tabindex="-1" id="categoriesOffcanvas" aria-labelledby="categoriesOffcanvasLabel" style="width: 310px;">
+        <div class="offcanvas-header border-bottom">
+            <h5 class="offcanvas-title fw-bold d-flex align-items-center gap-2" id="categoriesOffcanvasLabel">
+                <i class="fas fa-store text-primary"></i>
+                <span>{% trans "Store Catalog" %}</span>
+            </h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body p-3">
+            <div class="mb-3">
+                <a href="{% url 'marketplace:shop' %}" class="category-drawer-link {% if not selected_category %}active{% endif %}">
+                    <span><i class="fas fa-fire text-danger me-2"></i>{% trans "All Products" %}</span>
+                    <i class="fas fa-chevron-right text-muted small"></i>
+                </a>
+            </div>
+
+            <h6 class="text-uppercase text-muted fw-bold small mb-2 px-2">{% trans "Categories" %}</h6>
+            <div class="list-group list-group-flush mb-4">
+                {% for cat in marketplace_categories %}
+                <a href="{% url 'marketplace:shop' %}?category={{ cat.id }}" 
+                   class="category-drawer-link {% if selected_category == cat.id %}active{% endif %}">
+                    <span><i class="fas fa-tag text-primary me-2"></i>{{ cat.name }}</span>
+                    <i class="fas fa-chevron-right text-muted small"></i>
+                </a>
+                {% empty %}
+                <p class="text-muted small px-2">{% trans "No categories found" %}</p>
+                {% endfor %}
+            </div>
+
+            <h6 class="text-uppercase text-muted fw-bold small mb-2 px-2">{% trans "Quick Actions" %}</h6>
+            <div class="list-group list-group-flush">
+                <a href="{% url 'marketplace:view_cart' %}" class="category-drawer-link">
+                    <span><i class="fas fa-shopping-cart text-success me-2"></i>{% trans "View Cart" %}</span>
+                    {% if cart_count %}<span class="badge bg-danger rounded-pill">{{ cart_count }}</span>{% endif %}
+                </a>
+                <a href="{% url 'marketplace:view_wishlist' %}" class="category-drawer-link">
+                    <span><i class="fas fa-heart text-danger me-2"></i>{% trans "Saved Wishlist" %}</span>
+                </a>
+                {% if company and company.whatsapp_number %}
+                <a href="https://wa.me/{{ company.whatsapp_number|cut:'+'|cut:' ' }}" target="_blank" class="category-drawer-link text-success">
+                    <span><i class="fab fa-whatsapp me-2"></i>{% trans "WhatsApp RFQ / Inquiry" %}</span>
+                    <i class="fas fa-external-link-alt small"></i>
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Alerts / Messages -->
     {% if messages %}
-    <div class="container mt-3">
+    <div class="container mt-2">
         {% for message in messages %}
-        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-            <i class="fas fa-{% if message.tags == 'success' %}check-circle{% elif message.tags == 'error' %}exclamation-circle{% elif message.tags == 'warning' %}exclamation-triangle{% else %}info-circle{% endif %} me-2"></i>
+        <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show shadow-sm py-2 px-3 mb-2" role="alert" style="border-radius: 10px; font-size: 0.9rem;">
+            <i class="fas fa-{% if message.tags == 'success' %}check-circle{% elif message.tags == 'error' or message.tags == 'danger' %}exclamation-circle{% elif message.tags == 'warning' %}exclamation-triangle{% else %}info-circle{% endif %} me-2"></i>
             {{ message }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            <button type="button" class="btn-close p-2" data-bs-dismiss="alert"></button>
         </div>
         {% endfor %}
     </div>
     {% endif %}
 
-    <!-- Main Content -->
-    <main class="py-4">
+    <!-- Main Content Area -->
+    <main>
         {% block content %}{% endblock %}
     </main>
 
-    <!-- Footer -->
-    <footer class="marketplace-footer">
+    <!-- 3. Fixed App-Like Bottom Navigation Bar (Smartphones < 768px, Alibaba Style) -->
+    <nav class="mp-bottom-nav d-md-none" aria-label="Mobile Navigation">
+        <a href="{% url 'marketplace:shop' %}" class="nav-tab {% if request.resolver_match.url_name == 'shop' or request.resolver_match.url_name == 'shop_by_category' %}active{% endif %}">
+            <i class="fas fa-store"></i>
+            <span>{% trans "Shop" %}</span>
+        </a>
+        <a href="#categoriesOffcanvas" class="nav-tab" data-bs-toggle="offcanvas" role="button">
+            <i class="fas fa-th-large"></i>
+            <span>{% trans "Categories" %}</span>
+        </a>
+        {% if company and company.whatsapp_number %}
+        <a href="https://wa.me/{{ company.whatsapp_number|cut:'+'|cut:' ' }}?text=Hello%20{{ company.name }}!" target="_blank" class="nav-tab text-success">
+            <i class="fab fa-whatsapp"></i>
+            <span>{% trans "Inquire" %}</span>
+        </a>
+        {% else %}
+        <a href="{% url 'marketplace:view_wishlist' %}" class="nav-tab {% if request.resolver_match.url_name == 'view_wishlist' %}active{% endif %}">
+            <i class="fas fa-heart"></i>
+            <span>{% trans "Wishlist" %}</span>
+        </a>
+        {% endif %}
+        <a href="{% url 'marketplace:view_cart' %}" class="nav-tab {% if request.resolver_match.url_name == 'view_cart' or request.resolver_match.url_name == 'checkout' %}active{% endif %}">
+            <i class="fas fa-shopping-cart"></i>
+            <span>{% trans "Cart" %}</span>
+            {% if cart_count %}
+            <span class="badge-counter" id="mobileCartCounter">{{ cart_count }}</span>
+            {% else %}
+            <span class="badge-counter d-none" id="mobileCartCounter">0</span>
+            {% endif %}
+        </a>
+        {% if request.session.client_id or marketplace_client %}
+        <a href="{% url 'marketplace:client_profile' %}" class="nav-tab {% if request.resolver_match.url_name == 'client_profile' or request.resolver_match.url_name == 'order_list' %}active{% endif %}">
+            <i class="fas fa-user"></i>
+            <span>{% trans "Account" %}</span>
+        </a>
+        {% else %}
+        <a href="{% url 'marketplace:client_login' %}" class="nav-tab {% if request.resolver_match.url_name == 'client_login' %}active{% endif %}">
+            <i class="fas fa-user"></i>
+            <span>{% trans "Login" %}</span>
+        </a>
+        {% endif %}
+    </nav>
+
+    <!-- Floating Instant Toast for Fast Mobile Feedback -->
+    <div id="mpFloatingToast" class="mp-floating-toast">
+        <i class="fas fa-check-circle text-success" id="mpToastIcon"></i>
+        <span id="mpToastMessage">Item updated</span>
+    </div>
+
+    <!-- Desktop WhatsApp Float Button -->
+    {% if company and company.whatsapp_number %}
+    <a href="https://wa.me/{{ company.whatsapp_number|cut:'+'|cut:' ' }}" target="_blank" class="whatsapp-float-btn d-none d-md-flex" title="Chat with us on WhatsApp">
+        <i class="fab fa-whatsapp"></i>
+    </a>
+    {% endif %}
+
+    <!-- Theme Toggle Floating Pill -->
+    <button id="themeToggle" class="theme-toggle-btn" type="button" aria-label="Toggle dark mode" title="Toggle theme">
+        <i class="fas fa-moon"></i>
+    </button>
+
+    <!-- Desktop Footer -->
+    <footer class="marketplace-footer d-none d-md-block">
         <div class="container">
-            <div class="row">
-                <div class="col-md-4 mb-4">
-                    <h5 class="mb-3">{% trans "About Us" %}</h5>
-                    <p class="text-muted">
-                        {% if company %}
-                            {{ company.name }} - Your trusted online marketplace
-                        {% else %}
-                            Shop with confidence
-                        {% endif %}
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <h5 class="text-white mb-3 fw-bold">
+                        <i class="fas fa-store text-primary me-2"></i>
+                        {% if company %}{{ company.name }}{% elif marketplace_company %}{{ marketplace_company.name }}{% else %}Erpis Marketplace{% endif %}
+                    </h5>
+                    <p class="small text-muted mb-0">
+                        {% trans "Verified multi-tenant enterprise marketplace. High reliability, authentic products and instant mobile payments." %}
                     </p>
                 </div>
-                <div class="col-md-4 mb-4">
-                    <h5 class="mb-3">{% trans "Quick Links" %}</h5>
-                    <ul class="list-unstyled">
-                        <li><a href="{% url 'marketplace:shop' %}" class="footer-link">{% trans "Shop" %}</a></li>
-                        {% if request.session.client_id %}
-                        <li><a href="{% url 'marketplace:order_list' %}" class="footer-link">{% trans "My Orders" %}</a></li>
-                        <li><a href="{% url 'marketplace:client_profile' %}" class="footer-link">{% trans "Profile" %}</a></li>
+                <div class="col-md-4">
+                    <h6 class="text-white mb-3 fw-bold text-uppercase small">{% trans "Quick Navigation" %}</h6>
+                    <ul class="list-unstyled small mb-0">
+                        <li class="mb-2"><a href="{% url 'marketplace:shop' %}" class="footer-link"><i class="fas fa-angle-right me-2 text-primary"></i>{% trans "Catalog & Shop" %}</a></li>
+                        <li class="mb-2"><a href="{% url 'marketplace:view_cart' %}" class="footer-link"><i class="fas fa-angle-right me-2 text-primary"></i>{% trans "Shopping Cart" %}</a></li>
+                        {% if request.session.client_id or marketplace_client %}
+                        <li class="mb-2"><a href="{% url 'marketplace:order_list' %}" class="footer-link"><i class="fas fa-angle-right me-2 text-primary"></i>{% trans "My Orders" %}</a></li>
+                        <li class="mb-2"><a href="{% url 'marketplace:client_profile' %}" class="footer-link"><i class="fas fa-angle-right me-2 text-primary"></i>{% trans "Profile" %}</a></li>
+                        {% else %}
+                        <li class="mb-2"><a href="{% url 'marketplace:client_login' %}" class="footer-link"><i class="fas fa-angle-right me-2 text-primary"></i>{% trans "Buyer Login" %}</a></li>
+                        <li class="mb-2"><a href="{% url 'marketplace:client_register' %}" class="footer-link"><i class="fas fa-angle-right me-2 text-primary"></i>{% trans "Create Account" %}</a></li>
                         {% endif %}
                     </ul>
                 </div>
-                <div class="col-md-4 mb-4">
-                    <h5 class="mb-3">{% trans "Contact" %}</h5>
+                <div class="col-md-4">
+                    <h6 class="text-white mb-3 fw-bold text-uppercase small">{% trans "Customer Care & Security" %}</h6>
                     {% if company %}
-                    <p class="text-muted">
-                        <i class="fas fa-envelope me-2"></i>{{ company.contact_email }}<br>
-                        {% if company.contact_phone %}
-                        <i class="fas fa-phone me-2"></i>{{ company.contact_phone }}
-                        {% endif %}
-                    </p>
+                    <p class="small mb-1"><i class="fas fa-envelope text-primary me-2"></i>{{ company.contact_email }}</p>
+                    {% if company.contact_phone %}
+                    <p class="small mb-1"><i class="fas fa-phone text-primary me-2"></i>{{ company.contact_phone }}</p>
                     {% endif %}
+                    {% endif %}
+                    <div class="d-flex gap-2 mt-3 text-muted">
+                        <span class="badge bg-secondary bg-opacity-25 text-white p-2"><i class="fas fa-shield-alt text-warning me-1"></i>Secure</span>
+                        <span class="badge bg-secondary bg-opacity-25 text-white p-2"><i class="fas fa-truck text-info me-1"></i>Fast Dispatch</span>
+                    </div>
                 </div>
             </div>
-            <hr class="border-secondary">
-            <div class="text-center text-muted">
-                <p class="mb-0">&copy; {% now "Y" %} {% if company %}{{ company.name }}{% else %}Marketplace{% endif %}. All rights reserved.</p>
+            <hr class="border-secondary my-4">
+            <div class="text-center small text-muted">
+                &copy; {% now "Y" %} {% if company %}{{ company.name }}{% elif marketplace_company %}{{ marketplace_company.name }}{% else %}Erpis{% endif %}. All rights reserved.
             </div>
         </div>
     </footer>
 
-    {% if company and company.whatsapp_number %}
-    <a href="https://wa.me/{{ company.whatsapp_number|cut:'+'|cut:' ' }}" target="_blank" class="btn btn-success rounded-circle shadow-lg d-flex align-items-center justify-content-center" style="position: fixed; bottom: 20px; left: 20px; width: 56px; height: 56px; z-index: 1050; font-size: 28px;" title="Chat with us on WhatsApp">
-        <i class="fab fa-whatsapp text-white"></i>
-    </a>
-    {% endif %}
-
-    <button id="themeToggle" class="btn btn-outline-secondary theme-toggle-btn" type="button" aria-label="Toggle dark mode">
-        <i class="fas fa-moon"></i>
-    </button>
-
-    <!-- Bootstrap JS -->
+    <!-- Bootstrap 5 Bundle JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Global App Helpers & Theme -->
     <script>
         (function() {
+            // Theme setup
             var storageKey = 'erp-theme';
             var root = document.documentElement;
             var toggleBtn = document.getElementById('themeToggle');
@@ -313,10 +713,7 @@
             function applyTheme(theme) {
                 root.setAttribute('data-bs-theme', theme);
                 if (toggleIcon) {
-                    toggleIcon.className = 'fas ' + (theme === 'dark' ? 'fa-sun' : 'fa-moon');
-                }
-                if (toggleBtn) {
-                    toggleBtn.title = theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode';
+                    toggleIcon.className = 'fas ' + (theme === 'dark' ? 'fa-sun text-warning' : 'fa-moon text-secondary');
                 }
             }
 
@@ -329,9 +726,47 @@
                     applyTheme(nextTheme);
                 });
             }
+
+            // Global Toast Notification Helper
+            var toastEl = document.getElementById('mpFloatingToast');
+            var toastMsg = document.getElementById('mpToastMessage');
+            var toastIcon = document.getElementById('mpToastIcon');
+            var toastTimer = null;
+
+            window.showMpToast = function(message, isSuccess) {
+                if (!toastEl) return;
+                clearTimeout(toastTimer);
+                toastMsg.textContent = message || '';
+                if (isSuccess === false) {
+                    toastIcon.className = 'fas fa-exclamation-circle text-danger';
+                } else {
+                    toastIcon.className = 'fas fa-check-circle text-success';
+                }
+                toastEl.classList.add('show');
+                toastTimer = setTimeout(function() {
+                    toastEl.classList.remove('show');
+                }, 2600);
+            };
+
+            // Update live cart counters across mobile & desktop
+            window.updateCartCounter = function(count) {
+                var mobileCounter = document.getElementById('mobileCartCounter');
+                if (mobileCounter) {
+                    mobileCounter.textContent = count;
+                    if (count > 0) {
+                        mobileCounter.classList.remove('d-none');
+                    } else {
+                        mobileCounter.classList.add('d-none');
+                    }
+                }
+                var desktopBadges = document.querySelectorAll('.cart-badge');
+                desktopBadges.forEach(function(badge) {
+                    badge.textContent = count;
+                });
+            };
         })();
     </script>
-    
+
     {% block extra_js %}{% endblock %}
 </body>
 </html>
