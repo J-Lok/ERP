@@ -10,6 +10,7 @@ urlpatterns = [
     path('<int:pk>/', views.stock_detail, name='stock_detail'),
     path('<int:pk>/edit/', views.stock_edit, name='stock_edit'),
     path('<int:pk>/delete/', views.stock_delete, name='stock_delete'),
+    path('<int:pk>/upload-image/', views.stock_upload_image, name='stock_upload_image'),
     
     # Stock transactions
     path('<int:pk>/transaction/', views.stock_transaction, name='stock_transaction'),

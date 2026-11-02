@@ -371,3 +371,65 @@ class InventoryExcelPhotoTests(TestCase):
         self.assertIn('stock_import_template.xlsx', response['Content-Disposition'])
         self.assertGreater(len(response.content), 0)
 
+    def test_direct_stock_photo_upload_endpoint(self):
+        from django.urls import reverse
+        from django.core.files.uploadedfile import SimpleUploadedFile
+
+        # Create a test stock item without image
+        stock = Stock.objects.create(
+            company=self.company,
+            item_code='SNAP-001',
+            name='Snapshot Camera',
+            quantity=10,
+            cost_price=50.00,
+            selling_price=80.00,
+            reorder_level=2,
+        )
+        self.assertFalse(bool(stock.image))
+        self.assertFalse(bool(stock.photo))
+
+        # Direct upload valid PNG image via AJAX
+        img_bytes = self.test_img_bytes
+        uploaded = SimpleUploadedFile('new_photo.png', img_bytes, content_type='image/png')
+
+        url = reverse('inventory:stock_upload_image', args=[stock.pk])
+        resp = self.client.post(
+            url,
+            {'image': uploaded, 'format': 'json'},
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest'
+        )
+        self.assertEqual(resp.status_code, 200)
+        data = resp.json()
+        self.assertTrue(data['success'])
+        self.assertIn('.png', data['image_url'])
+
+        stock.refresh_from_db()
+        self.assertTrue(bool(stock.image))
+        self.assertEqual(stock.photo, stock.image)
+        self.assertEqual(stock.get_image_url(), stock.image.url)
+
+    def test_direct_stock_photo_upload_invalid_file(self):
+        from django.urls import reverse
+        from django.core.files.uploadedfile import SimpleUploadedFile
+
+        stock = Stock.objects.create(
+            company=self.company,
+            item_code='BAD-001',
+            name='Bad File Item',
+            quantity=5,
+            cost_price=10.00,
+            selling_price=15.00,
+            reorder_level=1,
+        )
+        bad_file = SimpleUploadedFile('not_image.txt', b'this is text not image', content_type='text/plain')
+
+        url = reverse('inventory:stock_upload_image', args=[stock.pk])
+        resp = self.client.post(
+            url,
+            {'image': bad_file, 'format': 'json'},
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest'
+        )
+        self.assertEqual(resp.status_code, 400)
+        data = resp.json()
+        self.assertFalse(data['success'])
+

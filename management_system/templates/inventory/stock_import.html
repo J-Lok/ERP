@@ -18,7 +18,7 @@
                         <li>{% trans "Existing items with the same item code will be updated" %}</li>
                         <li>{% trans "New items will be created" %}</li>
                         <li>{% trans "Categories will be created automatically if they don't exist" %}</li>
-                        <li>{% trans "Photos: You can add product photos directly by inserting images into the 'Photo' column in Excel, or by specifying image URLs (http/https)" %}</li>
+                        <li>{% trans "Photos (Optional / Non-required): You can add product photos directly by inserting images into the 'Photo' column in Excel, or by specifying image URLs (http/https). If omitted, a default box placeholder will be shown." %}</li>
                     </ul>
                 </div>
                 
@@ -45,9 +45,9 @@
                         <tbody>
                             <tr>
                                 <td><code>Photo</code> / <code>image</code></td>
-                                <td><span class="badge bg-secondary">{% trans "No" %}</span></td>
-                                <td>{% trans "Product photo: insert an image directly into the cell in Excel (Insert > Pictures), or paste an image URL (http/https)" %}</td>
-                                <td>{% trans "[Embedded photo or https://...]" %}</td>
+                                <td><span class="badge bg-secondary">{% trans "No (Optional)" %}</span></td>
+                                <td>{% trans "Product photo (non-required): insert an image directly into the cell in Excel (Insert > Pictures), or paste an image URL (http/https)" %}</td>
+                                <td>{% trans "[Optional embedded photo or https://...]" %}</td>
                             </tr>
                             <tr>
                                 <td><code>{% trans "item_code" %}</code></td>

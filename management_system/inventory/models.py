@@ -50,6 +50,10 @@ class Stock(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     image = models.ImageField(upload_to='products/%Y/%m/', blank=True, null=True)
     
+    @property
+    def photo(self):
+        return self.image
+
     def get_image_url(self):
         if self.image:
             return self.image.url

@@ -131,16 +131,32 @@ COLUMN_SYNONYMS = {
     'visible_marketplace': 'is_marketplace_visible',
     'visible sur marketplace': 'is_marketplace_visible',
 
-    # photo / image
+    # photo / image (optional / non-required)
     'photo': 'image',
     'photos': 'image',
+    'photo (optional)': 'image',
+    'photo_(optional)': 'image',
+    'photo_optional': 'image',
+    'photo (non required)': 'image',
+    'photo_(non_required)': 'image',
+    'photo (facultatif)': 'image',
+    'photo_(facultatif)': 'image',
     'image': 'image',
     'images': 'image',
+    'image (optional)': 'image',
+    'image_(optional)': 'image',
+    'image_optional': 'image',
+    'image (non required)': 'image',
+    'image_(non_required)': 'image',
+    'image (facultatif)': 'image',
+    'image_(facultatif)': 'image',
     'picture': 'image',
     'pictures': 'image',
     'img': 'image',
     'image_url': 'image',
     'photo_url': 'image',
+    'url_photo': 'image',
+    'url_image': 'image',
 }
 
 
@@ -154,6 +170,9 @@ def normalize_column_name(col_name):
         return COLUMN_SYNONYMS[clean_snake]
     if clean in COLUMN_SYNONYMS:
         return COLUMN_SYNONYMS[clean]
+    # Check if header begins with photo or image keywords
+    if clean.startswith(('photo', 'image', 'picture', 'img')):
+        return 'image'
     return clean_snake
 
 
@@ -557,7 +576,7 @@ def generate_stock_template_excel():
     ws.append(headers)
 
     sample_row = [
-        '',  # Photo (user can insert image or paste URL)
+        '[Optional: Insert photo or paste URL]',  # Photo (optional: user can insert image or paste URL)
         'ITEM-001',
         'Sample Item Name',
         'Electronics',
@@ -585,6 +604,15 @@ def generate_stock_template_excel():
 
     ws.row_dimensions[1].height = 28
     ws.row_dimensions[2].height = 50
+
+    # Add explanatory comment to Photo header cell
+    from openpyxl.comments import Comment
+    ws['A1'].comment = Comment(
+        "Photo / Image is an OPTIONAL (non-required) field.\n"
+        "You can insert a picture directly into this cell (Insert > Pictures), or paste an image URL (https://...).\n"
+        "Leave blank if no photo.",
+        "ERP"
+    )
 
     for col_idx in range(1, len(headers) + 1):
         h_cell = ws.cell(row=1, column=col_idx)
@@ -625,9 +653,9 @@ def generate_stock_template_excel():
     instructions_data = [
         (
             'Photo / Image',
-            'Non / No',
-            'Insérez une image directement dans la cellule (menu Insertion > Image) OU collez une URL d\'image (https://...) / Insert an image directly in the cell or paste an image URL',
-            '[Image insérée ou https://...]'
+            'Non / No (Optional / Non-required)',
+            'Photo de l\'article (Champ facultatif / Non obligatoire). Insérez une image directement dans la cellule (menu Insertion > Image) OU collez une URL d\'image (https://...) / Product photo (Optional field / Non-required). Insert an image directly into the cell or paste an image URL.',
+            '[Image insérée ou https://... (Optional)]'
         ),
         (
             'item_code',

@@ -2,6 +2,23 @@
 
 {% load i18n %}
 {% load currency_tags %}
+
+{% block extra_css %}
+<style>
+    .photo-cell-wrapper {
+        transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+    .photo-cell-wrapper:hover {
+        transform: scale(1.08);
+        border-color: #ff6000 !important;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.15) !important;
+    }
+    .photo-cell-wrapper:hover .photo-hover-overlay {
+        opacity: 1 !important;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h2><i class="fas fa-boxes me-2"></i>{% trans "Inventory" %}</h2>
@@ -127,17 +144,34 @@
                 </thead>
                 <tbody>
                     {% for stock in stocks %}
-                    <tr class="{% if stock.needs_reorder %}table-warning{% endif %}">
-                        <td class="text-center align-middle" style="width: 50px;">
-                            {% if stock.image %}
-                            <img src="{{ stock.image.url }}" alt="{{ stock.name }}" 
-                                 class="rounded" style="width: 40px; height: 40px; object-fit: cover; border: 1px solid #dee2e6;">
-                            {% else %}
-                            <div class="rounded d-inline-flex align-items-center justify-content-center bg-light text-muted" 
-                                 style="width: 40px; height: 40px; border: 1px solid #dee2e6;">
-                                <i class="fas fa-box text-secondary" style="font-size: 0.9rem;"></i>
+                    <tr class="{% if stock.needs_reorder %}table-warning{% endif %}" id="stock-row-{{ stock.pk }}">
+                        <td class="text-center align-middle" style="width: 54px;">
+                            <div class="photo-cell-wrapper position-relative d-inline-flex align-items-center justify-content-center rounded overflow-hidden shadow-sm"
+                                 data-stock-id="{{ stock.pk }}"
+                                 data-stock-name="{{ stock.name }}"
+                                 role="button"
+                                 tabindex="0"
+                                 title="{% trans 'Click to upload or change picture' %}"
+                                 style="width: 42px; height: 42px; cursor: pointer; border: 1px solid #dee2e6;">
+                                <div class="photo-preview-inner w-100 h-100 d-flex align-items-center justify-content-center">
+                                    {% if stock.image %}
+                                    <img src="{{ stock.image.url }}" alt="{{ stock.name }}"
+                                         class="w-100 h-100" style="object-fit: cover;">
+                                    {% else %}
+                                    <div class="w-100 h-100 d-flex align-items-center justify-content-center bg-light text-muted">
+                                        <i class="fas fa-box text-secondary" style="font-size: 0.95rem;"></i>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                <div class="photo-hover-overlay position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center text-white"
+                                     style="background: rgba(0, 0, 0, 0.45); opacity: 0; transition: opacity 0.15s ease;">
+                                    <i class="fas fa-camera fa-xs"></i>
+                                </div>
+                                <div class="photo-spinner-overlay position-absolute top-0 start-0 w-100 h-100 d-none align-items-center justify-content-center text-primary"
+                                     style="background: rgba(255, 255, 255, 0.85);">
+                                    <i class="fas fa-spinner fa-spin fa-sm"></i>
+                                </div>
                             </div>
-                            {% endif %}
                         </td>
                         <td>
                             <strong>{{ stock.item_code }}</strong>
@@ -297,6 +331,124 @@ document.addEventListener('DOMContentLoaded', function() {
             this.style.backgroundColor = '';
         });
     });
+
+    // Direct Photo Upload on Click
+    const photoFileInput = document.getElementById('directStockPhotoInput');
+    const photoCsrfToken = document.querySelector('#stockPhotoCsrfForm [name=csrfmiddlewaretoken]')?.value || '';
+    const toastEl = document.getElementById('stockPhotoToast');
+    const toastBody = document.getElementById('stockPhotoToastBody');
+    let toastInstance = null;
+    if (toastEl && typeof bootstrap !== 'undefined' && bootstrap.Toast) {
+        toastInstance = new bootstrap.Toast(toastEl, { delay: 3500 });
+    }
+
+    function showToast(msg, isSuccess = true) {
+        if (toastEl && toastBody) {
+            toastEl.className = 'toast align-items-center border-0 text-white ' + (isSuccess ? 'bg-success' : 'bg-danger');
+            toastBody.innerHTML = (isSuccess ? '<i class="fas fa-check-circle me-2"></i>' : '<i class="fas fa-exclamation-circle me-2"></i>') + msg;
+            if (toastInstance) {
+                toastInstance.show();
+            }
+        }
+    }
+
+    let activeStockId = null;
+    let activeStockName = '';
+    let activeWrapper = null;
+
+    document.querySelectorAll('.photo-cell-wrapper').forEach(wrapper => {
+        const triggerUpload = function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            activeStockId = wrapper.dataset.stockId;
+            activeStockName = wrapper.dataset.stockName || 'item';
+            activeWrapper = wrapper;
+            if (photoFileInput) {
+                photoFileInput.value = '';
+                photoFileInput.click();
+            }
+        };
+
+        wrapper.addEventListener('click', triggerUpload);
+        wrapper.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' || e.key === ' ') {
+                triggerUpload(e);
+            }
+        });
+    });
+
+    if (photoFileInput) {
+        photoFileInput.addEventListener('change', function() {
+            if (!this.files || !this.files[0] || !activeStockId || !activeWrapper) return;
+            const file = this.files[0];
+
+            if (file.size > 15 * 1024 * 1024) {
+                showToast('{% trans "File is too large. Maximum size is 15MB." %}', false);
+                return;
+            }
+
+            const spinner = activeWrapper.querySelector('.photo-spinner-overlay');
+            const previewInner = activeWrapper.querySelector('.photo-preview-inner');
+            if (spinner) {
+                spinner.classList.remove('d-none');
+                spinner.classList.add('d-flex');
+            }
+
+            const formData = new FormData();
+            formData.append('image', file);
+            formData.append('csrfmiddlewaretoken', photoCsrfToken);
+            formData.append('format', 'json');
+
+            fetch('/inventory/' + activeStockId + '/upload-image/', {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (spinner) {
+                    spinner.classList.add('d-none');
+                    spinner.classList.remove('d-flex');
+                }
+                if (data.success && data.image_url) {
+                    if (previewInner) {
+                        previewInner.innerHTML = '<img src="' + data.image_url + '" alt="' + activeStockName + '" class="w-100 h-100" style="object-fit: cover;">';
+                    }
+                    showToast(data.message || '{% trans "Photo updated successfully!" %}', true);
+                } else {
+                    showToast(data.message || '{% trans "Failed to update photo." %}', false);
+                }
+            })
+            .catch(err => {
+                if (spinner) {
+                    spinner.classList.add('d-none');
+                    spinner.classList.remove('d-flex');
+                }
+                console.error('Error uploading photo:', err);
+                showToast('{% trans "Error uploading photo. Please try again." %}', false);
+            });
+        });
+    }
 });
 </script>
+
+<!-- Hidden File Input & CSRF for direct image upload -->
+<input type="file" id="directStockPhotoInput" accept="image/*" class="d-none">
+<form id="stockPhotoCsrfForm" class="d-none">
+    {% csrf_token %}
+</form>
+
+<!-- Toast notification container -->
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 1090;">
+    <div id="stockPhotoToast" class="toast align-items-center text-white bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="d-flex">
+            <div class="toast-body" id="stockPhotoToastBody">
+                <i class="fas fa-check-circle me-2"></i>{% trans "Photo updated successfully!" %}
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+    </div>
+</div>
 {% endblock %}

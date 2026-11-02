@@ -46,7 +46,10 @@
                         <!-- ✅ IMAGE FIELD ADDED -->
                         <div class="col-12 mt-3">
                             <div class="mb-3">
-                                <label class="form-label">{% trans "Product Image" %}</label>
+                                <label class="form-label d-flex align-items-center gap-2">
+                                    <span>{% trans "Product Image / Photo" %}</span>
+                                    <span class="badge bg-light text-secondary border fw-normal">{% trans "Optional / Non-required" %}</span>
+                                </label>
                                 {{ form.image }}
                                 
                                 {% if stock and stock.image %}

@@ -171,6 +171,64 @@ def stock_edit(request, pk):
         'title': 'Edit Stock Item'
     })
 
+@role_required(*INVENTORY_WRITE_ROLES)
+def stock_upload_image(request, pk):
+    """
+    Direct image/photo upload for a stock item.
+    Supports AJAX file uploads (multipart/form-data) when clicking the image field in the UI.
+    """
+    company = request.user.company
+    stock = get_object_or_404(Stock, pk=pk, company=company)
+    
+    if request.method == 'POST':
+        # Optional: delete action
+        if request.POST.get('action') == 'delete':
+            if stock.image:
+                stock.image.delete(save=False)
+                stock.image = None
+                stock.save(update_fields=['image', 'updated_at'])
+            return JsonResponse({
+                'success': True,
+                'message': f'Photo for "{stock.name}" removed.',
+                'image_url': None,
+                'item_code': stock.item_code,
+            })
+
+        uploaded_file = request.FILES.get('image') or request.FILES.get('photo')
+        if not uploaded_file:
+            return JsonResponse({'success': False, 'message': 'No image file was provided.'}, status=400)
+        
+        # Validate that it's a real image file using PIL
+        try:
+            from PIL import Image as PILImage
+            img = PILImage.open(uploaded_file)
+            img.verify()
+            uploaded_file.seek(0)
+        except Exception:
+            return JsonResponse({'success': False, 'message': 'The uploaded file is not a valid image.'}, status=400)
+        
+        # Save image
+        stock.image = uploaded_file
+        stock.save(update_fields=['image', 'updated_at'])
+        
+        is_ajax = (
+            request.headers.get('x-requested-with') == 'XMLHttpRequest' or
+            request.POST.get('format') == 'json' or
+            'application/json' in request.headers.get('accept', '')
+        )
+        if is_ajax:
+            return JsonResponse({
+                'success': True,
+                'message': f'Photo for "{stock.name}" updated successfully!',
+                'image_url': stock.image.url if stock.image else '',
+                'item_code': stock.item_code,
+            })
+            
+        messages.success(request, f'Photo for "{stock.name}" updated successfully!')
+        return redirect('inventory:stock_list')
+        
+    return JsonResponse({'success': False, 'message': 'Invalid request method.'}, status=405)
+
 @role_required(*INVENTORY_MANAGE_ROLES)
 def stock_delete(request, pk):
     """Delete stock item"""

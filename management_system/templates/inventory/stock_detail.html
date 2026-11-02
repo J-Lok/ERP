@@ -124,17 +124,52 @@
     </div>
     
     <div class="col-md-4">
-        {% if stock.image %}
+        <!-- Product Photo Card (Click to upload/change) -->
         <div class="card mb-4">
-            <div class="card-header bg-white">
-                <h5 class="card-title mb-0"><i class="fas fa-image me-2"></i>{% trans "Product Photo" %}</h5>
+            <div class="card-header bg-white d-flex align-items-center justify-content-between">
+                <h5 class="card-title mb-0"><i class="fas fa-image me-2 text-primary"></i>{% trans "Product Photo" %}</h5>
+                <span class="badge bg-light text-secondary border small">
+                    <i class="fas fa-camera me-1"></i>{% trans "Click to edit" %}
+                </span>
             </div>
             <div class="card-body text-center p-3">
-                <img src="{{ stock.image.url }}" alt="{{ stock.name }}" 
-                     class="img-fluid rounded border shadow-sm" style="max-height: 220px; object-fit: contain;">
+                <div class="stock-detail-photo-wrapper position-relative d-inline-block rounded overflow-hidden" 
+                     id="detailPhotoTrigger"
+                     role="button" tabindex="0" 
+                     title="{% trans 'Click to upload or change picture' %}"
+                     style="cursor: pointer; max-width: 100%;">
+                    
+                    <div id="detailPhotoPreview">
+                        {% if stock.image %}
+                        <img src="{{ stock.image.url }}" alt="{{ stock.name }}" 
+                             class="img-fluid rounded border shadow-sm" style="max-height: 220px; object-fit: contain;">
+                        {% else %}
+                        <div class="p-4 bg-light rounded border text-muted d-flex flex-column align-items-center justify-content-center" style="min-height: 160px; min-width: 220px;">
+                            <div class="rounded-circle bg-white shadow-sm p-3 mb-2 text-primary">
+                                <i class="fas fa-camera fa-2x"></i>
+                            </div>
+                            <span class="fw-bold text-dark small mb-1">{% trans "No picture yet" %}</span>
+                            <span class="small text-muted">{% trans "Click here to upload a photo" %}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Hover overlay -->
+                    <div class="detail-photo-overlay position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center text-white"
+                         style="background: rgba(0, 0, 0, 0.45); opacity: 0; transition: opacity 0.2s ease;">
+                        <span class="badge bg-dark bg-opacity-75 p-2 px-3 shadow">
+                            <i class="fas fa-camera me-1"></i>{% trans "Upload / Change Photo" %}
+                        </span>
+                    </div>
+
+                    <!-- Spinner overlay -->
+                    <div class="detail-photo-spinner position-absolute top-0 start-0 w-100 h-100 d-none align-items-center justify-content-center text-primary"
+                         style="background: rgba(255, 255, 255, 0.85);">
+                        <i class="fas fa-spinner fa-spin fa-2x"></i>
+                    </div>
+                </div>
             </div>
         </div>
-        {% endif %}
         <div class="card">
             <div class="card-body text-center">
                 <h5 class="card-title">{% trans "Stock Status" %}</h5>
@@ -285,5 +320,127 @@
     align-items: center;
     justify-content: center;
 }
+
+.stock-detail-photo-wrapper {
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.stock-detail-photo-wrapper:hover {
+    transform: scale(1.02);
+}
+.stock-detail-photo-wrapper:hover .detail-photo-overlay {
+    opacity: 1 !important;
+}
 </style>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Hidden File Input & CSRF for direct image upload -->
+<input type="file" id="detailPhotoFileInput" accept="image/*" class="d-none">
+<form id="detailPhotoCsrfForm" class="d-none">
+    {% csrf_token %}
+</form>
+
+<!-- Toast notification container -->
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 1090;">
+    <div id="detailPhotoToast" class="toast align-items-center text-white bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="d-flex">
+            <div class="toast-body" id="detailPhotoToastBody">
+                <i class="fas fa-check-circle me-2"></i>{% trans "Photo updated successfully!" %}
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const trigger = document.getElementById('detailPhotoTrigger');
+    const fileInput = document.getElementById('detailPhotoFileInput');
+    const csrfToken = document.querySelector('#detailPhotoCsrfForm [name=csrfmiddlewaretoken]')?.value || '';
+    const toastEl = document.getElementById('detailPhotoToast');
+    const toastBody = document.getElementById('detailPhotoToastBody');
+    let toastInstance = null;
+    if (toastEl && typeof bootstrap !== 'undefined' && bootstrap.Toast) {
+        toastInstance = new bootstrap.Toast(toastEl, { delay: 3500 });
+    }
+
+    function showToast(msg, isSuccess = true) {
+        if (toastEl && toastBody) {
+            toastEl.className = 'toast align-items-center border-0 text-white ' + (isSuccess ? 'bg-success' : 'bg-danger');
+            toastBody.innerHTML = (isSuccess ? '<i class="fas fa-check-circle me-2"></i>' : '<i class="fas fa-exclamation-circle me-2"></i>') + msg;
+            if (toastInstance) {
+                toastInstance.show();
+            }
+        }
+    }
+
+    if (trigger && fileInput) {
+        const startUpload = function(e) {
+            e.preventDefault();
+            fileInput.value = '';
+            fileInput.click();
+        };
+
+        trigger.addEventListener('click', startUpload);
+        trigger.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' || e.key === ' ') {
+                startUpload(e);
+            }
+        });
+
+        fileInput.addEventListener('change', function() {
+            if (!this.files || !this.files[0]) return;
+            const file = this.files[0];
+
+            if (file.size > 15 * 1024 * 1024) {
+                showToast('{% trans "File is too large. Maximum size is 15MB." %}', false);
+                return;
+            }
+
+            const spinner = trigger.querySelector('.detail-photo-spinner');
+            const preview = document.getElementById('detailPhotoPreview');
+            if (spinner) {
+                spinner.classList.remove('d-none');
+                spinner.classList.add('d-flex');
+            }
+
+            const formData = new FormData();
+            formData.append('image', file);
+            formData.append('csrfmiddlewaretoken', csrfToken);
+            formData.append('format', 'json');
+
+            fetch('{% url "inventory:stock_upload_image" stock.pk %}', {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (spinner) {
+                    spinner.classList.add('d-none');
+                    spinner.classList.remove('d-flex');
+                }
+                if (data.success && data.image_url) {
+                    if (preview) {
+                        preview.innerHTML = '<img src="' + data.image_url + '" alt="{{ stock.name }}" class="img-fluid rounded border shadow-sm" style="max-height: 220px; object-fit: contain;">';
+                    }
+                    showToast(data.message || '{% trans "Photo updated successfully!" %}', true);
+                } else {
+                    showToast(data.message || '{% trans "Failed to update photo." %}', false);
+                }
+            })
+            .catch(err => {
+                if (spinner) {
+                    spinner.classList.add('d-none');
+                    spinner.classList.remove('d-flex');
+                }
+                console.error('Error uploading photo:', err);
+                showToast('{% trans "Error uploading photo. Please try again." %}', false);
+            });
+        });
+    }
+});
+</script>
 {% endblock %}
