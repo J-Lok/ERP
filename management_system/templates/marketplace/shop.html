@@ -74,7 +74,65 @@
     }
     @media (max-width: 767.98px) {
         .product-card {
-            border-radius: 12px;
+            border-radius: 10px;
+        }
+        .product-img-box {
+            aspect-ratio: 4 / 3;
+            max-height: 125px;
+        }
+        .product-img-box i.fa-box {
+            font-size: 1.8rem;
+        }
+        .card-badge-left {
+            top: 5px;
+            left: 5px;
+            gap: 2px;
+        }
+        .card-badge {
+            font-size: 0.58rem;
+            padding: 2px 5px;
+            border-radius: 4px;
+        }
+        .card-wishlist-btn {
+            top: 5px;
+            right: 5px;
+            width: 26px;
+            height: 26px;
+            font-size: 0.72rem;
+        }
+        .product-card-body {
+            padding: 6px 8px 8px;
+        }
+        .product-title {
+            font-size: 0.78rem;
+            line-height: 1.25;
+            min-height: 1.95rem;
+            margin-bottom: 2px;
+        }
+        .moq-tag {
+            font-size: 0.65rem;
+            margin-bottom: 2px;
+        }
+        .product-price {
+            font-size: 0.92rem;
+        }
+        .quick-add-btn {
+            width: 26px;
+            height: 26px;
+            font-size: 0.72rem;
+            box-shadow: 0 1px 5px rgba(255, 96, 0, 0.3);
+        }
+        .store-hero-card {
+            padding: 8px 12px;
+            margin-bottom: 10px;
+            border-radius: 10px;
+        }
+        .category-pill {
+            padding: 4px 10px;
+            font-size: 0.75rem;
+        }
+        .category-scroll-container {
+            padding: 2px 2px 6px;
         }
     }
 
@@ -88,6 +146,9 @@
         display: flex;
         align-items: center;
         justify-content: center;
+    }
+    .product-img-box i.fa-box {
+        font-size: 2.8rem;
     }
     [data-bs-theme="dark"] .product-img-box {
         background: #1e293b;
@@ -222,38 +283,38 @@
 {% endblock %}
 
 {% block content %}
-<div class="container py-3">
+<div class="container py-2 py-md-3">
 
     <!-- Store Profile & Wholesale Header -->
     {% if company %}
     <div class="store-hero-card">
-        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
-            <div class="d-flex align-items-center gap-3">
-                <div class="rounded-circle bg-white shadow-sm p-2 d-flex align-items-center justify-content-center text-primary" style="width: 48px; height: 48px;">
-                    <i class="fas fa-store fa-lg"></i>
+        <div class="d-flex align-items-center justify-content-between gap-2">
+            <div class="d-flex align-items-center gap-2 min-w-0">
+                <div class="rounded-circle bg-white shadow-sm p-1 d-flex align-items-center justify-content-center text-primary flex-shrink-0" style="width: 38px; height: 38px;">
+                    <i class="fas fa-store"></i>
                 </div>
-                <div>
-                    <div class="d-flex align-items-center gap-2">
-                        <h5 class="mb-0 fw-bold">{{ company.name }}</h5>
-                        <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 py-1 px-2 small">
-                            <i class="fas fa-check-circle me-1"></i>{% trans "Verified Merchant" %}
+                <div class="min-w-0">
+                    <div class="d-flex align-items-center gap-1 flex-wrap">
+                        <h6 class="mb-0 fw-bold text-truncate">{{ company.name }}</h6>
+                        <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 py-0 px-1" style="font-size: 0.65rem;">
+                            <i class="fas fa-check-circle me-1"></i>{% trans "Verified" %}
                         </span>
                     </div>
-                    <p class="small text-muted mb-0 mt-1">
+                    <p class="text-muted mb-0 small text-truncate" style="font-size: 0.72rem;">
                         <i class="fas fa-boxes text-primary me-1"></i>{{ total_products }} {% trans "Items in Catalog" %}
-                        {% if company.currency %} · <i class="fas fa-coins me-1"></i>{{ company.currency }}{% endif %}
+                        {% if company.currency %} · {{ company.currency }}{% endif %}
                     </p>
                 </div>
             </div>
 
-            <div class="d-flex align-items-center gap-2">
+            <div class="d-flex align-items-center gap-1 flex-shrink-0">
                 {% if company.whatsapp_number %}
                 <a href="https://wa.me/{{ company.whatsapp_number|cut:'+'|cut:' ' }}?text=Hello%20{{ company.name }}!%20I%20am%20browsing%20your%20marketplace." 
-                   target="_blank" class="btn btn-sm btn-success rounded-pill px-3 fw-semibold">
-                    <i class="fab fa-whatsapp me-1"></i>{% trans "Inquire / RFQ" %}
+                   target="_blank" class="btn btn-sm btn-success rounded-pill px-2 py-1 fw-semibold" style="font-size: 0.75rem;" title="WhatsApp">
+                    <i class="fab fa-whatsapp me-1"></i><span class="d-none d-sm-inline">{% trans "Inquire" %}</span>
                 </a>
                 {% endif %}
-                <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-3" data-bs-toggle="offcanvas" data-bs-target="#filterOffcanvas">
+                <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-2 py-1" style="font-size: 0.75rem;" data-bs-toggle="offcanvas" data-bs-target="#filterOffcanvas">
                     <i class="fas fa-sliders-h me-1"></i>{% trans "Filters" %}
                 </button>
             </div>
@@ -262,7 +323,7 @@
     {% endif %}
 
     <!-- Horizontal Category Scrollbar (Alibaba Style) -->
-    <div class="mb-3">
+    <div class="mb-2 mb-md-3">
         <div class="category-scroll-container">
             <a href="{% url 'marketplace:shop' %}{% if query %}?q={{ query }}{% endif %}" 
                class="category-pill {% if not selected_category %}active{% endif %}">
@@ -280,7 +341,7 @@
     </div>
 
     <!-- Active Filters & Sorting Strip -->
-    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3 px-1">
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2 mb-md-3 px-1">
         <div class="d-flex align-items-center gap-2">
             <span class="small fw-semibold text-muted">
                 <strong>{{ total_products }}</strong> {% trans "products found" %}
@@ -360,7 +421,7 @@
                     {% if stock.image %}
                         <img src="{{ stock.image.url }}" alt="{{ stock.name }}" loading="lazy">
                     {% else %}
-                        <i class="fas fa-box fa-3x text-muted opacity-50"></i>
+                        <i class="fas fa-box text-muted opacity-50"></i>
                     {% endif %}
                 </a>
 

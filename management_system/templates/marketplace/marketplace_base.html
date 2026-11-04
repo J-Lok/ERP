@@ -294,32 +294,26 @@
             color: white;
         }
 
-        /* Theme toggle button */
+        /* Theme toggle button in navbars */
         .theme-toggle-btn {
-            position: fixed;
-            right: 1rem;
-            bottom: 1rem;
-            z-index: 1035;
-            border-radius: 999px;
-            width: 42px;
-            height: 42px;
+            background: transparent;
+            border: none;
+            color: rgba(255,255,255,0.92);
+            padding: 4px 6px;
+            border-radius: 8px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 4px 14px rgba(0,0,0,0.18);
-            background: var(--surface-bg);
-            border: 1px solid var(--border-color);
-            color: var(--app-text);
+            transition: all 0.2s ease;
+            cursor: pointer;
+            line-height: 1;
+        }
+        .theme-toggle-btn:hover {
+            color: #ffffff;
+            background: rgba(255,255,255,0.15);
         }
 
         @media (max-width: 767.98px) {
-            .theme-toggle-btn {
-                bottom: calc(var(--bottom-nav-height) + 15px);
-                right: 12px;
-                width: 38px;
-                height: 38px;
-                font-size: 0.85rem;
-            }
             .whatsapp-float-btn {
                 display: none !important; /* Integrated into mobile bottom navigation & PDP */
             }
@@ -391,6 +385,9 @@
                 <i class="fas fa-certificate text-warning ms-1 small" title="Verified Store"></i>
             </a>
             <div class="d-flex align-items-center gap-2">
+                <button class="btn btn-sm text-white p-1 theme-toggle-btn border-0 bg-transparent" type="button" aria-label="Toggle dark mode" title="Toggle theme">
+                    <i class="fas fa-moon fa-lg"></i>
+                </button>
                 {% if company and company.whatsapp_number %}
                 <a href="https://wa.me/{{ company.whatsapp_number|cut:'+'|cut:' ' }}?text=Hello%20{{ company.name }}!" target="_blank" class="btn btn-sm text-white p-1" title="WhatsApp Chat">
                     <i class="fab fa-whatsapp fa-lg text-white"></i>
@@ -457,6 +454,11 @@
                 </ul>
                 
                 <ul class="navbar-nav align-items-center">
+                    <li class="nav-item me-2">
+                        <button class="nav-link theme-toggle-btn border-0 bg-transparent p-2" type="button" aria-label="Toggle dark mode" title="Toggle theme">
+                            <i class="fas fa-moon fa-lg"></i>
+                        </button>
+                    </li>
                     <li class="nav-item position-relative me-3">
                         <a class="nav-link d-flex align-items-center" href="{% url 'marketplace:view_cart' %}">
                             <i class="fas fa-shopping-cart fa-lg"></i>
@@ -601,7 +603,7 @@
         {% else %}
         <a href="{% url 'marketplace:view_wishlist' %}" class="nav-tab {% if request.resolver_match.url_name == 'view_wishlist' %}active{% endif %}">
             <i class="fas fa-heart"></i>
-            <span>{% trans "Wishlist" %}</span>
+            <span>{% trans "Wishlist" as wl %}{% if wl == "Liste de souhaits" %}Favoris{% else %}{{ wl }}{% endif %}</span>
         </a>
         {% endif %}
         <a href="{% url 'marketplace:view_cart' %}" class="nav-tab {% if request.resolver_match.url_name == 'view_cart' %}active{% endif %}">
@@ -641,10 +643,6 @@
     </a>
     {% endif %}
 
-    <!-- Theme Toggle Floating Pill -->
-    <button id="themeToggle" class="theme-toggle-btn" type="button" aria-label="Toggle dark mode" title="Toggle theme">
-        <i class="fas fa-moon"></i>
-    </button>
 
     <!-- Desktop Footer -->
     <footer class="marketplace-footer d-none d-md-block">
@@ -703,8 +701,7 @@
             // Theme setup
             var storageKey = 'erp-theme';
             var root = document.documentElement;
-            var toggleBtn = document.getElementById('themeToggle');
-            var toggleIcon = toggleBtn ? toggleBtn.querySelector('i') : null;
+            var toggleBtns = document.querySelectorAll('.theme-toggle-btn, #themeToggle');
 
             function getPreferredTheme() {
                 var savedTheme = localStorage.getItem(storageKey);
@@ -716,20 +713,24 @@
 
             function applyTheme(theme) {
                 root.setAttribute('data-bs-theme', theme);
-                if (toggleIcon) {
-                    toggleIcon.className = 'fas ' + (theme === 'dark' ? 'fa-sun text-warning' : 'fa-moon text-secondary');
-                }
+                toggleBtns.forEach(function(btn) {
+                    var icon = btn.querySelector('i');
+                    if (icon) {
+                        icon.className = 'fas ' + (theme === 'dark' ? 'fa-sun text-warning fa-lg' : 'fa-moon text-white fa-lg');
+                    }
+                });
             }
 
             applyTheme(getPreferredTheme());
 
-            if (toggleBtn) {
-                toggleBtn.addEventListener('click', function() {
+            toggleBtns.forEach(function(btn) {
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
                     var nextTheme = root.getAttribute('data-bs-theme') === 'dark' ? 'light' : 'dark';
                     localStorage.setItem(storageKey, nextTheme);
                     applyTheme(nextTheme);
                 });
-            }
+            });
 
             // Global Toast Notification Helper
             var toastEl = document.getElementById('mpFloatingToast');
