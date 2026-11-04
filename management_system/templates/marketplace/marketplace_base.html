@@ -582,6 +582,8 @@
     </main>
 
     <!-- 3. Fixed App-Like Bottom Navigation Bar (Smartphones < 768px, Alibaba Style) -->
+    {% block bottom_nav %}
+    {% if request.resolver_match.url_name != 'checkout' %}
     <nav class="mp-bottom-nav d-md-none" aria-label="Mobile Navigation">
         <a href="{% url 'marketplace:shop' %}" class="nav-tab {% if request.resolver_match.url_name == 'shop' or request.resolver_match.url_name == 'shop_by_category' %}active{% endif %}">
             <i class="fas fa-store"></i>
@@ -602,7 +604,7 @@
             <span>{% trans "Wishlist" %}</span>
         </a>
         {% endif %}
-        <a href="{% url 'marketplace:view_cart' %}" class="nav-tab {% if request.resolver_match.url_name == 'view_cart' or request.resolver_match.url_name == 'checkout' %}active{% endif %}">
+        <a href="{% url 'marketplace:view_cart' %}" class="nav-tab {% if request.resolver_match.url_name == 'view_cart' %}active{% endif %}">
             <i class="fas fa-shopping-cart"></i>
             <span>{% trans "Cart" %}</span>
             {% if cart_count %}
@@ -623,6 +625,8 @@
         </a>
         {% endif %}
     </nav>
+    {% endif %}
+    {% endblock %}
 
     <!-- Floating Instant Toast for Fast Mobile Feedback -->
     <div id="mpFloatingToast" class="mp-floating-toast">

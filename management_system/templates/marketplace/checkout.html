@@ -43,11 +43,13 @@
         bottom: 0;
         left: 0;
         right: 0;
-        z-index: 1040;
-        background: #ffffff;
-        box-shadow: 0 -4px 16px rgba(0,0,0,0.08);
-        padding: 10px 16px;
-        padding-bottom: calc(10px + env(safe-area-inset-bottom));
+        z-index: 1055;
+        background: var(--surface-bg, #ffffff);
+        border-top: 1px solid var(--border-color, #dee2e6);
+        box-shadow: 0 -4px 20px rgba(0,0,0,0.12);
+        padding: 12px 16px;
+        padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+        backdrop-filter: blur(10px);
     }
     .order-preview-thumb {
         width: 52px;
@@ -57,11 +59,18 @@
         background: #f8f9fa;
         flex-shrink: 0;
     }
+    @media (max-width: 991.98px) {
+        .checkout-container {
+            padding-bottom: calc(90px + env(safe-area-inset-bottom, 16px)) !important;
+        }
+    }
 </style>
 {% endblock %}
 
+{% block bottom_nav %}{% endblock %}
+
 {% block content %}
-<div class="container py-3 pb-5 mb-5 mb-md-0">
+<div class="container py-3 checkout-container">
     <!-- Stepper Header -->
     <div class="checkout-stepper">
         <a href="{% url 'marketplace:view_cart' %}" class="checkout-step-pill completed text-decoration-none">
@@ -151,8 +160,8 @@
                             {{ form.notes }}
                         </div>
 
-                        <!-- Desktop Submit Button -->
-                        <div class="d-none d-lg-block mt-4">
+                        <!-- Form Submit Button -->
+                        <div class="mt-4">
                             <button type="submit" class="btn btn-primary btn-lg w-100 rounded-pill fw-bold shadow">
                                 <i class="fas fa-check-circle me-2"></i>{% trans "Place Order & Proceed to Payment" %}
                             </button>
@@ -228,9 +237,14 @@
                     </div>
 
                     <!-- Accepted Badges -->
-                    <div class="p-2 bg-light rounded text-center small text-muted">
+                    <div class="p-2 bg-light rounded text-center small text-muted mb-3">
                         <i class="fas fa-lock text-success me-1"></i>{% trans "Secure checkout processed by ERP" %}
                     </div>
+
+                    <!-- Order Summary Submit Button -->
+                    <button type="submit" form="checkoutMainForm" class="btn btn-primary btn-lg w-100 rounded-pill fw-bold shadow">
+                        <i class="fas fa-check-circle me-2"></i>{% trans "Place Order & Proceed to Payment" %}
+                    </button>
                 </div>
             </div>
         </div>
@@ -238,15 +252,37 @@
 
     <!-- Smartphone Sticky Bottom Place Order Bar -->
     <div class="checkout-sticky-bar d-lg-none">
-        <div class="d-flex align-items-center justify-content-between">
+        <div class="d-flex align-items-center justify-content-between gap-3">
             <div>
                 <span class="text-muted d-block small" style="font-size:11px;">{% trans "Total to Pay" %}</span>
                 <span class="fw-bold text-primary fs-5">{{ cart.total_price|currency:cart.items.first.stock.company }}</span>
             </div>
-            <button type="submit" form="checkoutMainForm" class="btn btn-primary fw-bold px-4 py-2 rounded-pill shadow">
+            <button type="submit" form="checkoutMainForm" id="stickyPlaceOrderBtn" class="btn btn-primary fw-bold px-4 py-2 rounded-pill shadow">
                 {% trans "Place Order" %} <i class="fas fa-check-circle ms-1"></i>
             </button>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const stickyBtn = document.getElementById('stickyPlaceOrderBtn');
+    const mainForm = document.getElementById('checkoutMainForm');
+    if (stickyBtn && mainForm) {
+        stickyBtn.addEventListener('click', function(e) {
+            if (!e.defaultPrevented) {
+                if (mainForm.reportValidity) {
+                    if (mainForm.reportValidity()) {
+                        mainForm.submit();
+                    }
+                } else if (mainForm.checkValidity ? mainForm.checkValidity() : true) {
+                    mainForm.submit();
+                }
+            }
+        });
+    }
+});
+</script>
 {% endblock %}
