@@ -17,3 +17,4 @@ for po_path in pathlib.Path('management_system/locale').rglob('*.po'):
 fi
 python management_system/manage.py collectstatic --noinput
 python management_system/manage.py migrate --noinput
+python management_system/manage.py seed_job_roles

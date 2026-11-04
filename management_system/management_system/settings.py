@@ -47,12 +47,16 @@ ALLOWED_HOSTS = [
     for host in os.getenv('ALLOWED_HOSTS', '127.0.0.1,localhost').split(',')
     if host.strip()
 ]
+if os.getenv('RENDER') and '.onrender.com' not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append('.onrender.com')
 
 CSRF_TRUSTED_ORIGINS = [
     origin.strip()
     for origin in os.getenv('CSRF_TRUSTED_ORIGINS', '').split(',')
     if origin.strip()
 ]
+if os.getenv('RENDER') and not any('.onrender.com' in o for o in CSRF_TRUSTED_ORIGINS):
+    CSRF_TRUSTED_ORIGINS.append('https://*.onrender.com')
 
 INSTALLED_APPS = [
      'accounts',
@@ -185,7 +189,8 @@ LOCALE_PATHS = [BASE_DIR / 'locale']
 USE_TZ = True
 
 STATIC_URL = '/static/'
-STATICFILES_DIRS = [BASE_DIR / 'static']
+_static_dir = BASE_DIR / 'static'
+STATICFILES_DIRS = [_static_dir] if _static_dir.exists() else []
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 CLOUDINARY_STORAGE = {

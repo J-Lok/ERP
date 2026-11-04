@@ -3,7 +3,7 @@ services:
     name: erp-mec-system
     runtime: python
     buildCommand: "./build.sh"
-    startCommand: "python management_system/manage.py migrate --noinput && python management_system/manage.py seed_job_roles && gunicorn --chdir management_system management_system.wsgi:application --workers 2 --threads 2 --bind 0.0.0.0:$PORT"
+    startCommand: "gunicorn --chdir management_system management_system.wsgi:application --workers 1 --threads 4 --timeout 120 --bind 0.0.0.0:$PORT"
     envVars:
       - key: SECRET_KEY
         generateValue: true
